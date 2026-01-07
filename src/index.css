@@ -1,3 +1,19 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  /* Key Color */
+  --color-brand-key: #EABE2F;
+
+  /* Backgrounds */
+  --color-brand-bg: #191919;
+  --color-brand-nav: #202020;
+  --color-brand-card: #2C2C2C;
+  
+  /* Border */
+  --color-brand-border: #333333;
+
+  /* Texts */
+  --color-brand-text-main: #E6E6E6;
+  --color-brand-text-sub: #A0A0A0;
+  --color-brand-text-disabled: #505050;
+}
