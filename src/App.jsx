@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom"; // BrowserRouter 삭제
+import { Routes, Route } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import HomePage from "./pages/HomePage";
 import Layout from "./components/layout/Layout";
