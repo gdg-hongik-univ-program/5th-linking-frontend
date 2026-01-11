@@ -8,7 +8,7 @@ function HomePage() {
         홈 화면은 구현 예정입니다.
       </p>
 
-      {/* 임시 카드 */}
+      {/* 임시 카드 목록 */}
       <div className="mt-6 space-y-4">
         {[1, 2, 3, 4, 5].map((item) => (
           <div key={item} className="h-40 bg-brand-card rounded-xl border border-brand-border flex items-center justify-center text-brand-text-disabled">
