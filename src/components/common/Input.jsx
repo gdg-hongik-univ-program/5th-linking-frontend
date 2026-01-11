@@ -1,10 +1,13 @@
-function Input({ label, type, placeholder, value, onChange, name }) {
+function Input({ label, type, placeholder, value, onChange, name, message,rightElement}) {
+  const isSuccess = message?.includes("가능");
+
   return (
-    <div className="flex flex-col gap-1.5 w-full">
+    <div className="flex flex-col gap-1 w-full">
       <label className="text-sm font-medium text-brand-text-main ml-1">
         {label}
       </label>
-      
+
+      <div className="flex gap-2">
       <input
         type={type}
         name={name}
@@ -19,6 +22,22 @@ function Input({ label, type, placeholder, value, onChange, name }) {
                    focus:outline-none focus:ring-1 focus:ring-brand-key focus:border-brand-key 
                    transition-all"
       />
+      {rightElement && (
+          <div className="flex shrink-0">
+            {rightElement}
+          </div>
+        )}
+      </div>
+
+      {message && (
+        <span className={`text-xs ml-1 mt-0.5 transition-colors ${
+          isSuccess 
+            ? "text-brand-text-main"
+            : "text-brand-text-disabled"
+        }`}>
+          {message}
+        </span>
+      )}
     </div>
   );
 }

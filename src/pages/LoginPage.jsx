@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import Input from "../components/common/Input";
 
@@ -86,15 +86,16 @@ function LoginPage() {
           onClick={handleLogin}
           className="mt-6 w-full bg-brand-key text-brand-bg font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
         >
-          로그인하기
+          로그인
         </button>
       </div>
 
       <div className="mt-6 text-center text-sm text-brand-text-sub">
         계정이 없으신가요?{" "}
-        <span className="text-brand-key font-bold cursor-pointer hover:underline">
+        <Link to ="/signup" 
+        className="text-brand-key font-bold cursor-pointer hover:underline">
           회원가입
-        </span>
+        </Link>
       </div>
     </div>
   );
