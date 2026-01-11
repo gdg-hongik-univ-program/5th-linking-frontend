@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -16,4 +17,10 @@
   --color-brand-text-main: #E6E6E6;
   --color-brand-text-sub: #A0A0A0;
   --color-brand-text-disabled: #505050;
+
+  /* Default */
+  --font-sans: "Noto Sans KR", sans-serif;
+  
+  /* Logo */
+  --font-logo: "Outfit", sans-serif;
 }

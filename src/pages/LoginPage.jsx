@@ -30,7 +30,7 @@ function LoginPage() {
       // 서버로 로그인 요청 보내기 (POST /user/sign-in)
       const response = await axiosInstance.post("/user/sign-in", formData);
 
-      console.log("로그인 성공!", response.data);
+      console.log("로그인 성공", response.data);
 
       alert("로그인에 성공했습니다!");
       navigate("/home");
@@ -44,9 +44,20 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col justify-center px-6 bg-brand-bg">
-      <div className="mb-10 text-center">
-        <h1 className="text-3xl font-bold text-brand-key mb-2">Linking</h1>
-        <p className="text-brand-text-sub">나만의 링크 보관함</p>
+      <div className="mb-10 text-center flex flex-col items-center">
+        {/* 로고 이미지 */}
+        <img 
+          src="/linking.svg"
+          alt="main logo"
+          width="80"
+          height="80"
+          className="block"
+        />
+
+        {/* 로고 텍스트 */}
+        <h1 className="text-4xl font-bold text-brand-key mb-2 font-logo tracking-tight">
+          Linking
+        </h1>
       </div>
 
       <div className="space-y-4">
