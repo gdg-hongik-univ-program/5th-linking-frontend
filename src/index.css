@@ -18,6 +18,9 @@
   --color-brand-text-sub: #A0A0A0;
   --color-brand-text-disabled: #505050;
 
+  /* Status */
+  --color-status-error: #FF6B6B;
+
   /* Default */
   --font-sans: "Noto Sans KR", sans-serif;
   

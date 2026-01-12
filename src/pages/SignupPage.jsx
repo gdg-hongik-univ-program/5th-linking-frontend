@@ -87,8 +87,8 @@ const SignupPage = () => {
 
       <div className="space-y-4">
         <div className="flex flex-col gap-1.5">
-            <div className="flex items-end gap-2"> {/* items-end로 버튼과 인풋 하단 정렬 */}
-              <div className="flex-1"> {/* 인풋창이 남은 공간을 다 차지하도록 */}
+            <div className="flex items-end gap-2">
+              <div className="flex-1">
                 <Input 
                   label="아이디" 
                   type="text" 
