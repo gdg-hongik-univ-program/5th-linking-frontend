@@ -1,44 +1,44 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
-import Input from "../components/common/Input";
-import { VALIDATION } from "../constants/validation";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
+import Input from '../components/common/Input';
+import { VALIDATION } from '../constants/validation';
 
 const SignupPage = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    loginId: "",
-    password: "",
-    email: "",
-    nickName: "",
+    loginId: '',
+    password: '',
+    email: '',
+    nickName: '',
   });
 
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isIdAvailable, setIsIdAvailable] = useState(false);
   const [statusMessages, setStatusMessages] = useState({
-    loginId: "",
-    password: "",
-    email: "",
-    nickName: "",
+    loginId: '',
+    password: '',
+    email: '',
+    nickName: '',
   });
 
   // 유효성 검사 함수
   const validate = (name, value) => {
-    let message = "";
+    let message = '';
     const rule = VALIDATION[name];
 
     if (rule) {
       const isValid = rule.regex ? rule.regex.test(value) : rule.test(value);
-      if (!value) message = ""; 
+      if (!value) message = '';
       else if (!isValid) {
         message = rule.error;
       } else {
         const labels = {
-          loginId: "아이디",
-          password: "비밀번호",
-          email: "이메일",
-          nickName: "닉네임",
+          loginId: '아이디',
+          password: '비밀번호',
+          email: '이메일',
+          nickName: '닉네임',
         };
         message = `사용 가능한 ${labels[name]}입니다!`;
       }
@@ -51,20 +51,20 @@ const SignupPage = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     validate(name, value);
 
-    if (name === "loginId") {
+    if (name === 'loginId') {
       setIsIdAvailable(false);
     }
   };
 
   const handleSignup = async () => {
     try {
-      const response = await axiosInstance.post("/user/sign-up", formData);
+      const response = await axiosInstance.post('/user/sign-up', formData);
       if (response.status === 201 || response.status === 200) {
-        alert("회원가입이 완료되었습니다!");
-        navigate("/");
+        alert('회원가입이 완료되었습니다!');
+        navigate('/');
       }
     } catch (error) {
-      alert(error.response?.data?.message || "회원가입에 실패했습니다.");
+      alert(error.response?.data?.message || '회원가입에 실패했습니다.');
     }
   };
 
@@ -74,26 +74,26 @@ const SignupPage = () => {
     const isFormatValid = idRule.regex.test(idValue);
 
     if (!idValue || !isFormatValid) {
-      alert("올바른 아이디 형식을 먼저 입력해주세요.");
+      alert('올바른 아이디 형식을 먼저 입력해주세요.');
       return;
     }
     try {
-      const response = await axiosInstance.post("/user/user/dup", idValue, {
+      const response = await axiosInstance.post('/user/user/dup', idValue, {
         headers: {
-          "Content-Type": "text/plain",
+          'Content-Type': 'text/plain',
         },
       });
       if (response.data === true) {
         setIsIdAvailable(true);
         setStatusMessages((prev) => ({
           ...prev,
-          loginId: "사용 가능한 아이디입니다!",
+          loginId: '사용 가능한 아이디입니다!',
         }));
       } else {
         setIsIdAvailable(false);
         setStatusMessages((prev) => ({
           ...prev,
-          loginId: "이미 사용 중인 아이디입니다.",
+          loginId: '이미 사용 중인 아이디입니다.',
         }));
       }
     } catch (error) {
@@ -102,20 +102,20 @@ const SignupPage = () => {
       if (error.response?.status === 409) {
         setStatusMessages((prev) => ({
           ...prev,
-          loginId: "이미 사용 중인 아이디입니다.",
+          loginId: '이미 사용 중인 아이디입니다.',
         }));
       } else {
         setStatusMessages((prev) => ({
           ...prev,
-          loginId: serverMessage || "중복 확인 중 오류가 발생했습니다.",
+          loginId: serverMessage || '중복 확인 중 오류가 발생했습니다.',
         }));
       }
     }
   };
 
   const isAllValid =
-    Object.values(formData).every((val) => val.trim() !== "") &&
-    confirmPassword !== "" &&
+    Object.values(formData).every((val) => val.trim() !== '') &&
+    confirmPassword !== '' &&
     formData.password === confirmPassword &&
     isIdAvailable;
 
@@ -152,16 +152,16 @@ const SignupPage = () => {
                     onClick={handleCheckDuplicate}
                     disabled={
                       !formData.loginId ||
-                      (!!statusMessages.loginId.includes("가능") === false &&
-                        statusMessages.loginId !== "")
+                      (!!statusMessages.loginId.includes('가능') === false &&
+                        statusMessages.loginId !== '')
                     }
                     className={`px-4 font-bold rounded-xl whitespace-nowrap transition-all text-sm h-full ${
                       isIdAvailable
-                        ? "bg-text-disabled text-bg-main cursor-default" /* 확인됨: 회색 배경 */
-                        : "bg-primary-500 text-neutral-950 hover:bg-primary-600 cursor-pointer" /* 중복확인: 노랑 배경 */
+                        ? 'bg-text-disabled text-bg-main cursor-default' /* 확인됨: 회색 배경 */
+                        : 'bg-primary-500 text-neutral-950 hover:bg-primary-600 cursor-pointer' /* 중복확인: 노랑 배경 */
                     }`}
                   >
-                    {isIdAvailable ? "확인됨" : "중복확인"}
+                    {isIdAvailable ? '확인됨' : '중복확인'}
                   </button>
                 }
               />
@@ -185,9 +185,9 @@ const SignupPage = () => {
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder="비밀번호를 다시 입력해주세요"
           message={
-            formData.password !== confirmPassword && confirmPassword !== ""
-              ? "비밀번호가 일치하지 않습니다."
-              : ""
+            formData.password !== confirmPassword && confirmPassword !== ''
+              ? '비밀번호가 일치하지 않습니다.'
+              : ''
           }
         />
         <Input
@@ -216,8 +216,8 @@ const SignupPage = () => {
           disabled={!isAllValid}
           className={`mt-6 w-full font-bold py-3.5 rounded-xl transition-all duration-300 ${
             isAllValid
-              ? "bg-primary-500 text-neutral-950 hover:bg-primary-600 shadow-lg cursor-pointer"
-              : "bg-text-disabled text-text-sub opacity-50 cursor-not-allowed"
+              ? 'bg-primary-500 text-neutral-950 hover:bg-primary-600 shadow-lg cursor-pointer'
+              : 'bg-text-disabled text-text-sub opacity-50 cursor-not-allowed'
           }`}
         >
           회원가입
@@ -225,7 +225,7 @@ const SignupPage = () => {
       </div>
 
       <div className="mt-6 text-center text-sm text-text-sub">
-        계정이 이미 존재하나요?{" "}
+        계정이 이미 존재하나요?{' '}
         <Link
           to="/"
           className="text-text-primary font-bold cursor-pointer hover:underline"

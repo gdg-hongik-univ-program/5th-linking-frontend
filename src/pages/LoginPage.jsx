@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import axiosInstance from "../api/axiosInstance";
-import Input from "../components/common/Input";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import axiosInstance from '../api/axiosInstance';
+import Input from '../components/common/Input';
 
 function LoginPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    loginId: "",
-    password: "",
+    loginId: '',
+    password: '',
   });
 
   const handleChange = (e) => {
@@ -21,18 +21,19 @@ function LoginPage() {
 
   const handleLogin = async () => {
     if (!formData.loginId || !formData.password) {
-      alert("아이디와 비밀번호를 모두 입력해주세요.");
+      alert('아이디와 비밀번호를 모두 입력해주세요.');
       return;
     }
 
     try {
-      const response = await axiosInstance.post("/user/sign-in", formData);
-      console.log("로그인 성공", response.data);
-      alert("로그인에 성공했습니다!");
-      navigate("/home");
+      const response = await axiosInstance.post('/user/sign-in', formData);
+      console.log('로그인 성공', response.data);
+      alert('로그인에 성공했습니다!');
+      navigate('/home');
     } catch (error) {
-      console.error("로그인 실패:", error);
-      const errorMessage = error.response?.data?.message || "아이디 또는 비밀번호를 확인해주세요.";
+      console.error('로그인 실패:', error);
+      const errorMessage =
+        error.response?.data?.message || '아이디 또는 비밀번호를 확인해주세요.';
       alert(errorMessage);
     }
   };
@@ -40,7 +41,7 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main">
       <div className="mb-10 text-center flex flex-col items-center">
-        <img 
+        <img
           src="/linking.svg"
           alt="main logo"
           width="80"
@@ -81,9 +82,11 @@ function LoginPage() {
       </div>
 
       <div className="mt-6 text-center text-sm text-text-sub">
-        계정이 없으신가요?{" "}
-        <Link to="/signup" 
-          className="text-text-primary font-bold cursor-pointer hover:underline">
+        계정이 없으신가요?{' '}
+        <Link
+          to="/signup"
+          className="text-text-primary font-bold cursor-pointer hover:underline"
+        >
           회원가입
         </Link>
       </div>
