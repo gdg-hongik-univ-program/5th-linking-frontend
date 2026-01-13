@@ -23,14 +23,14 @@ const SignupPage = () => {
     nickName: "",
   });
 
-  //유효성 검사 함수
+  // 유효성 검사 함수
   const validate = (name, value) => {
     let message = "";
     const rule = VALIDATION[name];
 
     if (rule) {
       const isValid = rule.regex ? rule.regex.test(value) : rule.test(value);
-      if (!value) message = ""; // 비어있을 땐 메시지 없음
+      if (!value) message = ""; 
       else if (!isValid) {
         message = rule.error;
       } else {
@@ -54,8 +54,6 @@ const SignupPage = () => {
     if (name === "loginId") {
       setIsIdAvailable(false);
     }
-
-    if (name === "password") validate("confirmPassword", confirmPassword);
   };
 
   const handleSignup = async () => {
@@ -100,9 +98,7 @@ const SignupPage = () => {
       }
     } catch (error) {
       setIsIdAvailable(false);
-
       const serverMessage = error.response?.data?.message;
-
       if (error.response?.status === 409) {
         setStatusMessages((prev) => ({
           ...prev,
@@ -118,15 +114,14 @@ const SignupPage = () => {
   };
 
   const isAllValid =
-    Object.values(formData).every((val) => val.trim() !== "") && // 모든 필드가 채워짐
+    Object.values(formData).every((val) => val.trim() !== "") &&
     confirmPassword !== "" &&
-    formData.password === confirmPassword && // 비밀번호 채워짐 + 확인과 일치
+    formData.password === confirmPassword &&
     isIdAvailable;
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-6 bg-brand-bg">
+    <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main">
       <div className="mb-5 text-center flex flex-col items-center">
-        {/* 로고 이미지 */}
         <img
           src="linking.svg"
           alt="main logo"
@@ -134,9 +129,7 @@ const SignupPage = () => {
           height="60"
           className="block"
         />
-
-        {/* 로고 텍스트 */}
-        <h1 className="text-3xl font-bold text-brand-key mb-2 font-logo tracking-tight">
+        <h1 className="text-3xl font-bold text-text-primary mb-2 font-logo tracking-tight">
           Linking
         </h1>
       </div>
@@ -162,10 +155,10 @@ const SignupPage = () => {
                       (!!statusMessages.loginId.includes("가능") === false &&
                         statusMessages.loginId !== "")
                     }
-                    className={`px-4 font-bold rounded-xl whitespace-nowrap transition-all text-sm ${
+                    className={`px-4 font-bold rounded-xl whitespace-nowrap transition-all text-sm h-full ${
                       isIdAvailable
-                        ? "bg-brand-text-disabled text-brand-bg cursor-default"
-                        : "bg-brand-key text-brand-bg hover:opacity-90"
+                        ? "bg-text-disabled text-bg-main cursor-default" /* 확인됨: 회색 배경 */
+                        : "bg-primary-500 text-neutral-950 hover:bg-primary-600 cursor-pointer" /* 중복확인: 노랑 배경 */
                     }`}
                   >
                     {isIdAvailable ? "확인됨" : "중복확인"}
@@ -175,6 +168,7 @@ const SignupPage = () => {
             </div>
           </div>
         </div>
+
         <Input
           label="비밀번호"
           type="password"
@@ -222,19 +216,19 @@ const SignupPage = () => {
           disabled={!isAllValid}
           className={`mt-6 w-full font-bold py-3.5 rounded-xl transition-all duration-300 ${
             isAllValid
-              ? "bg-brand-key text-brand-bg hover:opacity-90 shadow-lg cursor-pointer"
-              : "bg-brand-text-disabled text-brand-text-sub opacity-50 cursor-not-allowed"
+              ? "bg-primary-500 text-neutral-950 hover:bg-primary-600 shadow-lg cursor-pointer"
+              : "bg-text-disabled text-text-sub opacity-50 cursor-not-allowed"
           }`}
         >
           회원가입
         </button>
       </div>
 
-      <div className="mt-6 text-center text-sm text-brand-text-sub">
+      <div className="mt-6 text-center text-sm text-text-sub">
         계정이 이미 존재하나요?{" "}
         <Link
           to="/"
-          className="text-brand-key font-bold cursor-pointer hover:underline"
+          className="text-text-primary font-bold cursor-pointer hover:underline"
         >
           로그인
         </Link>
