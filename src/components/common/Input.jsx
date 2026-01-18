@@ -40,7 +40,7 @@ function Input({
   message,
   rightElement,
 }) {
-  const isSuccess = message?.includes('가능');
+  const isSuccess = message?.includes('가능') || message?.includes('일치');
 
   return (
     <div className="flex flex-col gap-1 w-full">
