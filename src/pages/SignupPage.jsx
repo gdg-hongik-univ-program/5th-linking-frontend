@@ -78,11 +78,7 @@ const SignupPage = () => {
       return;
     }
     try {
-      const response = await axiosInstance.post('/user/user/dup', idValue, {
-        headers: {
-          'Content-Type': 'text/plain',
-        },
-      });
+      const response = await axiosInstance.post('/user/dup', formData);
       if (response.data === true) {
         setIsIdAvailable(true);
         setStatusMessages((prev) => ({
@@ -139,13 +135,12 @@ const SignupPage = () => {
           <div className="flex items-end gap-2">
             <div className="flex-1">
               <Input
-                label="아이디"
                 type="text"
                 name="loginId"
                 value={formData.loginId}
                 onChange={handleChange}
                 message={statusMessages.loginId}
-                placeholder="아이디를 입력해주세요"
+                placeholder="아이디 입력"
                 rightElement={
                   <button
                     type="button"
@@ -155,10 +150,10 @@ const SignupPage = () => {
                       (!!statusMessages.loginId.includes('가능') === false &&
                         statusMessages.loginId !== '')
                     }
-                    className={`px-4 font-bold rounded-xl whitespace-nowrap transition-all text-sm h-full ${
+                    className={`px-4 w-24 h-12 bg-neutral-500 rounded-[99px] font-bold whitespace-nowrap transition-all text-sm h-full ${
                       isIdAvailable
-                        ? 'bg-text-disabled text-bg-main cursor-default' /* 확인됨: 회색 배경 */
-                        : 'bg-primary-500 text-neutral-950 hover:bg-primary-600 cursor-pointer' /* 중복확인: 노랑 배경 */
+                        ? 'bg-text-disabled text-bg-main cursor-default'
+                        : 'bg-primary-500 text-neutral-950 hover:bg-primary-600 cursor-pointer'
                     }`}
                   >
                     {isIdAvailable ? '확인됨' : '중복확인'}
@@ -170,51 +165,49 @@ const SignupPage = () => {
         </div>
 
         <Input
-          label="비밀번호"
           type="password"
           value={formData.password}
           onChange={handleChange}
           name="password"
           message={statusMessages.password}
-          placeholder="비밀번호를 입력해주세요"
+          placeholder="비밀번호 입력"
         />
         <Input
-          label="비밀번호 확인"
           type="password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          placeholder="비밀번호를 다시 입력해주세요"
+          placeholder="비밀번호 확인"
           message={
-            formData.password !== confirmPassword && confirmPassword !== ''
-              ? '비밀번호가 일치하지 않습니다.'
-              : ''
+            confirmPassword.length === 0
+              ? ''
+              : formData.password === confirmPassword
+                ? '비밀번호가 일치합니다!'
+                : '비밀번호가 일치하지 않습니다.'
           }
         />
         <Input
-          label="이메일"
           type="text"
           value={formData.email}
           onChange={handleChange}
           name="email"
           message={statusMessages.email}
-          placeholder="이메일을 입력해주세요"
+          placeholder="이메일 입력"
         />
 
         <Input
-          label="닉네임"
           type="text"
           value={formData.nickName}
           onChange={handleChange}
           name="nickName"
           message={statusMessages.nickName}
-          placeholder="닉네임을 입력해주세요"
+          placeholder="닉네임 입력"
         />
 
         <button
           type="button"
           onClick={handleSignup}
           disabled={!isAllValid}
-          className={`mt-6 w-full font-bold py-3.5 rounded-xl transition-all duration-300 ${
+          className={`mt-6 w-full font-bold py-3.5 w-80 h-12 bg-neutral-500 rounded-[99px] transition-all duration-300 ${
             isAllValid
               ? 'bg-primary-500 text-neutral-950 hover:bg-primary-600 shadow-lg cursor-pointer'
               : 'bg-text-disabled text-text-sub opacity-50 cursor-not-allowed'
