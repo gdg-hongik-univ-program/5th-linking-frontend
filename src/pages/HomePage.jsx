@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-//import { Bell, Search } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import SearchBar from '../components/common/SearchBar';
 import QuickActionBar from '../components/common/QuickActionBar';
 
@@ -37,14 +37,11 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-bg-main text-text-main flex flex-col font-family-sans">
-      {/* 헤더: 홈 타이틀 & 알림 아이콘 */}
       <header className="flex items-center justify-between px-6 py-6">
         <h1 className="text-3xl font-semibold font-family-logo">홈</h1>
-        {/* 알림 버튼
-                <button className="p-1 hover:bg-bg-nav rounded-full transition-colors">
+        <button className="p-1 hover:bg-bg-nav rounded-full transition-colors">
           <Bell className="w-6 h-6" />
         </button>
-        */}
       </header>
 
       <main className="flex-1 px-6 py-3 flex flex-col gap-4 overflow-y-auto pb-24">
