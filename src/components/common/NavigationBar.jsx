@@ -1,17 +1,21 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HomeIcon from '../../assets/home.svg?react';
 import ScheduleIcon from '../../assets/schedule.svg?react';
 import StorageIcon from '../../assets/storage.svg?react';
 import ProfileIcon from '../../assets/profile.svg?react';
 
-function Navbar() {
+function NavigationBar() {
   const location = useLocation();
+  const navigate = useNavigate();
+
   const isActive = (path) => location.pathname === path;
-
   const linkStyle = 'flex flex-col items-center gap-1 w-12 p-2 min-h-[48px]';
-
   const iconStyle = (path) =>
     `w-6 h-6 fill-current ${isActive(path) ? 'text-text-main' : 'text-text-disabled'}`;
+
+  const handleCreateClick = () => {
+    navigate('/create');
+  };
 
   return (
     <nav className="fixed bottom-0 w-full max-w-[390px] h-[65px] py-2 bg-bg-nav border-t border-border-default z-50">
@@ -28,7 +32,11 @@ function Navbar() {
 
         {/* 중앙 플로팅 버튼 */}
         <div className="absolute left-1/2 -translate-x-1/2 -top-4">
-          <button className="w-14 h-14 bg-primary-500 rounded-full flex justify-center items-center shadow-[0_0_20px_rgba(234,190,47,0.5)] hover:shadow-[0_0_30px_rgba(234,190,47,0.7)] active:scale-95 active:shadow-lg transition-all duration-200 border-0 outline-none">
+          <button
+            type="button"
+            onClick={handleCreateClick}
+            className="w-14 h-14 bg-primary-500 rounded-full flex justify-center items-center shadow-[0_0_20px_rgba(234,190,47,0.5)] hover:shadow-[0_0_30px_rgba(234,190,47,0.7)] active:scale-95 active:shadow-lg transition-all duration-200 border-0 outline-none"
+          >
             <svg
               width="24"
               height="24"
@@ -68,4 +76,4 @@ function Navbar() {
   );
 }
 
-export default Navbar;
+export default NavigationBar;

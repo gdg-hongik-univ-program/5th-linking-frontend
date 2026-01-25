@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bell, Pencil, Trash2 } from 'lucide-react';
-import { useEffect } from 'react';
 import { getItems } from '../api/itemApi';
 import SearchBar from '../components/common/SearchBar';
 import QuickActionBar from '../components/common/QuickActionBar';
@@ -79,7 +78,7 @@ export default function HomePage() {
   }, []);
 */
   return (
-    <div className="min-h-screen bg-bg-main text-text-main flex flex-col font-family-sans">
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
       <header className="flex items-center justify-between px-6 py-6">
         <h1 className="text-3xl font-semibold font-family-logo">홈</h1>
         <button className="p-1 hover:bg-bg-nav rounded-full transition-colors">

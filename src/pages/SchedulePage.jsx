@@ -1,11 +1,11 @@
-const CalendarPage = () => {
+const SchedulePage = () => {
   return (
     <div className="p-6 bg-bg-main min-h-full">
-      <h1 className="text-2xl font-bold text-text-main mb-4"> 캘린더 </h1>
-      <p className="text-text-sub">캘린더 기능 구현 예정</p>
+      <h1 className="text-2xl font-bold text-text-main mb-4">일정</h1>
+      <p className="text-text-sub">일정 기능 구현 예정</p>
       <div className="mt-6 space-y-4"></div>
     </div>
   );
 };
 
-export default CalendarPage;
+export default SchedulePage;

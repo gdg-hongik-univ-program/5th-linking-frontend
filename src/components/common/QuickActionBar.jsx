@@ -29,7 +29,7 @@ export default function QuickActionBar() {
                 className="flex flex-col items-center gap-[5px] group outline-none"
               >
                 <Icon
-                  size={24}
+                  size={18}
                   strokeWidth="2"
                   className={`transition-colors ${
                     isActive

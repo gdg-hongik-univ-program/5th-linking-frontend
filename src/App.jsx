@@ -1,30 +1,34 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import HomePage from './pages/HomePage';
-import Layout from './components/layout/Layout';
 import SignupPage from './pages/SignupPage';
-import DeadlinePage from './pages/DeadlinePage';
-import TrashPage from './pages/TrashPage';
-import ProfilePage from './pages/ProfilePage';
+import Layout from './components/layout/Layout';
+import HomePage from './pages/HomePage';
 import SchedulePage from './pages/SchedulePage';
-import ImportantPage from './pages/ImportantPage';
-import CleanUpPage from './pages/CleanUpPage';
 import StoragePage from './pages/StoragePage';
+import ProfilePage from './pages/ProfilePage';
+import UpcomingLinksPage from './pages/UpcomingLinksPage';
+import ImportantLinksPage from './pages/ImportantLinksPage';
+import StaleLinksPage from './pages/StaleLinksPage';
+import TrashPage from './pages/TrashPage';
+import LinkEditorPage from './pages/LinkEditorPage';
 
 function App() {
   return (
-    <div className="min-h-screen bg-neutral-950 flex justify-center items-center font-family-sans">
-      <div className="w-full max-w-[390px] min-h-screen bg-bg-main shadow-2xl overflow-hidden relative border-x border-neutral-800">
+    <div className="h-screen bg-neutral-950 grid place-items-center font-family-sans">
+      <div className="w-full max-w-[390px] h-full bg-bg-main shadow-2xl overflow-hidden relative border-x border-neutral-800">
         <Routes>
+          {/* NavBar 없는 페이지들 */}
           <Route path="/" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/create" element={<LinkEditorPage />} />
 
+          {/* NavBar 포함 레이아웃 */}
           <Route element={<Layout />}>
             <Route path="/home" element={<HomePage />} />
 
-            <Route path="/deadline" element={<DeadlinePage />} />
-            <Route path="/important" element={<ImportantPage />} />
-            <Route path="/cleanup" element={<CleanUpPage />} />
+            <Route path="/deadline" element={<UpcomingLinksPage />} />
+            <Route path="/important" element={<ImportantLinksPage />} />
+            <Route path="/cleanup" element={<StaleLinksPage />} />
             <Route path="/trash" element={<TrashPage />} />
 
             <Route path="/schedule" element={<SchedulePage />} />
