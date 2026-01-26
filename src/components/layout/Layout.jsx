@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import Navbar from '../common/Navbar';
+import NavigationBar from '../common/NavigationBar';
 
 function Layout() {
   return (
@@ -7,9 +7,7 @@ function Layout() {
       <div className="flex-1 overflow-y-auto pb-16">
         <Outlet />
       </div>
-
-      {/* 네비게이션 바 */}
-      <Navbar />
+      <NavigationBar />
     </div>
   );
 }
