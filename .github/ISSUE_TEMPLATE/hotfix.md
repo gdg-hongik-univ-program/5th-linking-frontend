@@ -1,8 +1,10 @@
 ---
-name: 🐛HotFix
+name: "\U0001F41BHotFix"
 about: 치명적인 버그
 title: 'hotfix: '
-labels: 'hotfix'
+labels: ''
+assignees: ''
+
 ---
 
 ## Description

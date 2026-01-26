@@ -1,8 +1,10 @@
 ---
-name: 🐝 Fix
+name: "\U0001F41D Fix"
 about: 트러블 슈팅
 title: 'fix: '
-labels: 'fix'
+labels: ''
+assignees: ''
+
 ---
 
 ## Description

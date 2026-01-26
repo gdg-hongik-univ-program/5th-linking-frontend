@@ -1,8 +1,10 @@
 ---
-name: 👔 Style
+name: "\U0001F454 Style"
 about: 디자인적인 요소 변경
 title: 'style: '
-labels: 'style'
+labels: ''
+assignees: ''
+
 ---
 
 ## Description
