@@ -1,8 +1,10 @@
 ---
-name: 📋 Documentation
+name: "\U0001F4CB Documentation"
 about: 문서화를 해야합니다.
 title: 'docs: '
-labels: 'documentation'
+labels: documentation
+assignees: ''
+
 ---
 
 ## Description

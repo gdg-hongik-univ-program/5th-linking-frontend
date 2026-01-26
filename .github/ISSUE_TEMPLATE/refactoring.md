@@ -1,8 +1,10 @@
 ---
-name: 🔧 Refactoring
+name: "\U0001F527 Refactoring"
 about: 리팩토링
 title: 'refactoring: '
-labels: 'refactoring'
+labels: ''
+assignees: ''
+
 ---
 
 ## Description
