@@ -54,8 +54,8 @@ function LoginPage() {
       </div>
 
       <div className="space-y-4">
+        {/* label 속성을 제거했습니다 */}
         <Input
-          label="아이디"
           type="text"
           name="loginId"
           value={formData.loginId}
@@ -63,8 +63,8 @@ function LoginPage() {
           placeholder="아이디를 입력해주세요"
         />
 
+        {/* label 속성을 제거했습니다 */}
         <Input
-          label="비밀번호"
           type="password"
           name="password"
           value={formData.password}
@@ -75,7 +75,8 @@ function LoginPage() {
         <button
           type="button"
           onClick={handleLogin}
-          className="mt-6 w-full bg-primary-500 text-neutral-950 font-bold py-3.5 rounded-xl hover:bg-primary-600 transition-colors cursor-pointer"
+          /* rounded-xl -> rounded-full로 변경하여 타원형으로 만듦 */
+          className="mt-6 w-full bg-primary-500 text-neutral-950 font-bold py-3.5 rounded-full hover:bg-primary-600 transition-colors cursor-pointer"
         >
           로그인
         </button>
