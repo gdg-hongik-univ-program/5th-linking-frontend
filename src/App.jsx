@@ -22,16 +22,16 @@ function App() {
           <Route path="/" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/create" element={<LinkEditorPage />} />
-          <Route path="/link/:id" element={<LinkViewerPage />} />
+          <Route path="/edit/:itemId" element={<LinkEditorPage />} />
+          <Route path="/link/:itemId" element={<LinkViewerPage />} />
+
           {/* NavBar 포함 레이아웃 */}
           <Route element={<Layout />}>
             <Route path="/home" element={<HomePage />} />
-
             <Route path="/deadline" element={<UpcomingLinksPage />} />
             <Route path="/important" element={<ImportantLinksPage />} />
             <Route path="/cleanup" element={<StaleLinksPage />} />
             <Route path="/trash" element={<TrashPage />} />
-
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/storage" element={<StoragePage />} />
             <Route path="/profile" element={<ProfilePage />} />

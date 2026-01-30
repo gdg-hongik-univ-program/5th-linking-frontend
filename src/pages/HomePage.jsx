@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Bell, Pencil, Trash2 } from 'lucide-react';
 import { getItems } from '../api/itemApi';
 import SearchBar from '../components/common/SearchBar';
@@ -12,12 +13,15 @@ export default function HomePage() {
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchLinks = async () => {
       try {
         const data = await getItems();
         setLinks(data);
       } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -25,6 +29,10 @@ export default function HomePage() {
 
     fetchLinks();
   }, []);
+
+  const handleItemClick = (itemId) => {
+    navigate(`/link/${itemId}`);
+  };
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
@@ -57,11 +65,17 @@ export default function HomePage() {
                     rightAction={
                       <SwipeActionButton
                         type="delete"
+                        // handleDelete가 정의되어 있다고 가정
                         onClick={() => handleDelete(link.itemId)}
                       />
                     }
                   >
-                    <LinkCard link={link} />
+                    <div
+                      onClick={() => handleItemClick(link.itemId)}
+                      className="cursor-pointer"
+                    >
+                      <LinkCard link={link} />
+                    </div>
                   </SwipeableWrapper>
                 ))}
               </div>
