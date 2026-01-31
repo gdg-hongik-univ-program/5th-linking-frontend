@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import PageHeader from '../components/common/PageHeader';
+import IconButton from '../components/common/IconButton';
 import BottomSheet from '../components/common/BottomSheet';
 import {
-  ArrowLeft,
   Star,
   MoreHorizontal,
   PenLine,
   ExternalLink,
-  Link as LinkIcon, // 아이콘 추가
+  Link as LinkIcon,
 } from 'lucide-react';
 
 const LinkViewerPage = () => {
@@ -27,26 +28,23 @@ const LinkViewerPage = () => {
     createdAt: '',
   });
 
-  const [connectedLinks, setConnectedLinks] = useState([]); // 연결된 링크 상태
+  const [connectedLinks, setConnectedLinks] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // 데이터 불러오기
   useEffect(() => {
     const fetchLinkDetail = async () => {
       setLoading(true);
       const targetId = itemId || 23;
 
       try {
-        // 1. 아이템 상세 정보 조회
         const response = await axiosInstance.get(`/item/${targetId}`);
         setData(response.data);
 
-        // 2. 연결된 링크 목록 조회 (병렬 처리 권장하지만, 에러 핸들링 위해 분리 가능)
         try {
           const connectedRes = await axiosInstance.get(
             `/item/link/${targetId}`,
           );
-
-          // ⭐ [핵심] ID가 유효한 데이터만 필터링 (서버 오류 방어)
           const validLinks = connectedRes.data.filter(
             (item) => (item.itemId || item.id) && item.itemId !== 0,
           );
@@ -71,12 +69,11 @@ const LinkViewerPage = () => {
     navigate(`/edit/${data.itemId || itemId || 23}`, { state: { data } });
   };
 
-  // --- 연결된 링크 클릭 시 이동 핸들러 ---
   const handleLinkClick = (linkId) => {
-    // 현재 페이지를 스택에 쌓고 이동
     navigate(`/link/${linkId}`);
   };
 
+  // 날짜 포맷팅 함수
   const formatDateParts = (dateString) => {
     if (!dateString) return { year: '', month: '', day: '' };
     const dateObj = new Date(dateString);
@@ -93,6 +90,7 @@ const LinkViewerPage = () => {
   const hasDate = year && month && day;
   const hasTags = data.tags && data.tags.length > 0;
 
+  // 유튜브 ID 추출 함수
   const getYoutubeId = (url) => {
     if (!url) return null;
     const regExp =
@@ -109,54 +107,32 @@ const LinkViewerPage = () => {
 
   return (
     <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
-      {/* 헤더 */}
-      <header className="flex items-center justify-between px-4 py-3 z-10 shrink-0">
-        <button
-          className="p-3 -ml-2 hover:bg-bg-nav rounded-full transition active:scale-95"
-          type="button"
-          onClick={() => navigate(-1)}
+      <PageHeader>
+        <IconButton icon={PenLine} onClick={handleEdit} aria-label="수정하기" />
+        <div
+          className="p-3 flex items-center justify-center cursor-default"
+          aria-label="중요도 표시"
         >
-          <ArrowLeft size={24} className="text-text-main" />
-        </button>
-
-        <div className="flex items-center gap-1">
-          <button
-            onClick={handleEdit}
-            className="p-3 hover:bg-bg-nav rounded-full transition group active:scale-95"
-          >
-            <PenLine
-              size={24}
-              className="text-text-main group-hover:text-primary-500 transition-colors"
-            />
-          </button>
-
-          <div className="p-3 cursor-default">
-            <Star
-              size={24}
-              className={`transition-colors duration-200 ${
-                data.importance
-                  ? 'text-primary-500 fill-primary-500'
-                  : 'text-neutral-600'
-              }`}
-            />
-          </div>
-
-          <button className="p-3 -mr-2 hover:bg-bg-nav rounded-full transition active:scale-95">
-            <MoreHorizontal size={24} className="text-text-main" />
-          </button>
+          <Star
+            size={24}
+            className={`transition-colors duration-200 ${
+              data.importance
+                ? 'text-primary-500 fill-primary-500'
+                : 'text-neutral-600'
+            }`}
+          />
         </div>
-      </header>
 
-      {/* 바디 */}
-      <main className="flex-1 px-5 pt-2 pb-40 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-        {/* Title */}
+        <IconButton icon={MoreHorizontal} aria-label="더보기" />
+      </PageHeader>
+
+      <main className="flex-1 px-6 pt-2 pb-40 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
         <div className="w-full bg-transparent text-2xl font-bold text-text-main shrink-0 py-1 leading-normal break-keep">
           {data.title || <span className="text-text-disabled">제목 없음</span>}
         </div>
 
-        {/* 메타 정보 컨테이너 */}
         <div className="flex flex-col gap-3 shrink-0">
-          {/* URL Row */}
+          {/* URL */}
           <div className="flex items-center min-h-[40px]">
             <label className="w-20 text-text-sub text-sm font-medium shrink-0">
               URL
@@ -172,7 +148,6 @@ const LinkViewerPage = () => {
                   >
                     {data.url}
                   </a>
-
                   <a
                     href={data.url}
                     target="_blank"
@@ -188,7 +163,7 @@ const LinkViewerPage = () => {
             </div>
           </div>
 
-          {/* Deadline Row */}
+          {/* 마감일 */}
           <div className="flex items-center min-h-[40px]">
             <label className="w-20 text-text-sub text-sm font-medium shrink-0">
               마감일
@@ -204,7 +179,6 @@ const LinkViewerPage = () => {
                     </div>
                     <span className={`text-base ${getColor(year)}`}>년</span>
                   </div>
-
                   <div className="flex items-center mr-1">
                     <div
                       className={`w-6 bg-transparent text-base text-right ${getColor(month)}`}
@@ -213,7 +187,6 @@ const LinkViewerPage = () => {
                     </div>
                     <span className={`text-base ${getColor(month)}`}>월</span>
                   </div>
-
                   <div className="flex items-center mr-auto">
                     <div
                       className={`w-6 bg-transparent text-base text-right ${getColor(day)}`}
@@ -231,12 +204,11 @@ const LinkViewerPage = () => {
             </div>
           </div>
 
-          {/* Tags Row */}
+          {/* 태그 */}
           <div className="flex min-h-[40px] items-center">
             <label className="w-20 text-text-sub text-sm font-medium shrink-0">
               태그
             </label>
-
             <div className="flex-1 flex flex-wrap gap-2">
               {hasTags ? (
                 data.tags.map((tag, index) => (
@@ -253,7 +225,7 @@ const LinkViewerPage = () => {
             </div>
           </div>
 
-          {/* Location Row */}
+          {/* 위치 */}
           <div className="flex items-center min-h-[40px]">
             <label className="w-20 text-text-sub text-sm font-medium shrink-0">
               위치
@@ -268,7 +240,7 @@ const LinkViewerPage = () => {
           </div>
         </div>
 
-        {/* Video Player Section */}
+        {/* 유튜브 플레이어 */}
         {videoId && (
           <div className="w-full shrink-0 rounded-xl overflow-hidden bg-black aspect-video relative mb-6">
             <iframe
@@ -282,7 +254,7 @@ const LinkViewerPage = () => {
           </div>
         )}
 
-        {/* Memo Area */}
+        {/* 메모 */}
         <div
           className={`w-full flex-1 min-h-[200px] bg-transparent text-base leading-loose py-2 resize-none whitespace-pre-wrap ${data.memo ? 'text-text-main' : 'text-text-disabled'}`}
         >
@@ -290,7 +262,7 @@ const LinkViewerPage = () => {
         </div>
       </main>
 
-      {/* ▼▼▼ 바텀시트: 연결된 링크 표시 ▼▼▼ */}
+      {/* 바텀시트 */}
       <BottomSheet title="연결된 링크" count={`${displayCount}개 연결됨`}>
         <div className="flex flex-col h-full mt-2">
           {displayCount > 0 ? (
@@ -306,7 +278,6 @@ const LinkViewerPage = () => {
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800">
                       <LinkIcon size={18} className="text-text-sub" />
                     </div>
-
                     <div className="flex-1 overflow-hidden">
                       <div className="font-medium text-sm text-text-main truncate">
                         {item.title || '제목 없음'}
@@ -315,7 +286,6 @@ const LinkViewerPage = () => {
                         {item.url || 'URL 없음'}
                       </div>
                     </div>
-
                     <div className="p-2 text-text-sub">
                       <ExternalLink size={16} />
                     </div>

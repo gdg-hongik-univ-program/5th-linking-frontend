@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
+import PageHeader from '../components/common/PageHeader';
+import IconButton from '../components/common/IconButton';
 import BottomSheet from '../components/common/BottomSheet';
 import {
-  ArrowLeft,
   Star,
   MoreHorizontal,
   FolderSearch,
@@ -12,7 +13,7 @@ import {
   Calendar as CalendarIcon,
   XCircle,
   X,
-  Minus, // 연결 해제 아이콘
+  Minus,
 } from 'lucide-react';
 
 const LinkEditorPage = () => {
@@ -26,10 +27,8 @@ const LinkEditorPage = () => {
   const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
 
-  // --- 상태 관리 ---
-  // allLinks, sheetSearch 삭제 (더 이상 필요 없음)
-  const [connectedLinks, setConnectedLinks] = useState([]); // [수정모드] 실제 서버 연결된 링크
-  const [pendingLinks, setPendingLinks] = useState([]); // [생성모드] 임시 선택한 링크
+  const [connectedLinks, setConnectedLinks] = useState([]);
+  const [pendingLinks, setPendingLinks] = useState([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -46,10 +45,9 @@ const LinkEditorPage = () => {
 
   const hasInput = dateParts.year || dateParts.month || dateParts.day;
 
-  // --- 데이터 로딩 ---
+  // 데이터 로딩
   useEffect(() => {
     const loadData = async () => {
-      // 1. 내 데이터 및 연결된 링크 불러오기
       if (itemId) {
         try {
           let currentData = location.state?.data;
@@ -58,6 +56,7 @@ const LinkEditorPage = () => {
             currentData = detailRes.data;
           }
 
+          // 폼 데이터 세팅
           setFormData({
             title: currentData.title || '',
             url: currentData.url || '',
@@ -73,7 +72,6 @@ const LinkEditorPage = () => {
             const connectedRes = await axiosInstance.get(
               `/item/link/${itemId}`,
             );
-            // ID가 유효한 것만 필터링
             const validConnected = connectedRes.data.filter(
               (item) => (item.itemId || item.id) && item.itemId !== 0,
             );
@@ -87,25 +85,48 @@ const LinkEditorPage = () => {
           alert('데이터를 불러오는데 실패했습니다.');
         }
       }
-      // 2. 전체 목록 불러오기 (GET /item) 로직은 삭제했습니다. (500 에러 방지)
     };
     loadData();
   }, [itemId, location.state]);
 
-  // --- 연결 / 해제 핸들러 ---
+  // 마감일이 변경되면 dateParts 업데이트
+  useEffect(() => {
+    if (formData.deadline) {
+      const cleanDate = formData.deadline.split('T')[0];
+      const parts = cleanDate.split('-');
+      if (parts.length === 3) {
+        setDateParts({ year: parts[0], month: parts[1], day: parts[2] });
+      }
+    }
+  }, [formData.deadline]);
+
+  // 날짜 입력 포커스 이동 로직
+  useEffect(() => {
+    if (
+      dateParts.year.length === 4 &&
+      document.activeElement === yearRef.current
+    ) {
+      monthRef.current?.focus();
+    }
+    if (
+      dateParts.month.length === 2 &&
+      document.activeElement === monthRef.current
+    ) {
+      dayRef.current?.focus();
+    }
+  }, [dateParts.year, dateParts.month]);
+
+  // 연결 토글
   const handleConnectToggle = async (targetLink) => {
     const myId = Number(itemId);
     const targetId = Number(targetLink?.itemId || targetLink?.id);
 
-    console.log('연결 토글:', { myId, targetId, targetLink });
-
     if (itemId && (!myId || !targetId)) {
-      console.error('ID가 유효하지 않습니다.', { myId, targetId });
       alert('링크 연결에 필요한 ID 정보가 없습니다.');
       return;
     }
 
-    // [CASE 1] 수정 모드: 즉시 API 호출
+    // 수정 모드
     if (itemId) {
       const isAlreadyConnected = connectedLinks.some(
         (link) => (link.itemId || link.id) === targetId,
@@ -113,33 +134,25 @@ const LinkEditorPage = () => {
 
       try {
         if (isAlreadyConnected) {
-          // [DELETE] 연결 해제
           await axiosInstance.delete('/item/link', {
-            data: {
-              itemId: myId,
-              linkItemId: targetId,
-            },
+            data: { itemId: myId, linkItemId: targetId },
           });
-
           setConnectedLinks((prev) =>
             prev.filter((link) => (link.itemId || link.id) !== targetId),
           );
         } else {
-          // [POST] 연결 생성
           await axiosInstance.post('/item/link', {
             itemId: myId,
             linkItemId: targetId,
           });
-
           setConnectedLinks((prev) => [...prev, targetLink]);
         }
       } catch (error) {
         console.error('연결 상태 변경 실패:', error);
-        const serverMsg = error.response?.data?.message || '알 수 없는 오류';
-        alert(`요청 처리 중 오류가 발생했습니다.\n(${serverMsg})`);
+        alert('요청 처리 중 오류가 발생했습니다.');
       }
     }
-    // [CASE 2] 생성 모드: 로컬 State 관리
+    // 생성 모드
     else {
       const isSelected = pendingLinks.some(
         (link) => (link.itemId || link.id) === targetId,
@@ -154,31 +167,24 @@ const LinkEditorPage = () => {
     }
   };
 
-  // --- ID 직접 입력 연결 핸들러 ---
+  // ID로 연결
   const handleConnectById = async (inputItemId) => {
     const targetId = Number(inputItemId);
     if (!targetId) return;
 
     const currentList = itemId ? connectedLinks : pendingLinks;
-
     if (currentList.some((link) => (link.itemId || link.id) === targetId)) {
       return alert('이미 연결된 링크입니다.');
     }
-
     if (itemId && Number(itemId) === targetId) {
       return alert('자기 자신은 연결할 수 없습니다.');
     }
 
     try {
-      console.log(`ID ${targetId} 조회 시작...`);
       const res = await axiosInstance.get(`/item/${targetId}`);
       const targetItem = res.data;
+      if (!targetItem) throw new Error('아이템 정보 없음');
 
-      if (!targetItem) {
-        throw new Error('아이템 정보가 없습니다.');
-      }
-
-      // itemId 강제 주입
       const safeItem = {
         ...targetItem,
         itemId: targetItem.itemId || targetItem.id || targetId,
@@ -187,13 +193,16 @@ const LinkEditorPage = () => {
       await handleConnectToggle(safeItem);
       alert(`'${targetItem.title || '링크'}'가 연결되었습니다.`);
     } catch (error) {
-      console.error(error);
       alert('해당 ID의 링크를 찾을 수 없거나 연결에 실패했습니다.');
     }
   };
 
-  // --- 저장 핸들러 ---
   const handleSave = async () => {
+    // 제목 필수 입력 체크 로직
+    if (!formData.title.trim()) {
+      return alert('제목을 입력해주세요.');
+    }
+
     if (!formData.folderId) return alert('폴더 ID를 입력해주세요.');
 
     let finalDeadline = null;
@@ -245,37 +254,7 @@ const LinkEditorPage = () => {
     }
   };
 
-  // --- UI 헬퍼 ---
-  // 이제 검색 필터링 없이 바로 연결된 목록만 사용
-  const displayLinks = itemId ? connectedLinks : pendingLinks;
-  const displayCount = displayLinks.length;
-
-  // ... (날짜/태그/UI 렌더링 코드는 기존과 동일) ...
-  useEffect(() => {
-    if (formData.deadline) {
-      const cleanDate = formData.deadline.split('T')[0];
-      const parts = cleanDate.split('-');
-      if (parts.length === 3) {
-        setDateParts({ year: parts[0], month: parts[1], day: parts[2] });
-      }
-    }
-  }, [formData.deadline]);
-
-  useEffect(() => {
-    if (
-      dateParts.year.length === 4 &&
-      document.activeElement === yearRef.current
-    ) {
-      monthRef.current?.focus();
-    }
-    if (
-      dateParts.month.length === 2 &&
-      document.activeElement === monthRef.current
-    ) {
-      dayRef.current?.focus();
-    }
-  }, [dateParts.year, dateParts.month]);
-
+  // UI 핸들러들
   const handleDateChange = (e, part) => {
     const rawValue = e.target.value.replace(/[^0-9]/g, '');
     const maxLength = part === 'year' ? 4 : 2;
@@ -343,42 +322,29 @@ const LinkEditorPage = () => {
 
   const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
 
+  const displayLinks = itemId ? connectedLinks : pendingLinks;
+  const displayCount = displayLinks.length;
+
   return (
     <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
-      <header className="flex items-center justify-between px-4 py-3 z-10 shrink-0">
-        <button
-          className="p-3 -ml-2 hover:bg-bg-nav rounded-full transition active:scale-95"
-          onClick={() => navigate(-1)}
-        >
-          <ArrowLeft size={24} className="text-text-main" />
-        </button>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={handleSave}
-            className="p-3 hover:bg-bg-nav rounded-full transition group active:scale-95"
-          >
-            <Save
-              size={24}
-              className="text-text-main group-hover:text-primary-500 transition-colors"
-            />
-          </button>
-          <button
-            onClick={toggleImportant}
-            className="p-3 hover:bg-bg-nav rounded-full transition active:scale-95"
-          >
-            <Star
-              size={24}
-              className={`transition-colors ${isImportant ? 'text-primary-500 fill-primary-500' : 'text-text-main'}`}
-            />
-          </button>
-          <button className="p-3 -mr-2 hover:bg-bg-nav rounded-full transition active:scale-95">
-            <MoreHorizontal size={24} className="text-text-main" />
-          </button>
-        </div>
-      </header>
+      {/* 헤더 컴포넌트 적용 */}
+      <PageHeader>
+        {/* 수정됨: IconButton 사용 */}
+        <IconButton icon={Save} onClick={handleSave} aria-label="저장하기" />
 
-      <main className="flex-1 px-5 pt-2 pb-40 flex flex-col gap-8 overflow-y-auto scrollbar-hide">
-        {/* 상단 폼 영역 (기존과 동일) */}
+        <IconButton
+          icon={Star}
+          onClick={toggleImportant}
+          color={
+            isImportant ? 'text-primary-500 fill-primary-500' : 'text-text-main'
+          }
+          aria-label="중요도 토글"
+        />
+
+        <IconButton icon={MoreHorizontal} aria-label="더보기" />
+      </PageHeader>
+
+      <main className="flex-1 px-6 pt-2 pb-40 flex flex-col gap-8 overflow-y-auto scrollbar-hide">
         <input
           type="text"
           name="title"
@@ -556,7 +522,6 @@ const LinkEditorPage = () => {
         />
       </main>
 
-      {/* ▼▼▼ 바텀시트 (검색창 제거 & 연결된 목록만 표시) ▼▼▼ */}
       <BottomSheet
         title="연결된 링크"
         count={`${displayCount}개 연결됨`}

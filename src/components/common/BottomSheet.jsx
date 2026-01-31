@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus } from 'lucide-react'; // 아이콘 추가
+import { Plus } from 'lucide-react';
 
 const BottomSheet = ({ title, count, children, onToggle, onConnectById }) => {
   const [isExpanded, setIsExpanded] = useState(false);

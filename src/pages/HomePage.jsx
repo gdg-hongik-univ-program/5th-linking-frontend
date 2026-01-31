@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Pencil, Trash2 } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { getItems } from '../api/itemApi';
+import TabHeader from '../components/common/TabHeader';
+import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
 import QuickActionBar from '../components/common/QuickActionBar';
 import LinkCard from '../components/common/LinkCard';
@@ -34,23 +36,32 @@ export default function HomePage() {
     navigate(`/link/${itemId}`);
   };
 
+  const handleDelete = (id) => console.log('Delete:', id);
+
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
-      <header className="flex items-center justify-between px-6 py-6">
-        <h1 className="text-3xl font-semibold font-family-logo">홈</h1>
-        <button className="p-1 hover:bg-bg-nav rounded-full transition-colors">
-          <Bell className="w-6 h-6" />
-        </button>
-      </header>
+      <TabHeader title="홈">
+        <IconButton
+          icon={Bell}
+          onClick={() => console.log('알림함 클릭')}
+          aria-label="알림함"
+        />
+      </TabHeader>
 
-      <main className="flex-1 px-6 py-3 flex flex-col gap-4 overflow-y-auto pb-24">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} />
-        <div className="flex justify-center shrink-0">
+      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
+        <div className="mb-6">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-center shrink-0 mb-10">
           <QuickActionBar />
         </div>
 
-        <section className="flex flex-col gap-5">
-          <h2 className="text-lg font-bold">최근 저장한 링크</h2>
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold">최근 저장한 링크</h2>
           <div className="flex flex-col divide-y divide-neutral-800">
             {loading ? (
               <div className="text-center py-10 text-text-sub">
@@ -65,7 +76,6 @@ export default function HomePage() {
                     rightAction={
                       <SwipeActionButton
                         type="delete"
-                        // handleDelete가 정의되어 있다고 가정
                         onClick={() => handleDelete(link.itemId)}
                       />
                     }

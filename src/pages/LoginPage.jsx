@@ -19,7 +19,9 @@ function LoginPage() {
     });
   };
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
+
     if (!formData.loginId || !formData.password) {
       alert('아이디와 비밀번호를 모두 입력해주세요.');
       return;
@@ -53,8 +55,7 @@ function LoginPage() {
         </h1>
       </div>
 
-      <div className="space-y-4">
-        {/* label 속성을 제거했습니다 */}
+      <form onSubmit={handleLogin} className="space-y-4">
         <Input
           type="text"
           name="loginId"
@@ -63,7 +64,6 @@ function LoginPage() {
           placeholder="아이디를 입력해주세요"
         />
 
-        {/* label 속성을 제거했습니다 */}
         <Input
           type="password"
           name="password"
@@ -73,14 +73,12 @@ function LoginPage() {
         />
 
         <button
-          type="button"
-          onClick={handleLogin}
-          /* rounded-xl -> rounded-full로 변경하여 타원형으로 만듦 */
+          type="submit"
           className="mt-6 w-full bg-primary-500 text-neutral-950 font-bold py-3.5 rounded-full hover:bg-primary-600 transition-colors cursor-pointer"
         >
           로그인
         </button>
-      </div>
+      </form>
 
       <div className="mt-6 text-center text-sm text-text-sub">
         계정이 없으신가요?{' '}
