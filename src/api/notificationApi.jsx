@@ -1,0 +1,23 @@
+import axiosInstance from './axiosInstance';
+
+export const getNotifications = async () => {
+  try {
+    const response = await axiosInstance.get('/notification');
+    return response.data;
+  } catch (error) {
+    console.error('알림 조회 실패:', error);
+    throw error;
+  }
+};
+
+export const markAsRead = async (notificationId) => {
+  try {
+    const response = await axiosInstance.patch(
+      `/notification/${notificationId}/read`,
+    );
+    return response.data;
+  } catch (error) {
+    console.error('읽음 처리 실패:', error);
+    throw error;
+  }
+};

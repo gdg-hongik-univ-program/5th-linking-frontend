@@ -28,7 +28,7 @@ export default function SwipeActionButton({ type, onClick }) {
   const { icon: Icon, colorClass } = CASE;
 
   return (
-    <div className="z-index: 25">
+    <div className="relative z-25">
       <button
         onClick={(e) => {
           e.stopPropagation();
