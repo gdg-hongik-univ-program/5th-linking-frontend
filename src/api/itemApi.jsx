@@ -7,7 +7,17 @@ export const getItems = async () => {
     });
     return response.data;
   } catch (error) {
-    console.error('아이템 조회 실패:', error);
+    console.error('홈 화면 최근 아이템 조회 실패:', error);
+    throw error;
+  }
+};
+
+export const deleteItem = async (itemId) => {
+  try {
+    const response = await axiosInstance.delete(`/item/${itemId}`);
+    return response.data;
+  } catch (error) {
+    console.error('삭제 실패:', error);
     throw error;
   }
 };
