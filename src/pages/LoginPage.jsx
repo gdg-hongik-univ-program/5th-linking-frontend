@@ -64,6 +64,7 @@ function LoginPage() {
           placeholder="아이디를 입력해주세요"
         />
 
+        {/* label 속성을 제거했습니다 */}
         <Input
           type="password"
           name="password"
