@@ -12,6 +12,7 @@ import StaleLinksPage from './pages/StaleLinksPage';
 import TrashPage from './pages/TrashPage';
 import LinkEditorPage from './pages/LinkEditorPage';
 import LinkViewerPage from './pages/LinkViewerPage';
+import NotificationPage from './pages/NotificationPage';
 
 function App() {
   return (
@@ -23,6 +24,9 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/create" element={<LinkEditorPage />} />
           <Route path="/link/:id" element={<LinkViewerPage />} />
+
+          <Route path="/notification" element={<NotificationPage />} />
+
           {/* NavBar 포함 레이아웃 */}
           <Route element={<Layout />}>
             <Route path="/home" element={<HomePage />} />

@@ -1,78 +1,109 @@
-import React, { useState, useEffect } from 'react';
-import {
-  motion,
-  useMotionValue,
-  animate,
-  useMotionValueEvent,
-} from 'framer-motion';
+import React, { useState, useEffect, useCallback, forwardRef } from 'react';
+import { motion, useMotionValue, animate } from 'framer-motion';
 
-export default function SwipeableWrapper({
-  children,
-  leftAction,
-  rightAction,
-  actionWidth = 80,
-  threshold = 80,
-}) {
-  const x = useMotionValue(0);
-  const [isOpened, setIsOpened] = useState(false);
+const SwipeableWrapper = forwardRef(
+  (
+    {
+      children,
+      itemId,
+      isOpen,
+      onOpen,
+      onClose,
+      leftAction,
+      rightAction,
+      actionWidth = 80,
 
-  useMotionValueEvent(x, 'change', (latest) => {
-    if (Math.abs(latest) >= actionWidth && !isOpened) {
-      setIsOpened(true);
-    } else if (latest === 0 && isOpened) {
-      setIsOpened(false);
-    }
-  });
+      layout,
+      initial,
+      animate: animateProp,
+      exit,
+      transition,
+    },
+    ref,
+  ) => {
+    const x = useMotionValue(0);
+    const [constraints, setConstraints] = useState({
+      left: -actionWidth,
+      right: actionWidth,
+    });
 
-  const closeSwipe = () => {
-    animate(x, 0, { type: 'spring', bounce: 0.3, duration: 0.3 });
-    setIsOpened(false);
-  };
+    useEffect(() => {
+      if (!isOpen && x.get() !== 0) {
+        animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
+      }
+    }, [isOpen, x]);
 
-  const handleDragEnd = (_, info) => {
-    const dragX = info.offset.x;
-    if (dragX < -actionWidth / 1.5) {
-      animate(x, -actionWidth, { type: 'spring', bounce: 0.3 });
-    } else if (dragX > actionWidth / 1.5) {
-      animate(x, actionWidth, { type: 'spring', bounce: 0.3 });
-    } else {
-      closeSwipe();
-    }
-  };
+    const handleDragStart = useCallback(() => {
+      const currentX = x.get();
+      if (currentX > 5) {
+        setConstraints({ left: 0, right: actionWidth });
+      } else if (currentX < -5) {
+        setConstraints({ left: -actionWidth, right: 0 });
+      } else {
+        setConstraints({ left: -actionWidth, right: actionWidth });
+      }
+      onOpen(itemId);
+    }, [actionWidth, itemId, onOpen, x]);
 
-  return (
-    <>
-      {isOpened && (
-        <div
-          className="fixed inset-0 z-10 bg-transparent"
-          onClick={(e) => {
-            e.stopPropagation();
-            closeSwipe();
-          }}
-          onTouchStart={(e) => {
-            e.stopPropagation();
-            closeSwipe();
-          }}
-        />
-      )}
+    const handleDragEnd = (_, info) => {
+      const dragX = x.get();
+      const velocity = info.velocity.x;
+      const springConfig = { type: 'spring', stiffness: 400, damping: 35 };
 
-      <div className="relative overflow-hidden rounded-xl bg-bg-main">
-        <div className="absolute inset-0 flex justify-between items-center px-6 z-20">
-          <motion.div className="flex items-center">{leftAction}</motion.div>
-          <motion.div className="flex items-center">{rightAction}</motion.div>
+      if (dragX < -actionWidth / 2 || velocity < -500) {
+        animate(x, -actionWidth, springConfig);
+        onOpen(itemId);
+      } else if (dragX > actionWidth / 2 || velocity > 500) {
+        animate(x, actionWidth, springConfig);
+        onOpen(itemId);
+      } else {
+        animate(x, 0, { ...springConfig, stiffness: 500 });
+        onClose();
+      }
+    };
+
+    return (
+      <motion.div
+        ref={ref}
+        layout={layout}
+        initial={initial}
+        animate={animateProp}
+        exit={exit}
+        transition={transition}
+        className="relative overflow-hidden rounded-xl bg-bg-main mb-3 select-none shadow-sm"
+      >
+        {/* 배경 버튼 (z-index 20) */}
+        <div className="absolute inset-0 flex items-center justify-between px-6 z-20 pointer-events-none">
+          <div className="pointer-events-auto h-full flex items-center">
+            {leftAction}
+          </div>
+          <div className="pointer-events-auto h-full flex items-center">
+            {rightAction}
+          </div>
         </div>
 
+        {/* 실제 카드 콘텐츠 (z-index 30) */}
         <motion.div
           drag="x"
-          dragConstraints={{ left: -threshold, right: threshold }}
+          onDragStart={handleDragStart}
+          dragConstraints={constraints}
+          dragElastic={0} // 반대쪽 넘어감 방지를 위해 탄성 제거
+          dragMomentum={false}
           style={{ x }}
           onDragEnd={handleDragEnd}
-          onClick={() => isOpened && closeSwipe()}
-          className="relative z-30 bg-bg-main"
+          onClick={(e) => {
+            if (isOpen || Math.abs(x.get()) > 5) {
+              e.stopPropagation();
+              onClose();
+            }
+          }}
+          className="relative z-30 bg-bg-main cursor-grab active:cursor-grabbing will-change-transform"
         >
           {children}
         </motion.div>
-      </div>
-    </>
-  );
-}
+      </motion.div>
+    );
+  },
+);
+
+export default SwipeableWrapper;
