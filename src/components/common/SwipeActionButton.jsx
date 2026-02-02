@@ -1,4 +1,3 @@
-import React from 'react';
 import { Pencil, Trash2, RotateCcw, XCircle } from 'lucide-react';
 
 const BUTTON_CASE = {

@@ -5,34 +5,33 @@ import { getItems } from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import LinkCard from '../components/common/LinkCard';
+import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 
-export default function UpcomingLinksPage() {
+export default function StaleItemsPage() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [links, setLinks] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const navigate = useNavigate();
-
   useEffect(() => {
-    const fetchLinks = async () => {
+    const fetchItems = async () => {
       try {
         const data = await getItems();
-        setLinks(data);
+        setItems(data);
       } catch (error) {
-        console.error('데이터 로드 실패:', error);
+        console.error('아이템 로드 실패:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLinks();
+    fetchItems();
   }, []);
 
   const handleItemClick = (itemId) => {
-    navigate(`/link/${itemId}`);
+    navigate(`/view/${itemId}`);
   };
 
   const handleDelete = (id) => console.log('Delete:', id);
@@ -40,7 +39,7 @@ export default function UpcomingLinksPage() {
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
       <PageHeader
-        title="마감임박"
+        title="청소"
         iconType="close"
         onBackClick={() => navigate(-1)}
       >
@@ -67,22 +66,22 @@ export default function UpcomingLinksPage() {
               </div>
             ) : (
               <div className="flex flex-col">
-                {links.map((link) => (
+                {items.map((item) => (
                   <SwipeableWrapper
-                    key={link.itemId}
+                    key={item.itemId}
                     leftAction={<SwipeActionButton type="edit" />}
                     rightAction={
                       <SwipeActionButton
                         type="delete"
-                        onClick={() => handleDelete(link.itemId)}
+                        onClick={() => handleDelete(item.itemId)}
                       />
                     }
                   >
                     <div
-                      onClick={() => handleItemClick(link.itemId)}
+                      onClick={() => handleItemClick(item.itemId)}
                       className="cursor-pointer"
                     >
-                      <LinkCard link={link} />
+                      <ItemCard item={item} />
                     </div>
                   </SwipeableWrapper>
                 ))}

@@ -12,7 +12,7 @@ import {
   Link as LinkIcon,
 } from 'lucide-react';
 
-const LinkViewerPage = () => {
+export default function ItemViewerPage() {
   const navigate = useNavigate();
   const { itemId } = useParams();
 
@@ -28,12 +28,12 @@ const LinkViewerPage = () => {
     createdAt: '',
   });
 
-  const [connectedLinks, setConnectedLinks] = useState([]);
+  const [connectedItems, setConnectedItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // 데이터 불러오기
   useEffect(() => {
-    const fetchLinkDetail = async () => {
+    const fetchItemDetail = async () => {
       setLoading(true);
       const targetId = itemId || 23;
 
@@ -42,30 +42,30 @@ const LinkViewerPage = () => {
         setData(itemData);
 
         try {
-          const validLinks = await getConnectedItems(targetId);
-          setConnectedLinks(validLinks);
-        } catch (linkError) {
-          console.warn('연결된 링크 조회 실패:', linkError);
-          setConnectedLinks([]);
+          const validItems = await getConnectedItems(targetId);
+          setConnectedItems(validItems);
+        } catch (connectError) {
+          console.warn('연결된 아이템 조회 실패:', connectError);
+          setConnectedItems([]);
         }
       } catch (error) {
         console.error('상세 정보 조회 실패:', error);
-        alert('데이터를 불러오는데 실패했습니다.');
+        alert('아이템을 불러오는데 실패했습니다.');
         navigate(-1);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLinkDetail();
+    fetchItemDetail();
   }, [itemId, navigate]);
 
   const handleEdit = () => {
     navigate(`/edit/${data.itemId || itemId || 23}`, { state: { data } });
   };
 
-  const handleLinkClick = (linkId) => {
-    navigate(`/link/${linkId}`);
+  const handleItemClick = (targetId) => {
+    navigate(`/view/${targetId}`);
   };
 
   // 날짜 포맷팅 함수
@@ -96,7 +96,7 @@ const LinkViewerPage = () => {
 
   const videoId = getYoutubeId(data.url);
   const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
-  const displayCount = connectedLinks.length;
+  const displayCount = connectedItems.length;
 
   if (loading) return <div className="h-full bg-bg-main" />;
 
@@ -258,16 +258,16 @@ const LinkViewerPage = () => {
       </main>
 
       {/* 바텀시트 */}
-      <BottomSheet title="연결된 링크" count={`${displayCount}개 연결됨`}>
+      <BottomSheet title="연결된 아이템" count={`${displayCount}개 연결됨`}>
         <div className="flex flex-col h-full mt-2">
           {displayCount > 0 ? (
             <div className="flex flex-col gap-2 pb-6">
-              {connectedLinks.map((item) => {
-                const linkId = item.itemId || item.id;
+              {connectedItems.map((item) => {
+                const targetId = item.itemId || item.id;
                 return (
                   <div
-                    key={linkId}
-                    onClick={() => handleLinkClick(linkId)}
+                    key={targetId}
+                    onClick={() => handleItemClick(targetId)}
                     className="flex items-center gap-3 p-3 rounded-xl bg-neutral-800/50 border border-neutral-700 active:bg-neutral-700 transition-all cursor-pointer"
                   >
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800">
@@ -291,13 +291,11 @@ const LinkViewerPage = () => {
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-text-sub gap-2">
               <LinkIcon size={32} className="opacity-20" />
-              <div className="text-sm">연결된 링크가 없습니다.</div>
+              <div className="text-sm">연결된 아이템이 없습니다.</div>
             </div>
           )}
         </div>
       </BottomSheet>
     </div>
   );
-};
-
-export default LinkViewerPage;
+}

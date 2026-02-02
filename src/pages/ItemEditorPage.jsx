@@ -23,7 +23,7 @@ import {
   Minus,
 } from 'lucide-react';
 
-const LinkEditorPage = () => {
+export default function ItemEditorPage() {
   const navigate = useNavigate();
   const { itemId } = useParams();
   const location = useLocation();
@@ -34,8 +34,8 @@ const LinkEditorPage = () => {
   const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
 
-  const [connectedLinks, setConnectedLinks] = useState([]);
-  const [pendingLinks, setPendingLinks] = useState([]);
+  const [connectedItems, setConnectedItems] = useState([]);
+  const [pendingItems, setPendingItems] = useState([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -57,7 +57,7 @@ const LinkEditorPage = () => {
     const loadData = async () => {
       if (itemId) {
         try {
-          let currentData = location.state?.data;
+          let currentData = location.state?.item;
           if (!currentData) {
             currentData = await getItem(itemId);
           }
@@ -73,13 +73,13 @@ const LinkEditorPage = () => {
           });
           setIsImportant(currentData.importance || false);
 
-          // 연결된 링크 불러오기
+          // 연결된 아이템 불러오기
           try {
             const validConnected = await getConnectedItems(itemId);
-            setConnectedLinks(validConnected);
+            setConnectedItems(validConnected);
           } catch (err) {
-            console.warn('연결된 링크 로드 실패 (무시함):', err);
-            setConnectedLinks([]);
+            console.warn('연결된 아이템 로드 실패 (무시함):', err);
+            setConnectedItems([]);
           }
         } catch (error) {
           console.error('상세 데이터 로드 실패:', error);
@@ -118,30 +118,30 @@ const LinkEditorPage = () => {
   }, [dateParts.year, dateParts.month]);
 
   // 연결 토글
-  const handleConnectToggle = async (targetLink) => {
+  const handleConnectToggle = async (targetItem) => {
     const myId = Number(itemId);
-    const targetId = Number(targetLink?.itemId || targetLink?.id);
+    const targetId = Number(targetItem?.itemId || targetItem?.id);
 
     if (itemId && (!myId || !targetId)) {
-      alert('링크 연결에 필요한 ID 정보가 없습니다.');
+      alert('아이템 연결에 필요한 ID 정보가 없습니다.');
       return;
     }
 
     // 수정 모드
     if (itemId) {
-      const isAlreadyConnected = connectedLinks.some(
-        (link) => (link.itemId || link.id) === targetId,
+      const isAlreadyConnected = connectedItems.some(
+        (item) => (item.itemId || item.id) === targetId,
       );
 
       try {
         if (isAlreadyConnected) {
           await disconnectItem(myId, targetId);
-          setConnectedLinks((prev) =>
-            prev.filter((link) => (link.itemId || link.id) !== targetId),
+          setConnectedItems((prev) =>
+            prev.filter((item) => (item.itemId || item.id) !== targetId),
           );
         } else {
           await connectItem(myId, targetId);
-          setConnectedLinks((prev) => [...prev, targetLink]);
+          setConnectedItems((prev) => [...prev, targetItem]);
         }
       } catch (error) {
         console.error('연결 상태 변경 실패:', error);
@@ -150,15 +150,15 @@ const LinkEditorPage = () => {
     }
     // 생성 모드
     else {
-      const isSelected = pendingLinks.some(
-        (link) => (link.itemId || link.id) === targetId,
+      const isSelected = pendingItems.some(
+        (item) => (item.itemId || item.id) === targetId,
       );
       if (isSelected) {
-        setPendingLinks((prev) =>
-          prev.filter((link) => (link.itemId || link.id) !== targetId),
+        setPendingItems((prev) =>
+          prev.filter((item) => (item.itemId || item.id) !== targetId),
         );
       } else {
-        setPendingLinks((prev) => [...prev, targetLink]);
+        setPendingItems((prev) => [...prev, targetItem]);
       }
     }
   };
@@ -168,9 +168,9 @@ const LinkEditorPage = () => {
     const targetId = Number(inputItemId);
     if (!targetId) return;
 
-    const currentList = itemId ? connectedLinks : pendingLinks;
-    if (currentList.some((link) => (link.itemId || link.id) === targetId)) {
-      return alert('이미 연결된 링크입니다.');
+    const currentList = itemId ? connectedItems : pendingItems;
+    if (currentList.some((item) => (item.itemId || item.id) === targetId)) {
+      return alert('이미 연결된 아이템입니다.');
     }
     if (itemId && Number(itemId) === targetId) {
       return alert('자기 자신은 연결할 수 없습니다.');
@@ -186,9 +186,9 @@ const LinkEditorPage = () => {
       };
 
       await handleConnectToggle(safeItem);
-      alert(`'${targetItem.title || '링크'}'가 연결되었습니다.`);
+      alert(`'${targetItem.title || '아이템'}'가 연결되었습니다.`);
     } catch (error) {
-      alert('해당 ID의 링크를 찾을 수 없거나 연결에 실패했습니다.');
+      alert('해당 ID의 아이템을 찾을 수 없거나 연결에 실패했습니다.');
     }
   };
 
@@ -226,15 +226,15 @@ const LinkEditorPage = () => {
         const responseData = await createItem(payload);
         const newItemId = responseData.itemId;
 
-        if (newItemId && pendingLinks.length > 0) {
+        if (newItemId && pendingItems.length > 0) {
           try {
             await Promise.all(
-              pendingLinks.map((link) =>
-                connectItem(newItemId, link.itemId || link.id),
+              pendingItems.map((item) =>
+                connectItem(newItemId, item.itemId || item.id),
               ),
             );
-          } catch (linkError) {
-            console.error('링크 연결 실패', linkError);
+          } catch (connectError) {
+            console.error('아이템 연결 실패', connectError);
           }
         }
         alert('성공적으로 저장되었습니다!');
@@ -314,8 +314,8 @@ const LinkEditorPage = () => {
 
   const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
 
-  const displayLinks = itemId ? connectedLinks : pendingLinks;
-  const displayCount = displayLinks.length;
+  const displayItems = itemId ? connectedItems : pendingItems;
+  const displayCount = displayItems.length;
 
   return (
     <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
@@ -514,14 +514,14 @@ const LinkEditorPage = () => {
       </main>
 
       <BottomSheet
-        title="연결된 링크"
+        title="연결된 아이템"
         count={`${displayCount}개 연결됨`}
         onConnectById={handleConnectById}
       >
         <div className="flex flex-col h-full mt-2">
-          {displayLinks.length > 0 ? (
+          {displayItems.length > 0 ? (
             <div className="flex flex-col gap-2 pb-6">
-              {displayLinks.map((item) => (
+              {displayItems.map((item) => (
                 <div
                   key={item.itemId || item.id}
                   className="flex items-center gap-3 p-3 rounded-xl bg-neutral-800/50 border border-neutral-700 transition-all"
@@ -555,7 +555,7 @@ const LinkEditorPage = () => {
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-text-sub gap-2">
               <LinkIcon size={32} className="opacity-20" />
-              <div className="text-sm">연결된 링크가 없습니다.</div>
+              <div className="text-sm">연결된 아이템이 없습니다.</div>{' '}
               <div className="text-xs opacity-60">
                 상단의 입력창을 통해 ID로 연결해보세요.
               </div>
@@ -565,6 +565,4 @@ const LinkEditorPage = () => {
       </BottomSheet>
     </div>
   );
-};
-
-export default LinkEditorPage;
+}

@@ -7,7 +7,7 @@ import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
 import QuickActionBar from '../components/common/QuickActionBar';
-import LinkCard from '../components/common/LinkCard';
+import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
@@ -15,7 +15,7 @@ import Snackbar from '../components/common/Snackbar';
 export default function HomePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [links, setLinks] = useState([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openedItemId, setOpenedItemId] = useState(null);
   const [snackbar, setSnackbar] = useState({ isVisible: false, item: null });
@@ -23,10 +23,10 @@ export default function HomePage() {
   const pendingItemRef = useRef(null);
 
   useEffect(() => {
-    const fetchLinks = async () => {
+    const fetchItems = async () => {
       try {
         const data = await getItems();
-        setLinks(data);
+        setItems(data);
       } catch (error) {
         console.error('아이템 목록 로드 실패:', error);
       } finally {
@@ -34,15 +34,15 @@ export default function HomePage() {
       }
     };
 
-    fetchLinks();
+    fetchItems();
   }, []);
 
   const handleItemClick = (itemId) => {
-    navigate(`/link/${itemId}`);
+    navigate(`/view/${itemId}`);
   };
 
-  const handleEdit = (link) => {
-    navigate(`/edit/${link.itemId}`, { state: { link } });
+  const handleEdit = (item) => {
+    navigate(`/edit/${item.itemId}`, { state: { item } });
   };
 
   const handleDeleteRequest = (item) => {
@@ -50,12 +50,12 @@ export default function HomePage() {
       executeActualDelete();
     }
 
-    const targetIndex = links.findIndex((l) => l.itemId === item.itemId);
+    const targetIndex = items.findIndex((i) => i.itemId === item.itemId);
     pendingItemRef.current = { item, index: targetIndex };
 
-    setLinks((prev) => prev.filter((l) => l.itemId !== item.itemId));
+    setItems((prev) => prev.filter((i) => i.itemId !== item.itemId));
 
-    setSnackbar({ isVisible: true, message: '링크가 삭제되었습니다.' });
+    setSnackbar({ isVisible: true, message: '아이템이 삭제되었습니다.' });
 
     deleteTimerRef.current = setTimeout(() => {
       executeActualDelete();
@@ -72,7 +72,6 @@ export default function HomePage() {
       console.log('서버에서 완전히 삭제됨');
     } catch (error) {
       console.error('서버 삭제 실패:', error);
-      // 실패 시 UI 복구 로직이 필요하다면 여기에 추가 (여기선 생략)
     } finally {
       clearDeleteState();
     }
@@ -87,7 +86,7 @@ export default function HomePage() {
 
     // 2. 원래 위치에 데이터 복원
     const { item, index } = pendingItemRef.current;
-    setLinks((prev) => {
+    setItems((prev) => {
       const newList = [...prev];
       newList.splice(index, 0, item);
       return newList;
@@ -133,7 +132,7 @@ export default function HomePage() {
         </div>
 
         <section className="flex flex-col gap-3">
-          <h2 className="text-xl font-bold">최근 저장한 링크</h2>
+          <h2 className="text-xl font-bold">최근 저장한 아이템</h2>{' '}
           <div className="flex flex-col divide-y divide-neutral-800">
             {loading ? (
               <div className="text-center py-10 text-text-sub">
@@ -142,11 +141,11 @@ export default function HomePage() {
             ) : (
               <div className="flex flex-col relative overflow-hidden">
                 <AnimatePresence mode="popLayout">
-                  {links.map((link) => (
+                  {items.map((item) => (
                     <SwipeableWrapper
-                      key={link.itemId}
-                      itemId={link.itemId}
-                      isOpen={openedItemId === link.itemId}
+                      key={item.itemId}
+                      itemId={item.itemId}
+                      isOpen={openedItemId === item.itemId}
                       onOpen={(id) => setOpenedItemId(id)}
                       onClose={() => setOpenedItemId(null)}
                       actionWidth={80}
@@ -168,30 +167,29 @@ export default function HomePage() {
                       leftAction={
                         <SwipeActionButton
                           type="edit"
-                          onClick={() => handleEdit(link)}
+                          onClick={() => handleEdit(item)}
                         />
                       }
                       rightAction={
                         <SwipeActionButton
                           type="delete"
-                          onClick={() => handleDeleteRequest(link)}
+                          onClick={() => handleDeleteRequest(item)}
                         />
                       }
                     >
                       <div
-                        onClick={() => handleItemClick(link.itemId)}
+                        onClick={() => handleItemClick(item.itemId)}
                         className="cursor-pointer"
                       >
-                        <LinkCard link={link} />
+                        <ItemCard item={item} />{' '}
                       </div>
                     </SwipeableWrapper>
                   ))}
                 </AnimatePresence>
 
-                {/* 데이터 없을 때 안내 문구 추가 (선택 사항) */}
-                {!loading && links.length === 0 && (
+                {!loading && items.length === 0 && (
                   <div className="text-center py-10 text-text-sub text-sm">
-                    저장된 링크가 없습니다.
+                    저장된 아이템이 없습니다.
                   </div>
                 )}
               </div>

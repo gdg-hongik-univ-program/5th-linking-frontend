@@ -7,7 +7,7 @@ import TabHeader from '../components/common/TabHeader';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import LinkCard from '../components/common/LinkCard';
+import ItemCard from '../components/common/ItemCard';
 import FolderCard from '../components/common/FolderCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
@@ -31,7 +31,7 @@ export default function StoragePage() {
 
   const [search, setSearch] = useState('');
   const [folderTree, setFolderTree] = useState([]);
-  const [currentLinks, setCurrentLinks] = useState([]);
+  const [currentItems, setCurrentItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // 스와이프 제어용 상태
@@ -50,9 +50,9 @@ export default function StoragePage() {
     fetchTree();
   }, []);
 
-  // 2. 링크 데이터 로드 (핵심 수정 부분)
+  // 2. 아이템 데이터 로드
   useEffect(() => {
-    const fetchLinks = async () => {
+    const fetchItems = async () => {
       setLoading(true);
       try {
         const data = await getItems(folderId || null);
@@ -60,25 +60,24 @@ export default function StoragePage() {
         let finalData = data;
 
         if (!folderId) {
-          finalData = data.filter((link) => {
+          finalData = data.filter((item) => {
             // folderId가 없거나, 0이거나, 문자열 'null' 인 것들 (루트 아이템)
             return (
-              !link.folderId ||
-              link.folderId === 0 ||
-              String(link.folderId) === 'null'
+              !item.folderId || // link -> item
+              item.folderId === 0 || // link -> item
+              String(item.folderId) === 'null' // link -> item
             );
           });
         }
-        // folderId가 있으면 filter 과정을 생략하고 data를 그대로 finalData로 씀
 
-        setCurrentLinks(finalData);
+        setCurrentItems(finalData);
       } catch (error) {
-        console.error('링크 목록 로드 실패:', error);
+        console.error('아이템 목록 로드 실패:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchLinks();
+    fetchItems();
   }, [folderId]);
 
   // 3. 렌더링할 폴더 목록 (직계 자식만)
@@ -151,25 +150,26 @@ export default function StoragePage() {
                 </SwipeableWrapper>
               ))}
 
-              {/* 링크 리스트 */}
-              {currentLinks.map((link) => (
+              {/* 아이템 리스트 */}
+              {currentItems.map((item) => (
                 <SwipeableWrapper
-                  key={`link-${link.itemId}`}
-                  itemId={`link-${link.itemId}`}
-                  isOpen={openedId === `link-${link.itemId}`}
+                  key={`item-${item.itemId}`}
+                  itemId={`item-${item.itemId}`}
+                  isOpen={openedId === `item-${item.itemId}`}
                   onOpen={setOpenedId}
                   onClose={() => setOpenedId(null)}
                   leftAction={<SwipeActionButton type="edit" />}
                   rightAction={<SwipeActionButton type="delete" />}
                 >
-                  <div onClick={() => navigate(`/link/${link.itemId}`)}>
-                    <LinkCard link={link} />
+                  <div onClick={() => navigate(`/link/${item.itemId}`)}>
+                    {' '}
+                    <ItemCard item={item} />{' '}
                   </div>
                 </SwipeableWrapper>
               ))}
 
               {/* 빈 상태 메시지 */}
-              {displayFolders.length === 0 && currentLinks.length === 0 && (
+              {displayFolders.length === 0 && currentItems.length === 0 && (
                 <div className="text-center py-10 text-text-sub">
                   폴더가 비어있습니다.
                 </div>

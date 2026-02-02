@@ -28,8 +28,8 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 };
 
-export default function LinkCard({ link }) {
-  const { title, tags, importance, createdAt } = link;
+export default function ItemCard({ item }) {
+  const { title, tags, importance, createdAt } = item;
 
   return (
     <motion.div
