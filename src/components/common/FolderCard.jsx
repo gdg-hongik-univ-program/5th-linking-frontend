@@ -1,4 +1,4 @@
-import { Star, Link as LinkIcon } from 'lucide-react';
+import { Folder } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // 날짜 포맷팅 함수
@@ -28,8 +28,12 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 };
 
-export default function LinkCard({ link }) {
-  const { title, tags, importance, createdAt } = link;
+export default function FolderCard({ folder }) {
+  const { folderName, children, linkCount, createdAt } = folder;
+
+  const folderCount = children?.length || 0;
+  const fileCount = linkCount || 0;
+  const totalCount = folderCount + fileCount;
 
   return (
     <motion.div
@@ -38,36 +42,22 @@ export default function LinkCard({ link }) {
     >
       {/* 1. 좌측 썸네일 영역 */}
       <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
-        <LinkIcon size={40} className="text-neutral-600" />
-        {/* 1-1. 중요 표시 */}
-        {importance && (
-          <div className="absolute top-1.5 right-1.5 drop-shadow-md">
-            <Star size={14} fill="currentColor" className="text-primary-500" />
-          </div>
-        )}
+        <Folder size={40} className="text-yellow-500 fill-yellow-500" />
       </div>
 
       {/* 2. 우측 정보 영역 */}
       <div className="flex flex-col justify-between flex-1 py-1 min-w-0">
-        {/* 2-1. 상단 링크 제목 */}
+        {/* 2-1. 상단 폴더 이름 */}
         <h3 className="text-[15px] font-medium text-text-main leading-snug line-clamp-2 overflow-hidden text-ellipsis break-keep">
-          {title}
+          {folderName}
         </h3>
 
         {/* 2-2. 하단 세부 사항 영역 */}
         <div className="flex flex-col items-end gap-0.5 min-w-0">
-          {/* 2-2-1. 태그 (최대 1줄) */}
-          <div className="w-full text-right truncate">
-            {tags && tags.length > 0 ? (
-              <span className="text-[11px] text-text-sub font-medium">
-                {tags.map((tag) => `#${tag}`).join(' ')}
-              </span>
-            ) : (
-              <span className="text-[11px] text-text-sub font-medium">
-                태그 없음
-              </span>
-            )}
-          </div>
+          {/* 2-2-1. 항목 개수 */}
+          <p className="text-[11px] text-text-sub font-medium">
+            {totalCount}개 항목
+          </p>
 
           {/* 2-2-2. 생성일 */}
           <p className="text-[11px] text-text-sub opacity-80 shrink-0">
