@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MoreHorizontal, ArrowLeft } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { getItems } from '../api/itemApi';
 import { getFolders } from '../api/folderApi';
 import TabHeader from '../components/common/TabHeader';
+import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
 import LinkCard from '../components/common/LinkCard';
-import FolderCard from '../components/common/FolderCard'; // 새로 만든 컴포넌트
+import FolderCard from '../components/common/FolderCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 
@@ -33,7 +34,7 @@ export default function StoragePage() {
   const [currentLinks, setCurrentLinks] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // 스와이프 제어용 상태 (하나만 열리게)
+  // 스와이프 제어용 상태
   const [openedId, setOpenedId] = useState(null);
 
   // 1. 초기 로드: 전체 폴더 트리
@@ -49,15 +50,33 @@ export default function StoragePage() {
     fetchTree();
   }, []);
 
-  // 2. 링크 데이터 로드
+  // 2. 링크 데이터 로드 (핵심 수정 부분)
   useEffect(() => {
     const fetchLinks = async () => {
       setLoading(true);
       try {
         const data = await getItems(folderId || null);
-        setCurrentLinks(data);
+
+        let finalData = data;
+
+        // [수정 핵심]
+        // 폴더 ID가 없을 때(루트)만 필터링을 수행합니다.
+        // 폴더 ID가 있을 때는 API가 이미 걸러준 데이터이므로 필터링 없이 그대로 씁니다.
+        if (!folderId) {
+          finalData = data.filter((link) => {
+            // folderId가 없거나, 0이거나, 문자열 'null' 인 것들 (루트 아이템)
+            return (
+              !link.folderId ||
+              link.folderId === 0 ||
+              String(link.folderId) === 'null'
+            );
+          });
+        }
+        // folderId가 있으면 filter 과정을 생략하고 data를 그대로 finalData로 씀
+
+        setCurrentLinks(finalData);
       } catch (error) {
-        console.error(error);
+        console.error('링크 목록 로드 실패:', error);
       } finally {
         setLoading(false);
       }
@@ -65,48 +84,39 @@ export default function StoragePage() {
     fetchLinks();
   }, [folderId]);
 
-  // 3. 렌더링할 폴더 목록
+  // 3. 렌더링할 폴더 목록 (직계 자식만)
   const displayFolders = useMemo(() => {
     if (!folderId) return folderTree;
     const currentNode = findFolderNode(folderTree, folderId);
-    return currentNode ? currentNode.children : [];
+    return currentNode?.children || [];
   }, [folderTree, folderId]);
 
-  // 핸들러
-  const handleFolderClick = (id) => {
-    navigate(`/storage/${id}`);
-    setSearch('');
-    setOpenedId(null);
-  };
-
-  const handleLinkClick = (itemId) => {
-    navigate(`/link/${itemId}`);
-  };
-
+  // 4. 현재 폴더 이름
   const currentFolderName = useMemo(() => {
     if (!folderId) return '저장소';
     const node = findFolderNode(folderTree, folderId);
     return node ? node.folderName : '폴더';
   }, [folderTree, folderId]);
 
+  // 더보기 버튼
+  const renderMoreButton = (
+    <IconButton
+      icon={MoreHorizontal}
+      onClick={() => console.log('더보기')}
+      aria-label="더보기"
+    />
+  );
+
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
-      <TabHeader title={currentFolderName}>
-        {folderId && (
-          <div className="absolute left-4">
-            <IconButton
-              icon={ArrowLeft}
-              onClick={() => navigate(-1)}
-              aria-label="뒤로가기"
-            />
-          </div>
-        )}
-        <IconButton
-          icon={MoreHorizontal}
-          onClick={() => console.log('더보기')}
-          aria-label="더보기"
-        />
-      </TabHeader>
+      {/* 헤더 조건부 렌더링 */}
+      {!folderId ? (
+        <TabHeader title="저장소">{renderMoreButton}</TabHeader>
+      ) : (
+        <PageHeader title={currentFolderName} onBack={() => navigate(-1)}>
+          {renderMoreButton}
+        </PageHeader>
+      )}
 
       <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
         <div className="mb-6">
@@ -121,7 +131,7 @@ export default function StoragePage() {
             <div className="text-center py-10 text-text-sub">로딩 중...</div>
           ) : (
             <>
-              {/* === [1] 폴더 리스트 (FolderCard 적용) === */}
+              {/* 폴더 리스트 */}
               {displayFolders.map((folder) => (
                 <SwipeableWrapper
                   key={`folder-${folder.folderId}`}
@@ -132,13 +142,19 @@ export default function StoragePage() {
                   leftAction={<SwipeActionButton type="edit" />}
                   rightAction={<SwipeActionButton type="delete" />}
                 >
-                  <div onClick={() => handleFolderClick(folder.folderId)}>
+                  <div
+                    onClick={() => {
+                      navigate(`/storage/${folder.folderId}`);
+                      setSearch('');
+                      setOpenedId(null);
+                    }}
+                  >
                     <FolderCard folder={folder} />
                   </div>
                 </SwipeableWrapper>
               ))}
 
-              {/* === [2] 링크 리스트 (LinkCard 유지) === */}
+              {/* 링크 리스트 */}
               {currentLinks.map((link) => (
                 <SwipeableWrapper
                   key={`link-${link.itemId}`}
@@ -149,12 +165,13 @@ export default function StoragePage() {
                   leftAction={<SwipeActionButton type="edit" />}
                   rightAction={<SwipeActionButton type="delete" />}
                 >
-                  <div onClick={() => handleLinkClick(link.itemId)}>
+                  <div onClick={() => navigate(`/link/${link.itemId}`)}>
                     <LinkCard link={link} />
                   </div>
                 </SwipeableWrapper>
               ))}
 
+              {/* 빈 상태 메시지 */}
               {displayFolders.length === 0 && currentLinks.length === 0 && (
                 <div className="text-center py-10 text-text-sub">
                   폴더가 비어있습니다.
