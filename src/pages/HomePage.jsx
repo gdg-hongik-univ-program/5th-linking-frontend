@@ -19,7 +19,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [openedItemId, setOpenedItemId] = useState(null);
   const [snackbar, setSnackbar] = useState({ isVisible: false, item: null });
-
   const deleteTimerRef = useRef(null);
   const pendingItemRef = useRef(null);
 
@@ -29,7 +28,7 @@ export default function HomePage() {
         const data = await getItems();
         setLinks(data);
       } catch (error) {
-        console.error(error);
+        console.error('아이템 목록 로드 실패:', error);
       } finally {
         setLoading(false);
       }
@@ -43,23 +42,19 @@ export default function HomePage() {
   };
 
   const handleEdit = (link) => {
-    navigate(`/edit/${link.itemId || itemId}`, { state: { link } });
+    navigate(`/edit/${link.itemId}`, { state: { link } });
   };
 
   const handleDeleteRequest = (item) => {
-    // 1. 기존에 진행 중이던 삭제 작업이 있다면 즉시 서버 처리 (중첩 방지)
     if (deleteTimerRef.current) {
       executeActualDelete();
     }
 
-    // 2. 삭제할 아이템 정보와 위치(index) 저장
     const targetIndex = links.findIndex((l) => l.itemId === item.itemId);
     pendingItemRef.current = { item, index: targetIndex };
 
-    // 3. UI에서 즉시 제거 (낙관적 업데이트)
     setLinks((prev) => prev.filter((l) => l.itemId !== item.itemId));
 
-    // 4. 스낵바 노출 및 3초 타이머 시작
     setSnackbar({ isVisible: true, message: '링크가 삭제되었습니다.' });
 
     deleteTimerRef.current = setTimeout(() => {
@@ -77,6 +72,7 @@ export default function HomePage() {
       console.log('서버에서 완전히 삭제됨');
     } catch (error) {
       console.error('서버 삭제 실패:', error);
+      // 실패 시 UI 복구 로직이 필요하다면 여기에 추가 (여기선 생략)
     } finally {
       clearDeleteState();
     }
@@ -86,7 +82,7 @@ export default function HomePage() {
   const handleUndo = () => {
     if (!pendingItemRef.current) return;
 
-    // 1. 타이머 중단
+    // 1. 타이머 중단 (서버 요청 안 보냄)
     clearTimeout(deleteTimerRef.current);
 
     // 2. 원래 위치에 데이터 복원
@@ -107,14 +103,10 @@ export default function HomePage() {
     pendingItemRef.current = null;
   };
 
-  {
-    /* 전역 이벤트로 스와이프 액션 닫기 */
-  }
+  // 전역 이벤트로 스와이프 액션 닫기
   useEffect(() => {
     const handleGlobalClose = () => setOpenedItemId(null);
-    // 스크롤 발생 시 즉시 닫기
     window.addEventListener('scroll', handleGlobalClose, true);
-    // 배경(main 영역) 터치 시 닫기
     return () => window.removeEventListener('scroll', handleGlobalClose, true);
   }, []);
 
@@ -195,6 +187,13 @@ export default function HomePage() {
                     </SwipeableWrapper>
                   ))}
                 </AnimatePresence>
+
+                {/* 데이터 없을 때 안내 문구 추가 (선택 사항) */}
+                {!loading && links.length === 0 && (
+                  <div className="text-center py-10 text-text-sub text-sm">
+                    저장된 링크가 없습니다.
+                  </div>
+                )}
               </div>
             )}
           </div>

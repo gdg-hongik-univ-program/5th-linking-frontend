@@ -42,8 +42,8 @@ export default function SchedulePage() {
       <TabHeader title="일정">
         <IconButton
           icon={Bell}
-          onClick={() => console.log('알림 클릭')}
-          aria-label="알림"
+          onClick={() => console.log('알림함 클릭')}
+          aria-label="알림함"
         />
       </TabHeader>
 

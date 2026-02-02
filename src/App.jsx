@@ -37,6 +37,7 @@ function App() {
             <Route path="/trash" element={<TrashPage />} />
             <Route path="/schedule" element={<SchedulePage />} />
             <Route path="/storage" element={<StoragePage />} />
+            <Route path="/storage/:folderId" element={<StoragePage />} />
             <Route path="/profile" element={<ProfilePage />} />
           </Route>
 

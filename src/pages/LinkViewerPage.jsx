@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import { getItem, getConnectedItems } from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import BottomSheet from '../components/common/BottomSheet';
@@ -38,16 +38,11 @@ const LinkViewerPage = () => {
       const targetId = itemId || 23;
 
       try {
-        const response = await axiosInstance.get(`/item/${targetId}`);
-        setData(response.data);
+        const itemData = await getItem(targetId);
+        setData(itemData);
 
         try {
-          const connectedRes = await axiosInstance.get(
-            `/item/link/${targetId}`,
-          );
-          const validLinks = connectedRes.data.filter(
-            (item) => (item.itemId || item.id) && item.itemId !== 0,
-          );
+          const validLinks = await getConnectedItems(targetId);
           setConnectedLinks(validLinks);
         } catch (linkError) {
           console.warn('연결된 링크 조회 실패:', linkError);

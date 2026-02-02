@@ -22,7 +22,7 @@ export default function ProfilePage() {
         const data = await getItems();
         setLinks(data);
       } catch (error) {
-        console.error(error);
+        console.error('데이터 로드 실패:', error);
       } finally {
         setLoading(false);
       }

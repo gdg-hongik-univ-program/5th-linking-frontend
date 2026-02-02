@@ -1,5 +1,6 @@
 import axiosInstance from './axiosInstance';
 
+// 1. 알림 목록 조회
 export const getNotifications = async () => {
   try {
     const response = await axiosInstance.get('/notification');
@@ -10,6 +11,7 @@ export const getNotifications = async () => {
   }
 };
 
+// 2. 알림 읽음 처리
 export const markAsRead = async (notificationId) => {
   try {
     const response = await axiosInstance.patch(

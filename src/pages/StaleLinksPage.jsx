@@ -9,7 +9,7 @@ import LinkCard from '../components/common/LinkCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 
-export default function UpcomingLinksPage() {
+export default function StaleLinksPage() {
   const [search, setSearch] = useState('');
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,7 +22,7 @@ export default function UpcomingLinksPage() {
         const data = await getItems();
         setLinks(data);
       } catch (error) {
-        console.error(error);
+        console.error('데이터 로드 실패:', error);
       } finally {
         setLoading(false);
       }

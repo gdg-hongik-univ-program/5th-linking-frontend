@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import axiosInstance from '../api/axiosInstance';
+import {
+  getItem,
+  createItem,
+  updateItem,
+  getConnectedItems,
+  connectItem,
+  disconnectItem,
+} from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import BottomSheet from '../components/common/BottomSheet';
@@ -52,8 +59,7 @@ const LinkEditorPage = () => {
         try {
           let currentData = location.state?.data;
           if (!currentData) {
-            const detailRes = await axiosInstance.get(`/item/${itemId}`);
-            currentData = detailRes.data;
+            currentData = await getItem(itemId);
           }
 
           // 폼 데이터 세팅
@@ -69,12 +75,7 @@ const LinkEditorPage = () => {
 
           // 연결된 링크 불러오기
           try {
-            const connectedRes = await axiosInstance.get(
-              `/item/link/${itemId}`,
-            );
-            const validConnected = connectedRes.data.filter(
-              (item) => (item.itemId || item.id) && item.itemId !== 0,
-            );
+            const validConnected = await getConnectedItems(itemId);
             setConnectedLinks(validConnected);
           } catch (err) {
             console.warn('연결된 링크 로드 실패 (무시함):', err);
@@ -134,17 +135,12 @@ const LinkEditorPage = () => {
 
       try {
         if (isAlreadyConnected) {
-          await axiosInstance.delete('/item/link', {
-            data: { itemId: myId, linkItemId: targetId },
-          });
+          await disconnectItem(myId, targetId);
           setConnectedLinks((prev) =>
             prev.filter((link) => (link.itemId || link.id) !== targetId),
           );
         } else {
-          await axiosInstance.post('/item/link', {
-            itemId: myId,
-            linkItemId: targetId,
-          });
+          await connectItem(myId, targetId);
           setConnectedLinks((prev) => [...prev, targetLink]);
         }
       } catch (error) {
@@ -181,8 +177,7 @@ const LinkEditorPage = () => {
     }
 
     try {
-      const res = await axiosInstance.get(`/item/${targetId}`);
-      const targetItem = res.data;
+      const targetItem = await getItem(targetId);
       if (!targetItem) throw new Error('아이템 정보 없음');
 
       const safeItem = {
@@ -225,20 +220,17 @@ const LinkEditorPage = () => {
 
     try {
       if (itemId) {
-        await axiosInstance.put('/item', payload);
+        await updateItem(payload);
         alert('수정되었습니다.');
       } else {
-        const response = await axiosInstance.post('/item', payload);
-        const newItemId = response.data.itemId;
+        const responseData = await createItem(payload);
+        const newItemId = responseData.itemId;
 
         if (newItemId && pendingLinks.length > 0) {
           try {
             await Promise.all(
               pendingLinks.map((link) =>
-                axiosInstance.post('/item/link', {
-                  itemId: newItemId,
-                  linkItemId: link.itemId || link.id,
-                }),
+                connectItem(newItemId, link.itemId || link.id),
               ),
             );
           } catch (linkError) {
@@ -329,7 +321,6 @@ const LinkEditorPage = () => {
     <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
       {/* 헤더 컴포넌트 적용 */}
       <PageHeader>
-        {/* 수정됨: IconButton 사용 */}
         <IconButton icon={Save} onClick={handleSave} aria-label="저장하기" />
 
         <IconButton
