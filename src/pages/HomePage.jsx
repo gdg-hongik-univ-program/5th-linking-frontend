@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Bell } from 'lucide-react';
-import PageHeader from '../components/common/PageHeader';
 import { getItems, deleteItem } from '../api/itemApi';
+import TabHeader from '../components/common/TabHeader';
+import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
 import QuickActionBar from '../components/common/QuickActionBar';
 import LinkCard from '../components/common/LinkCard';
@@ -28,6 +29,7 @@ export default function HomePage() {
         const data = await getItems();
         setLinks(data);
       } catch (error) {
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -35,6 +37,14 @@ export default function HomePage() {
 
     fetchLinks();
   }, []);
+
+  const handleItemClick = (itemId) => {
+    navigate(`/link/${itemId}`);
+  };
+
+  const handleEdit = (link) => {
+    navigate(`/edit/${link.itemId || itemId}`, { state: { link } });
+  };
 
   const handleDeleteRequest = (item) => {
     // 1. 기존에 진행 중이던 삭제 작업이 있다면 즉시 서버 처리 (중첩 방지)
@@ -98,13 +108,6 @@ export default function HomePage() {
   };
 
   {
-    /* 수정 화면으로 이동 (현재는 뷰어로 이동) */
-  }
-  const handleDirectEdit = (itemId) => {
-    navigate(`/link/${itemId}`);
-  };
-
-  {
     /* 전역 이벤트로 스와이프 액션 닫기 */
   }
   useEffect(() => {
@@ -117,22 +120,28 @@ export default function HomePage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
-      <PageHeader title="홈">
-        <Link to="/notification">
-          <button className="p-1 hover:bg-bg-nav rounded-full transition-colors">
-            <Bell className="w-6 h-6" />
-          </button>
-        </Link>
-      </PageHeader>
+      <TabHeader title="홈">
+        <IconButton
+          icon={Bell}
+          onClick={() => navigate('/notification')}
+          aria-label="알림함"
+        />
+      </TabHeader>
 
-      <main className="flex-1 px-6 py-3 flex flex-col gap-4 overflow-y-auto pb-24">
-        <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} />
-        <div className="flex justify-center shrink-0">
+      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
+        <div className="mb-6">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex justify-center shrink-0 mb-10">
           <QuickActionBar />
         </div>
 
-        <section className="flex flex-col gap-5">
-          <h2 className="text-lg font-bold">최근 저장한 링크</h2>
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold">최근 저장한 링크</h2>
           <div className="flex flex-col divide-y divide-neutral-800">
             {loading ? (
               <div className="text-center py-10 text-text-sub">
@@ -167,7 +176,7 @@ export default function HomePage() {
                       leftAction={
                         <SwipeActionButton
                           type="edit"
-                          onClick={() => handleDirectEdit(link.itemId)}
+                          onClick={() => handleEdit(link)}
                         />
                       }
                       rightAction={
@@ -177,7 +186,12 @@ export default function HomePage() {
                         />
                       }
                     >
-                      <LinkCard link={link} />
+                      <div
+                        onClick={() => handleItemClick(link.itemId)}
+                        className="cursor-pointer"
+                      >
+                        <LinkCard link={link} />
+                      </div>
                     </SwipeableWrapper>
                   ))}
                 </AnimatePresence>

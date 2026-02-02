@@ -1,18 +1,92 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { MoreHorizontal } from 'lucide-react';
+import { getItems } from '../api/itemApi';
+import TabHeader from '../components/common/TabHeader';
+import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
+import LinkCard from '../components/common/LinkCard';
+import SwipeableWrapper from '../components/common/SwipeableWrapper';
+import SwipeActionButton from '../components/common/SwipeActionButton';
 
-const StoragePage = () => {
+export default function StoragePage() {
+  const [search, setSearch] = useState('');
+  const [links, setLinks] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchLinks = async () => {
+      try {
+        const data = await getItems();
+        setLinks(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLinks();
+  }, []);
+
+  const handleItemClick = (itemId) => {
+    navigate(`/link/${itemId}`);
+  };
+
+  const handleDelete = (id) => console.log('Delete:', id);
+
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
-      {/* 헤더: 타이틀 '저장소'와 ... 버튼 */}
-      <header className="flex items-center justify-between px-6 py-5">
-        <h1 className="text-2xl font-bold font-family-logo">저장소</h1>
-      </header>
+      <TabHeader title="저장소">
+        <IconButton
+          icon={MoreHorizontal}
+          onClick={() => console.log('더보기 클릭')}
+          aria-label="더보기"
+        />
+      </TabHeader>
 
-      <main className="flex-1 px-6 flex flex-col gap-8 overflow-y-auto pb-24">
-        <SearchBar />
+      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
+        <div className="mb-10">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <section className="flex flex-col">
+          <div className="flex flex-col divide-y divide-neutral-800">
+            {loading ? (
+              <div className="text-center py-10 text-text-sub">
+                불러오는 중...
+              </div>
+            ) : (
+              <div className="flex flex-col">
+                {links.map((link) => (
+                  <SwipeableWrapper
+                    key={link.itemId}
+                    leftAction={<SwipeActionButton type="edit" />}
+                    rightAction={
+                      <SwipeActionButton
+                        type="delete"
+                        onClick={() => handleDelete(link.itemId)}
+                      />
+                    }
+                  >
+                    <div
+                      onClick={() => handleItemClick(link.itemId)}
+                      className="cursor-pointer"
+                    >
+                      <LinkCard link={link} />
+                    </div>
+                  </SwipeableWrapper>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   );
-};
-
-export default StoragePage;
+}
