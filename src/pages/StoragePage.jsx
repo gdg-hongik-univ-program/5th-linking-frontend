@@ -59,9 +59,6 @@ export default function StoragePage() {
 
         let finalData = data;
 
-        // [수정 핵심]
-        // 폴더 ID가 없을 때(루트)만 필터링을 수행합니다.
-        // 폴더 ID가 있을 때는 API가 이미 걸러준 데이터이므로 필터링 없이 그대로 씁니다.
         if (!folderId) {
           finalData = data.filter((link) => {
             // folderId가 없거나, 0이거나, 문자열 'null' 인 것들 (루트 아이템)
