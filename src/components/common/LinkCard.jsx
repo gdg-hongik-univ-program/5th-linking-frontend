@@ -1,5 +1,6 @@
 import { Star, Link as LinkIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import DDayBadge from './DDayBadge';
 
 // 날짜 포맷팅 함수
 const formatDate = (dateString) => {
@@ -45,6 +46,10 @@ export default function LinkCard({ link }) {
             <Star size={14} fill="currentColor" className="text-primary-500" />
           </div>
         )}
+        {/* 1-2. D-Day 배지 */}
+        <div className="absolute bottom-1.5 right-1.5">
+          <DDayBadge deadline={link.deadline} />
+        </div>
       </div>
 
       {/* 2. 우측 정보 영역 */}
