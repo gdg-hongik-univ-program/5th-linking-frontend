@@ -1,21 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Bell } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
-import LinkCard from '../components/common/LinkCard';
 import CalendarPicker from '../components/common/CalendarPicker';
+import LinkCard from '../components/common/LinkCard';
 import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
 
 export default function SchedulePage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-
-  // 캘린더 뷰 제어 (연/월) 및 선택된 날짜
+  const [today, setToday] = useState(new Date()); // 실제 현재 시점 관리
   const [viewDate, setViewDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
-
   const [summarySets, setSummarySets] = useState({
     deadlineSet: new Set(),
     createdSet: new Set(),
@@ -23,118 +20,108 @@ export default function SchedulePage() {
   const [eventList, setEventList] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 월별 요약 데이터 불러오기
+  useEffect(() => {
+    let timer;
+    const updateToday = () => {
+      const now = new Date();
+      setToday((prev) =>
+        prev.toDateString() !== now.toDateString() ? now : prev,
+      );
+
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+      );
+      timer = setTimeout(updateToday, tomorrow.getTime() - now.getTime() + 100);
+    };
+    updateToday();
+
+    window.addEventListener('focus', updateToday);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', updateToday);
+    };
+  }, []);
+
+  // 월별 요약 조회
   useEffect(() => {
     const fetchSummary = async () => {
       try {
-        const year = viewDate.getFullYear();
-        const month = viewDate.getMonth() + 1;
-        const data = await getCalendarSummary(year, month);
-
-        const deadlineDates = [];
-        const createdDates = [];
-
+        const data = await getCalendarSummary(
+          viewDate.getFullYear(),
+          viewDate.getMonth() + 1,
+        );
+        const deadlineDates = [],
+          createdDates = [];
         if (data.calendarSummary) {
           Object.entries(data.calendarSummary).forEach(([dateStr, counts]) => {
             if (counts.deadlineCount > 0) deadlineDates.push(dateStr);
             if (counts.createdCount > 0) createdDates.push(dateStr);
           });
         }
-
         setSummarySets({
           deadlineSet: new Set(deadlineDates),
           createdSet: new Set(createdDates),
         });
-      } catch (error) {
-        console.error('월별 요약 로드 실패:', error);
+      } catch (e) {
+        console.error(e);
       }
     };
     fetchSummary();
   }, [viewDate]);
 
-  // 일별 상세 일정 불러오기
+  // 일별 상세 일정 조회
   useEffect(() => {
-    const fetchDailyEvents = async () => {
+    const fetchEvents = async () => {
       setLoading(true);
       try {
-        const dateStr = format(selectedDate, 'yyyy-MM-dd');
-        const data = await getDailyEvents(dateStr);
+        const data = await getDailyEvents(format(selectedDate, 'yyyy-MM-dd'));
         setEventList(data.eventList || []);
-        console.log(
-          '일별 일정 데이터:',
-          data,
-          '선택된 날짜:',
-          dateStr,
-          '\nformat함수:',
-          format(new Date(), 'yyyy-MM-dd'),
-          '\nviewDate:',
-          viewDate,
-          '\nnew Date',
-          new Date(),
-        );
-      } catch (error) {
-        console.error('일별 일정 조회 실패:', error);
+      } catch (e) {
+        console.error(e);
       } finally {
         setLoading(false);
       }
     };
-    fetchDailyEvents();
+    fetchEvents();
   }, [selectedDate]);
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden">
       <TabHeader title="일정">
-        <IconButton
-          icon={Bell}
-          onClick={() => navigate('/notification')}
-          aria-label="알림함"
-        />
+        <IconButton icon={Bell} onClick={() => navigate('/notification')} />
       </TabHeader>
 
-      {/* 캘린더 내비게이션 및 그리드 */}
-      <CalendarPicker
-        viewDate={viewDate}
-        setViewDate={setViewDate}
-        selectedDate={selectedDate}
-        onDateClick={setSelectedDate}
-        summarySets={summarySets}
-        showDots={true}
-        onYearMonthClick={() => {
-          console.log('년/월 선택 모달 열기');
-        }}
-      />
+      <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+        <CalendarPicker
+          viewDate={viewDate}
+          setViewDate={setViewDate}
+          selectedDate={selectedDate}
+          onDateClick={setSelectedDate}
+          today={today}
+          summarySets={summarySets}
+          showDots={true}
+          onYearMonthClick={() => setViewDate(new Date())}
+        />
 
-      {/* 하단 상세 일정 리스트 */}
-      <section className="mt-8 px-6 pb-24">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold">
-            {format(selectedDate, 'M월 d일')}
+        <section className="mt-8 px-6 pb-24">
+          <h3 className="text-lg font-bold mb-4">
+            {format(selectedDate, 'M월 d일')} 일정
           </h3>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          {loading && (
-            <span className="py-12 text-center text-text-sub test-sm animate-pulse">
-              불러오는 중...
-            </span>
-          )}
-          {eventList.length > 0
-            ? eventList.map((event) => (
-                <div
-                  key={event.itemId}
-                  onClick={() => navigate(`/view/${event.itemId}`)}
-                  className="cursor-pointer active:scale-[0.98] transition-transform"
-                >
-                  <LinkCard link={event} />
-                </div>
-              ))
-            : !loading && (
-                <div className="py-12 text-center text-text-sub text-sm">
-                  저장한 링크가 없습니다.
-                </div>
-              )}
-        </div>
-      </section>
+          <div className="flex flex-col gap-3">
+            {eventList.length > 0
+              ? eventList.map((event) => (
+                  <LinkCard key={event.itemId} link={event} />
+                ))
+              : !loading && (
+                  <div className="py-12 text-center text-text-sub text-sm">
+                    일정이 없습니다.
+                  </div>
+                )}
+          </div>
+        </section>
+      </main>
     </div>
   );
 }

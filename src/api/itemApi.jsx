@@ -20,7 +20,7 @@ export const getItems = async (folderId = null) => {
     return response.data;
   } else {
     // 전체
-    const response = await axiosInstance.post('/item/mine');
+    const response = await axiosInstance.get('/item');
     return response.data;
   }
 };
