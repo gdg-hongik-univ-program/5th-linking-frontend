@@ -35,7 +35,7 @@ export default function LinkCard({ link }) {
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      className="flex gap-4 py-3 cursor-pointer group select-none"
+      className="flex gap-4 py-2 cursor-pointer group select-none"
     >
       {/* 1. 좌측 썸네일 영역 */}
       <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
