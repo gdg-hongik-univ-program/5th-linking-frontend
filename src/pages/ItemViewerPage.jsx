@@ -1,21 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getItem, getConnectedItems } from '../api/itemApi';
+import { getItem, getConnectedItems, connectItem } from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import BottomSheet from '../components/common/BottomSheet';
 import {
   Star,
-  MoreHorizontal,
-  PenLine,
   ExternalLink,
   Link as LinkIcon,
+  Share2,
+  MoreHorizontal,
+  PenLine,
 } from 'lucide-react';
 
 export default function ItemViewerPage() {
   const navigate = useNavigate();
   const { itemId } = useParams();
-
   const [data, setData] = useState({
     itemId: null,
     title: '',
@@ -26,38 +26,37 @@ export default function ItemViewerPage() {
     importance: false,
     deadline: '',
     createdAt: '',
+    updatedAt: '',
   });
-
   const [connectedItems, setConnectedItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isDetailExpanded, setIsDetailExpanded] = useState(false);
 
-  // 데이터 불러오기
-  useEffect(() => {
-    const fetchItemDetail = async () => {
-      setLoading(true);
-      const targetId = itemId || 23;
-
+  const refreshData = async () => {
+    const targetId = itemId || 23;
+    try {
+      const itemData = await getItem(targetId);
+      setData(itemData);
       try {
-        const itemData = await getItem(targetId);
-        setData(itemData);
-
-        try {
-          const validItems = await getConnectedItems(targetId);
-          setConnectedItems(validItems);
-        } catch (connectError) {
-          console.warn('연결된 아이템 조회 실패:', connectError);
-          setConnectedItems([]);
-        }
-      } catch (error) {
-        console.error('상세 정보 조회 실패:', error);
-        alert('아이템을 불러오는데 실패했습니다.');
-        navigate(-1);
-      } finally {
-        setLoading(false);
+        const validItems = await getConnectedItems(targetId);
+        setConnectedItems(validItems);
+      } catch (connectError) {
+        console.warn('연결된 아이템 조회 실패:', connectError);
+        setConnectedItems([]);
       }
-    };
+    } catch (error) {
+      console.error('상세 정보 조회 실패:', error);
+      alert('아이템을 불러오는데 실패했습니다.');
+      navigate(-1);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchItemDetail();
+  useEffect(() => {
+    setLoading(true);
+    refreshData();
   }, [itemId, navigate]);
 
   const handleEdit = () => {
@@ -66,26 +65,33 @@ export default function ItemViewerPage() {
 
   const handleItemClick = (targetId) => {
     navigate(`/view/${targetId}`);
+    setIsSheetOpen(false);
   };
 
-  // 날짜 포맷팅 함수
-  const formatDateParts = (dateString) => {
-    if (!dateString) return { year: '', month: '', day: '' };
-    const dateObj = new Date(dateString);
-    if (isNaN(dateObj.getTime())) return { year: '', month: '', day: '' };
-
-    const year = dateObj.getFullYear().toString();
-    const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
-    const day = dateObj.getDate().toString().padStart(2, '0');
-
-    return { year, month, day };
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({ title: data.title, url: data.url });
+    } else {
+      navigator.clipboard.writeText(data.url);
+      alert('URL이 복사되었습니다.');
+    }
   };
 
-  const { year, month, day } = formatDateParts(data.deadline);
-  const hasDate = year && month && day;
-  const hasTags = data.tags && data.tags.length > 0;
+  const handleVisit = () => {
+    if (data.url) window.open(data.url, '_blank');
+  };
 
-  // 유튜브 ID 추출 함수
+  const handleConnectById = async (targetLinkItemId) => {
+    try {
+      await connectItem(data.itemId, targetLinkItemId);
+      alert('연결되었습니다.');
+      refreshData();
+    } catch (error) {
+      console.error('연결 실패:', error);
+      alert('연결에 실패했습니다. ID를 확인해주세요.');
+    }
+  };
+
   const getYoutubeId = (url) => {
     if (!url) return null;
     const regExp =
@@ -94,208 +100,273 @@ export default function ItemViewerPage() {
     return match && match[2].length === 11 ? match[2] : null;
   };
 
+  const getDDay = (dateString) => {
+    if (!dateString) return '';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const target = new Date(dateString);
+    target.setHours(0, 0, 0, 0);
+    const diffTime = target - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'D-DAY';
+    if (diffDays > 0) return `D-${diffDays}`;
+    return `D+${Math.abs(diffDays)}`;
+  };
+
+  const formatSmartTime = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const isToday =
+      date.getDate() === now.getDate() &&
+      date.getMonth() === now.getMonth() &&
+      date.getFullYear() === now.getFullYear();
+    const isThisYear = date.getFullYear() === now.getFullYear();
+
+    if (isToday) {
+      return date.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+    } else if (isThisYear) {
+      return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+    } else {
+      return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
+  };
+
+  const formatDateDetail = (dateString, fallback = '-') => {
+    if (!dateString) return fallback;
+    const date = new Date(dateString);
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+
   const videoId = getYoutubeId(data.url);
-  const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
   const displayCount = connectedItems.length;
 
   if (loading) return <div className="h-full bg-bg-main" />;
 
   return (
-    <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
+    <div className="h-full flex flex-col font-family-sans bg-bg-main text-text-main relative overflow-hidden">
       <PageHeader>
         <IconButton icon={PenLine} onClick={handleEdit} aria-label="수정하기" />
-        <div
-          className="p-3 flex items-center justify-center cursor-default"
-          aria-label="중요도 표시"
-        >
-          <Star
-            size={24}
-            className={`transition-colors duration-200 ${
-              data.importance
-                ? 'text-primary-500 fill-primary-500'
-                : 'text-neutral-600'
-            }`}
-          />
-        </div>
-
         <IconButton icon={MoreHorizontal} aria-label="더보기" />
       </PageHeader>
 
-      <main className="flex-1 px-6 pt-2 pb-40 flex flex-col gap-6 overflow-y-auto scrollbar-hide">
-        <div className="w-full bg-transparent text-2xl font-bold text-text-main shrink-0 py-1 leading-normal break-keep">
-          {data.title || <span className="text-text-disabled">제목 없음</span>}
-        </div>
-
-        <div className="flex flex-col gap-3 shrink-0">
-          {/* URL */}
-          <div className="flex items-center min-h-[40px]">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              URL
-            </label>
-            <div className="flex items-center flex-1 relative min-w-0">
-              {data.url ? (
-                <>
-                  <a
-                    href={data.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 text-text-main hover:text-primary-500 transition-colors text-base truncate block mr-2"
-                  >
-                    {data.url}
-                  </a>
-                  <a
-                    href={data.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-text-sub hover:text-primary-500 transition-colors shrink-0 -mr-2"
-                  >
-                    <ExternalLink size={20} />
-                  </a>
-                </>
-              ) : (
-                <span className="text-text-disabled text-base">URL 없음</span>
-              )}
-            </div>
-          </div>
-
-          {/* 마감일 */}
-          <div className="flex items-center min-h-[40px]">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              마감일
-            </label>
-            <div className="flex items-center flex-1 relative">
-              {hasDate ? (
-                <>
-                  <div className="flex items-center mr-1">
-                    <div
-                      className={`w-9 bg-transparent text-base text-right ${getColor(year)}`}
-                    >
-                      {year}
-                    </div>
-                    <span className={`text-base ${getColor(year)}`}>년</span>
-                  </div>
-                  <div className="flex items-center mr-1">
-                    <div
-                      className={`w-6 bg-transparent text-base text-right ${getColor(month)}`}
-                    >
-                      {month}
-                    </div>
-                    <span className={`text-base ${getColor(month)}`}>월</span>
-                  </div>
-                  <div className="flex items-center mr-auto">
-                    <div
-                      className={`w-6 bg-transparent text-base text-right ${getColor(day)}`}
-                    >
-                      {day}
-                    </div>
-                    <span className={`text-base ${getColor(day)}`}>일</span>
-                  </div>
-                </>
-              ) : (
-                <span className="text-text-disabled text-base">
-                  마감일 없음
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* 태그 */}
-          <div className="flex min-h-[40px] items-center">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              태그
-            </label>
-            <div className="flex-1 flex flex-wrap gap-2">
-              {hasTags ? (
-                data.tags.map((tag, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-1 px-3 py-1.5 bg-neutral-700 text-text-main rounded-full text-sm font-medium"
-                  >
-                    <span>{tag}</span>
-                  </div>
-                ))
-              ) : (
-                <span className="text-text-disabled text-base">태그 없음</span>
-              )}
-            </div>
-          </div>
-
-          {/* 위치 */}
-          <div className="flex items-center min-h-[40px]">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              위치
-            </label>
-            <div className="flex items-center flex-1 relative">
-              <div
-                className={`flex-1 bg-transparent text-base mr-auto ${data.folderId ? 'text-text-main' : 'text-text-disabled'}`}
-              >
-                {data.folderId ? `${data.folderId}번 폴더` : '폴더 없음'}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 유튜브 플레이어 */}
-        {videoId && (
-          <div className="w-full shrink-0 rounded-xl overflow-hidden bg-black aspect-video relative mb-6">
+      <main className="flex-1 flex flex-col pt-2 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-20">
+        <div className="w-full aspect-video bg-black shrink-0 relative">
+          {videoId ? (
             <iframe
-              className="absolute top-0 left-0 w-full h-full"
+              className="w-full h-full"
               src={`https://www.youtube.com/embed/${videoId}`}
               title="YouTube video player"
-              frameBorder="0"
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen
-            ></iframe>
-          </div>
-        )}
-
-        {/* 메모 */}
-        <div
-          className={`w-full flex-1 min-h-[200px] bg-transparent text-base leading-loose py-2 resize-none whitespace-pre-wrap ${data.memo ? 'text-text-main' : 'text-text-disabled'}`}
-        >
-          {data.memo || '메모 없음'}
-        </div>
-      </main>
-
-      {/* 바텀시트 */}
-      <BottomSheet title="연결된 아이템" count={`${displayCount}개 연결됨`}>
-        <div className="flex flex-col h-full mt-2">
-          {displayCount > 0 ? (
-            <div className="flex flex-col gap-2 pb-6">
-              {connectedItems.map((item) => {
-                const targetId = item.itemId || item.id;
-                return (
-                  <div
-                    key={targetId}
-                    onClick={() => handleItemClick(targetId)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-neutral-800/50 border border-neutral-700 active:bg-neutral-700 transition-all cursor-pointer"
-                  >
-                    <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800">
-                      <LinkIcon size={18} className="text-text-sub" />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <div className="font-medium text-sm text-text-main truncate">
-                        {item.title || '제목 없음'}
-                      </div>
-                      <div className="text-xs text-text-sub truncate">
-                        {item.url || 'URL 없음'}
-                      </div>
-                    </div>
-                    <div className="p-2 text-text-sub">
-                      <ExternalLink size={16} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            />
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-text-sub gap-2">
-              <LinkIcon size={32} className="opacity-20" />
-              <div className="text-sm">연결된 아이템이 없습니다.</div>
+            <div className="w-full h-full flex items-center justify-center bg-bg-nav text-text-sub">
+              <span className="text-sm">동영상 없음</span>
             </div>
           )}
         </div>
+
+        <div className="px-6 py-5 flex flex-col gap-5">
+          {/* 태그 및 디데이 영역 */}
+          <div className="flex flex-wrap gap-2">
+            {data.deadline && (
+              <span className="px-3 py-1 bg-error-500 rounded-full text-xs text-error-50 font-bold">
+                {getDDay(data.deadline)}
+              </span>
+            )}
+            {data.tags && data.tags.length > 0 ? (
+              data.tags.map((tag, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1 bg-bg-nav rounded-full text-xs text-text-sub"
+                >
+                  {tag}
+                </span>
+              ))
+            ) : (
+              <span className="px-3 py-1 bg-bg-nav rounded-full text-xs text-text-disabled">
+                태그 없음
+              </span>
+            )}
+          </div>
+
+          {/* 제목 및 상세 정보 확장 영역 */}
+          <div>
+            <h1 className="text-2xl font-bold leading-tight mb-1.5 text-text-main">
+              {data.title || '제목 없음'}
+            </h1>
+
+            <div className="text-sm text-text-sub">
+              {!isDetailExpanded ? (
+                <div className="flex items-center gap-2">
+                  <span>
+                    {data.createdAt
+                      ? formatSmartTime(data.createdAt)
+                      : formatSmartTime(new Date())}
+                  </span>
+                  <button
+                    className="text-text-sub ml-1 underline hover:text-text-main"
+                    onClick={() => setIsDetailExpanded(true)}
+                  >
+                    더보기
+                  </button>
+                </div>
+              ) : (
+                //확장 상태
+                <div className="flex flex-col gap-1.5 mt-2 bg-bg-nav p-3 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200">
+                  {/* 생성일 영역 */}
+                  <div className="flex gap-2">
+                    <span className="min-w-[40px] text-text-disabled">
+                      생성일
+                    </span>
+                    <span className="text-text-main">
+                      {formatDateDetail(data.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* 수정일 영역 */}
+                  <div className="flex gap-2">
+                    <span className="min-w-[40px] text-text-disabled">
+                      수정일
+                    </span>
+                    <span className="text-text-main">
+                      {formatDateDetail(data.updatedAt || data.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* 마감일 영역 */}
+                  <div className="flex gap-2">
+                    <span className="min-w-[40px] text-text-disabled">
+                      마감일
+                    </span>
+                    <span className="text-text-main">
+                      {formatDateDetail(data.deadline, '기한 없음')}
+                    </span>
+                  </div>
+
+                  {/* URL 영역 */}
+                  <div className="flex gap-2">
+                    <span className="min-w-[40px] text-text-disabled shrink-0">
+                      URL
+                    </span>
+                    <span className="text-text-main truncate">{data.url}</span>
+                  </div>
+
+                  {/* 위치 및 줄이기 버튼 영역 */}
+                  <div className="flex justify-between items-center">
+                    <div className="flex gap-2">
+                      <span className="min-w-[40px] text-text-disabled">
+                        위치
+                      </span>
+                      <span className="text-text-main">
+                        {data.folderId}번 폴더
+                      </span>
+                    </div>
+                    <button
+                      className="text-xs text-text-sub underline hover:text-text-main ml-2"
+                      onClick={() => setIsDetailExpanded(false)}
+                    >
+                      줄이기
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 액션 버튼 영역 */}
+          <div className="flex justify-between items-center px-4 py-1">
+            <button
+              onClick={() => {}}
+              className="flex flex-col items-center gap-1.5 min-w-[60px] text-text-sub hover:text-text-main transition-colors active:scale-95"
+            >
+              <div
+                className={`p-1 ${data.importance ? 'text-primary-500' : ''}`}
+              >
+                <Star
+                  size={24}
+                  strokeWidth={1.5}
+                  fill={data.importance ? '#eabe2f' : 'none'}
+                />
+              </div>
+              <span className="text-xs font-medium">중요</span>
+            </button>
+            <ActionItem
+              icon={ExternalLink}
+              label="방문"
+              onClick={handleVisit}
+            />
+            <ActionItem
+              icon={LinkIcon}
+              label="연결"
+              onClick={() => setIsSheetOpen(true)}
+            />
+            <ActionItem icon={Share2} label="공유" onClick={handleShare} />
+          </div>
+
+          <hr className="border-border-default" />
+
+          <div className="text-base leading-relaxed text-text-main whitespace-pre-wrap pb-10 mt-1">
+            {data.memo || '메모 내용이 없습니다.'}
+          </div>
+        </div>
+      </main>
+
+      <BottomSheet
+        title="연결된 아이템"
+        count={`${displayCount}개`}
+        isOpen={isSheetOpen}
+        onClose={() => setIsSheetOpen(false)}
+        onConnectById={handleConnectById}
+      >
+        {displayCount > 0 ? (
+          <div className="flex flex-col gap-3 pb-6">
+            {connectedItems.map((item) => (
+              <div
+                key={item.itemId || item.id}
+                onClick={() => handleItemClick(item.itemId || item.id)}
+                className="flex items-center gap-3 p-3 rounded-xl bg-bg-nav active:bg-neutral-700 transition-colors cursor-pointer border border-border-default"
+              >
+                <div className="w-10 h-10 rounded-lg bg-bg-card flex items-center justify-center shrink-0">
+                  <LinkIcon size={18} className="text-text-sub" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-text-main truncate">
+                    {item.title || '제목 없음'}
+                  </div>
+                  <div className="text-xs text-text-sub truncate">
+                    {item.url || 'URL 없음'}
+                  </div>
+                </div>
+                <ExternalLink size={16} className="text-text-sub" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center text-text-sub gap-2 py-10">
+            <LinkIcon size={40} className="opacity-20 mb-2" />
+            <p className="text-sm">연결된 아이템이 없습니다.</p>
+          </div>
+        )}
       </BottomSheet>
     </div>
+  );
+}
+
+function ActionItem({ icon: Icon, label, isActive, activeColor, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center gap-1.5 min-w-[60px] text-text-sub hover:text-text-main transition-colors active:scale-95"
+    >
+      <div className={`p-1 ${isActive ? activeColor : ''}`}>
+        <Icon size={24} strokeWidth={1.5} />
+      </div>
+      <span className="text-xs font-medium">{label}</span>
+    </button>
   );
 }

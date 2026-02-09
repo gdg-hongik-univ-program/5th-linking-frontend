@@ -1,4 +1,4 @@
-import { Pencil, Trash2, RotateCcw, XCircle } from 'lucide-react';
+import { Pencil, Trash2, RotateCcw } from 'lucide-react';
 
 const BUTTON_CASE = {
   edit: {
@@ -17,9 +17,9 @@ const BUTTON_CASE = {
     colorClass: 'bg-success-600',
   },
   permanent_delete: {
-    icon: XCircle,
+    icon: Trash2,
     label: '영구삭제',
-    colorClass: 'bg-neutral-800',
+    colorClass: 'bg-error-600',
   },
 };
 export default function SwipeActionButton({ type, onClick }) {

@@ -1,26 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import {
-  getItem,
-  createItem,
-  updateItem,
-  getConnectedItems,
-  connectItem,
-  disconnectItem,
-} from '../api/itemApi';
+import { getItem, createItem, updateItem } from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
-import BottomSheet from '../components/common/BottomSheet';
 import {
   Star,
   MoreHorizontal,
   FolderSearch,
-  Link as LinkIcon,
   Save,
   Calendar as CalendarIcon,
   XCircle,
   X,
-  Minus,
 } from 'lucide-react';
 
 export default function ItemEditorPage() {
@@ -33,9 +23,6 @@ export default function ItemEditorPage() {
   const dayRef = useRef(null);
   const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
-
-  const [connectedItems, setConnectedItems] = useState([]);
-  const [pendingItems, setPendingItems] = useState([]);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -72,15 +59,6 @@ export default function ItemEditorPage() {
             folderId: currentData.folderId || '',
           });
           setIsImportant(currentData.importance || false);
-
-          // 연결된 아이템 불러오기
-          try {
-            const validConnected = await getConnectedItems(itemId);
-            setConnectedItems(validConnected);
-          } catch (err) {
-            console.warn('연결된 아이템 로드 실패 (무시함):', err);
-            setConnectedItems([]);
-          }
         } catch (error) {
           console.error('상세 데이터 로드 실패:', error);
           alert('데이터를 불러오는데 실패했습니다.');
@@ -117,81 +95,6 @@ export default function ItemEditorPage() {
     }
   }, [dateParts.year, dateParts.month]);
 
-  // 연결 토글
-  const handleConnectToggle = async (targetItem) => {
-    const myId = Number(itemId);
-    const targetId = Number(targetItem?.itemId || targetItem?.id);
-
-    if (itemId && (!myId || !targetId)) {
-      alert('아이템 연결에 필요한 ID 정보가 없습니다.');
-      return;
-    }
-
-    // 수정 모드
-    if (itemId) {
-      const isAlreadyConnected = connectedItems.some(
-        (item) => (item.itemId || item.id) === targetId,
-      );
-
-      try {
-        if (isAlreadyConnected) {
-          await disconnectItem(myId, targetId);
-          setConnectedItems((prev) =>
-            prev.filter((item) => (item.itemId || item.id) !== targetId),
-          );
-        } else {
-          await connectItem(myId, targetId);
-          setConnectedItems((prev) => [...prev, targetItem]);
-        }
-      } catch (error) {
-        console.error('연결 상태 변경 실패:', error);
-        alert('요청 처리 중 오류가 발생했습니다.');
-      }
-    }
-    // 생성 모드
-    else {
-      const isSelected = pendingItems.some(
-        (item) => (item.itemId || item.id) === targetId,
-      );
-      if (isSelected) {
-        setPendingItems((prev) =>
-          prev.filter((item) => (item.itemId || item.id) !== targetId),
-        );
-      } else {
-        setPendingItems((prev) => [...prev, targetItem]);
-      }
-    }
-  };
-
-  // ID로 연결
-  const handleConnectById = async (inputItemId) => {
-    const targetId = Number(inputItemId);
-    if (!targetId) return;
-
-    const currentList = itemId ? connectedItems : pendingItems;
-    if (currentList.some((item) => (item.itemId || item.id) === targetId)) {
-      return alert('이미 연결된 아이템입니다.');
-    }
-    if (itemId && Number(itemId) === targetId) {
-      return alert('자기 자신은 연결할 수 없습니다.');
-    }
-
-    try {
-      const targetItem = await getItem(targetId);
-      if (!targetItem) throw new Error('아이템 정보 없음');
-
-      const safeItem = {
-        ...targetItem,
-        itemId: targetItem.itemId || targetItem.id || targetId,
-      };
-
-      await handleConnectToggle(safeItem);
-      alert(`'${targetItem.title || '아이템'}'가 연결되었습니다.`);
-    } catch (error) {
-      alert('해당 ID의 아이템을 찾을 수 없거나 연결에 실패했습니다.');
-    }
-  };
-
   const handleSave = async () => {
     // 제목 필수 입력 체크 로직
     if (!formData.title.trim()) {
@@ -223,20 +126,7 @@ export default function ItemEditorPage() {
         await updateItem(payload);
         alert('수정되었습니다.');
       } else {
-        const responseData = await createItem(payload);
-        const newItemId = responseData.itemId;
-
-        if (newItemId && pendingItems.length > 0) {
-          try {
-            await Promise.all(
-              pendingItems.map((item) =>
-                connectItem(newItemId, item.itemId || item.id),
-              ),
-            );
-          } catch (connectError) {
-            console.error('아이템 연결 실패', connectError);
-          }
-        }
+        await createItem(payload);
         alert('성공적으로 저장되었습니다!');
       }
       navigate(-1);
@@ -313,9 +203,6 @@ export default function ItemEditorPage() {
   };
 
   const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
-
-  const displayItems = itemId ? connectedItems : pendingItems;
-  const displayCount = displayItems.length;
 
   return (
     <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
@@ -512,57 +399,6 @@ export default function ItemEditorPage() {
           className="w-full flex-1 min-h-[200px] bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none resize-none text-base leading-loose py-2"
         />
       </main>
-
-      <BottomSheet
-        title="연결된 아이템"
-        count={`${displayCount}개 연결됨`}
-        onConnectById={handleConnectById}
-      >
-        <div className="flex flex-col h-full mt-2">
-          {displayItems.length > 0 ? (
-            <div className="flex flex-col gap-2 pb-6">
-              {displayItems.map((item) => (
-                <div
-                  key={item.itemId || item.id}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-neutral-800/50 border border-neutral-700 transition-all"
-                >
-                  <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-neutral-800">
-                    <LinkIcon size={18} className="text-text-sub" />
-                  </div>
-
-                  <div className="flex-1 overflow-hidden">
-                    <div className="font-medium text-sm text-text-main truncate">
-                      {item.title || '제목 없음'}
-                    </div>
-                    <div className="text-xs text-text-sub truncate">
-                      {item.url || 'URL 없음'}
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleConnectToggle(item);
-                    }}
-                    className="p-2 rounded-full bg-neutral-700 text-text-sub hover:bg-red-500 hover:text-white transition-all active:scale-95 flex items-center justify-center"
-                    title="연결 해제"
-                  >
-                    <Minus size={18} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-10 text-text-sub gap-2">
-              <LinkIcon size={32} className="opacity-20" />
-              <div className="text-sm">연결된 아이템이 없습니다.</div>{' '}
-              <div className="text-xs opacity-60">
-                상단의 입력창을 통해 ID로 연결해보세요.
-              </div>
-            </div>
-          )}
-        </div>
-      </BottomSheet>
     </div>
   );
 }
