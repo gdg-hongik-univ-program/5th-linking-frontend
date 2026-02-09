@@ -105,6 +105,10 @@ export default function HomePage() {
     navigate(`/link/${itemId}`);
   };
 
+  const handleItemClick = (itemId) => {
+    navigate(`/link/${itemId}`);
+  };
+
   {
     /* 전역 이벤트로 스와이프 액션 닫기 */
   }
@@ -128,12 +132,12 @@ export default function HomePage() {
 
       <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
         <SearchBar value={search} onChange={(e) => setSearch(e.target.value)} />
-        <div className="flex justify-center shrink-0">
+        <div className="flex justify-center pt-6 shrink-0">
           <QuickActionBar />
         </div>
 
-        <section className="flex flex-col gap-5">
-          <h2 className="text-lg font-bold">최근 저장한 링크</h2>
+        <section className="flex flex-col py-6">
+          <h2 className="text-lg font-bold pb-4">최근 저장한 링크</h2>
           <div className="flex flex-col divide-y divide-neutral-800">
             {loading ? (
               <div className="text-center py-10 text-text-sub">
@@ -146,6 +150,7 @@ export default function HomePage() {
                     <SwipeableWrapper
                       key={link.itemId}
                       itemId={link.itemId}
+                      onClick={() => handleItemClick(link.itemId)}
                       isOpen={openedItemId === link.itemId}
                       onOpen={(id) => setOpenedItemId(id)}
                       onClose={() => setOpenedItemId(null)}

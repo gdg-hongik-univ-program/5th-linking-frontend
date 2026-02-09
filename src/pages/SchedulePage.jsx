@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Bell } from 'lucide-react';
@@ -10,9 +10,13 @@ import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
 
 export default function SchedulePage() {
   const navigate = useNavigate();
-  const [today, setToday] = useState(new Date()); // 실제 현재 시점 관리
-  const [viewDate, setViewDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // 날짜 상태 관리
+  const [today, setToday] = useState(new Date()); // 실제 오늘 (자정 갱신용)
+  const [viewDate, setViewDate] = useState(new Date()); // 달력에 표시되는 월
+  const [selectedDate, setSelectedDate] = useState(new Date()); // 선택된 일자
+
+  // 데이터 상태 관리
   const [summarySets, setSummarySets] = useState({
     deadlineSet: new Set(),
     createdSet: new Set(),
@@ -20,6 +24,10 @@ export default function SchedulePage() {
   const [eventList, setEventList] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  //캐시 저장
+  const [monthCache, setMonthCache] = useState({});
+
+  // 자정 마다 실제 오늘 날짜(today) 동기화
   useEffect(() => {
     let timer;
     const updateToday = () => {
@@ -28,6 +36,7 @@ export default function SchedulePage() {
         prev.toDateString() !== now.toDateString() ? now : prev,
       );
 
+      // 다음 자정까지 남은 시간 계산
       const tomorrow = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -36,7 +45,6 @@ export default function SchedulePage() {
       timer = setTimeout(updateToday, tomorrow.getTime() - now.getTime() + 100);
     };
     updateToday();
-
     window.addEventListener('focus', updateToday);
     return () => {
       clearTimeout(timer);
@@ -44,32 +52,48 @@ export default function SchedulePage() {
     };
   }, []);
 
-  // 월별 요약 조회
+  // 월별 요약 조회 (캐싱 적용)
   useEffect(() => {
     const fetchSummary = async () => {
+      const cacheKey = format(viewDate, 'yyyy-MM');
+
+      // A. 캐시 적중(Hit): API 호출 없이 즉시 적용
+      if (monthCache[cacheKey]) {
+        setSummarySets(monthCache[cacheKey]);
+        return;
+      }
+
+      // B. 캐시 미적중(Miss): 서버 요청
       try {
-        const data = await getCalendarSummary(
-          viewDate.getFullYear(),
-          viewDate.getMonth() + 1,
-        );
-        const deadlineDates = [],
-          createdDates = [];
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth() + 1;
+        const data = await getCalendarSummary(year, month);
+
+        const deadlineDates = [];
+        const createdDates = [];
+
         if (data.calendarSummary) {
           Object.entries(data.calendarSummary).forEach(([dateStr, counts]) => {
             if (counts.deadlineCount > 0) deadlineDates.push(dateStr);
             if (counts.createdCount > 0) createdDates.push(dateStr);
           });
         }
-        setSummarySets({
+
+        const newSets = {
           deadlineSet: new Set(deadlineDates),
           createdSet: new Set(createdDates),
-        });
+        };
+
+        // UI 업데이트 및 캐시에 저장
+        setSummarySets(newSets);
+        setMonthCache((prev) => ({ ...prev, [cacheKey]: newSets }));
       } catch (e) {
-        console.error(e);
+        console.error('월별 요약 로드 실패:', e);
       }
     };
+
     fetchSummary();
-  }, [viewDate]);
+  }, [viewDate]); // monthCache는 의존성에서 제외 (무한 루프 방지)
 
   // 일별 상세 일정 조회
   useEffect(() => {
@@ -102,7 +126,6 @@ export default function SchedulePage() {
           today={today}
           summarySets={summarySets}
           showDots={true}
-          onYearMonthClick={() => setViewDate(new Date())}
         />
 
         <section className="mt-8 px-6 pb-24">
@@ -112,7 +135,12 @@ export default function SchedulePage() {
           <div className="flex flex-col gap-3">
             {eventList.length > 0
               ? eventList.map((event) => (
-                  <LinkCard key={event.itemId} link={event} />
+                  <div
+                    key={event.itemId}
+                    onClick={() => navigate(`/link/${event.itemId}`)}
+                  >
+                    <LinkCard link={event} />
+                  </div>
                 ))
               : !loading && (
                   <div className="py-12 text-center text-text-sub text-sm">
