@@ -1,95 +1,83 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { MoreHorizontal } from 'lucide-react';
-import { getItems } from '../api/itemApi';
+import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { useItems } from '../hooks/useItems';
 import PageHeader from '../components/common/PageHeader';
-import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
 import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
+import Snackbar from '../components/common/Snackbar';
 
 export default function StaleItemsPage() {
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    items,
+    loading,
+    navigate,
+    openedItemId,
+    setOpenedItemId,
+    snackbar,
+    handleDelete,
+    handleUndo,
+    handleRestore,
+    handleItemClick,
+  } = useItems('stale');
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const data = await getItems();
-        setItems(data);
-      } catch (error) {
-        console.error('아이템 로드 실패:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchItems();
-  }, []);
-
-  const handleItemClick = (itemId) => {
-    navigate(`/view/${itemId}`);
-  };
-
-  const handleDelete = (id) => console.log('Delete:', id);
+  const filteredItems = items.filter((item) =>
+    (item.title || item.itemName || '')
+      .toLowerCase()
+      .includes(search.toLowerCase()),
+  );
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
-      <PageHeader
-        title="청소"
-        iconType="close"
-        onBackClick={() => navigate(-1)}
-      >
-        <IconButton
-          icon={MoreHorizontal}
-          onClick={() => console.log('더보기 클릭')}
-          aria-label="더보기"
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col h-full">
+      <PageHeader title="정리가 필요한 링크" onBack={() => navigate(-1)} />
+      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
+        <SearchBar
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="오래된 링크 검색"
         />
-      </PageHeader>
-
-      <main className="flex-1 px-6 pt-6 pb-2 flex flex-col overflow-y-auto">
-        <div className="mb-6">
-          <SearchBar
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <section className="flex flex-col">
-          <div className="flex flex-col divide-y divide-neutral-800">
-            {loading ? (
-              <div className="text-center py-10 text-text-sub">
-                불러오는 중...
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                {items.map((item) => (
-                  <SwipeableWrapper
-                    key={item.itemId}
-                    leftAction={<SwipeActionButton type="edit" />}
-                    rightAction={
-                      <SwipeActionButton
-                        type="delete"
-                        onClick={() => handleDelete(item.itemId)}
-                      />
-                    }
-                  >
-                    <div
-                      onClick={() => handleItemClick(item.itemId)}
-                      className="cursor-pointer"
-                    >
-                      <ItemCard item={item} />
-                    </div>
-                  </SwipeableWrapper>
-                ))}
-              </div>
-            )}
-          </div>
+        <section className="flex flex-col py-6">
+          {loading ? (
+            <div className="text-center py-10 text-text-sub">
+              불러오는 중...
+            </div>
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {filteredItems.map((item) => (
+                <SwipeableWrapper
+                  key={item.itemId}
+                  itemId={item.itemId}
+                  onClick={() => handleItemClick(item.itemId)}
+                  isOpen={openedItemId === item.itemId}
+                  onOpen={setOpenedItemId}
+                  onClose={() => setOpenedItemId(null)}
+                  leftAction={
+                    <SwipeActionButton
+                      type="restore"
+                      onClick={() => handleRestore(item.itemId)}
+                    />
+                  }
+                  rightAction={
+                    <SwipeActionButton
+                      type="delete"
+                      onClick={() => handleDelete(item)}
+                    />
+                  }
+                >
+                  <ItemCard item={item} />
+                </SwipeableWrapper>
+              ))}
+            </AnimatePresence>
+          )}
         </section>
       </main>
+      <Snackbar
+        isVisible={snackbar.isVisible}
+        message={snackbar.message}
+        onUndo={handleUndo}
+      />
     </div>
   );
 }

@@ -12,7 +12,7 @@ const SwipeableWrapper = ({
   leftAction,
   rightAction,
   actionWidth = 80,
-  triggerThreshold = 250,
+  triggerThreshold = 280,
   layout,
   initial,
   animate: animateProp,

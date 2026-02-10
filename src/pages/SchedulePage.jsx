@@ -5,8 +5,8 @@ import { Bell } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import CalendarPicker from '../components/common/CalendarPicker';
-import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
 import ItemCard from '../components/common/ItemCard';
+import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
 
 export default function SchedulePage() {
   const navigate = useNavigate();
