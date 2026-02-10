@@ -19,7 +19,6 @@ export default function TrashPage() {
   const [loading, setLoading] = useState(true);
   const [openedItemId, setOpenedItemId] = useState(null);
 
-  // [수정] filteredItems 변수 정의 추가
   const filteredItems = items.filter((item) => {
     if (!search) return true;
     const itemName = item.itemName || item.title || '';

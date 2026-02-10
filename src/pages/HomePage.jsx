@@ -29,7 +29,6 @@ export default function HomePage() {
     handleItemClick,
   } = useItems('recent');
 
-  // 검색 필터링
   const filteredItems = items.filter((item) => {
     if (!search) return true;
     const title = item.itemName || item.title || '';

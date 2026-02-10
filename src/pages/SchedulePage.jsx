@@ -24,10 +24,10 @@ export default function SchedulePage() {
   const [eventList, setEventList] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  //캐시 저장
+  // 캐시 저장
   const [monthCache, setMonthCache] = useState({});
 
-  // 자정 마다 실제 오늘 날짜(today) 동기화
+  // 자정 마다 실제 오늘 날짜 동기화
   useEffect(() => {
     let timer;
     const updateToday = () => {
