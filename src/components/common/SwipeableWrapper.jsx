@@ -1,109 +1,178 @@
-import React, { useState, useEffect, useCallback, forwardRef } from 'react';
-import { motion, useMotionValue, animate } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, useMotionValue, animate, useTransform } from 'framer-motion';
 
-const SwipeableWrapper = forwardRef(
-  (
-    {
-      children,
-      itemId,
-      isOpen,
-      onOpen,
-      onClose,
-      leftAction,
-      rightAction,
-      actionWidth = 80,
+const SMOOTH_SPRING = { type: 'spring', stiffness: 120, damping: 20, mass: 1 };
 
-      layout,
-      initial,
-      animate: animateProp,
-      exit,
-      transition,
-    },
-    ref,
-  ) => {
-    const x = useMotionValue(0);
-    const [constraints, setConstraints] = useState({
-      left: -actionWidth,
-      right: actionWidth,
-    });
+const SwipeableWrapper = ({
+  children,
+  itemId,
+  isOpen,
+  onOpen,
+  onClose,
+  leftAction,
+  rightAction,
+  actionWidth = 80,
+  triggerThreshold = 280,
+  layout,
+  initial,
+  animate: animateProp,
+  exit,
+  transition,
+}) => {
+  const x = useMotionValue(0);
+  const wrapperRef = useRef(null);
+  const dragStartX = useRef(0);
 
-    useEffect(() => {
-      if (!isOpen && x.get() !== 0) {
-        animate(x, 0, { type: 'spring', stiffness: 300, damping: 30 });
-      }
-    }, [isOpen, x]);
+  // 1. 배경 버튼 투명도
+  const leftOpacity = useTransform(x, [0, actionWidth], [0, 1]);
+  const rightOpacity = useTransform(x, [0, -actionWidth], [0, 1]);
 
-    const handleDragStart = useCallback(() => {
+  const contentOpacity = useTransform(
+    x,
+    // [왼쪽 풀 스와이프 끝, 왼쪽 액션 열림, 중앙, 오른쪽 액션 열림, 오른쪽 풀 스와이프 끝]
+    [-triggerThreshold, -actionWidth, 0, actionWidth, triggerThreshold],
+    // [흐려짐(0.5), 선명함(1), 선명함(1), 선명함(1), 흐려짐(0.5)]
+    [0.5, 1, 1, 1, 0.5],
+  );
+
+  const [constraints, setConstraints] = useState({
+    left: -1000,
+    right: 1000,
+  });
+
+  useEffect(() => {
+    if (isOpen) {
       const currentX = x.get();
-      if (currentX > 5) {
-        setConstraints({ left: 0, right: actionWidth });
-      } else if (currentX < -5) {
-        setConstraints({ left: -actionWidth, right: 0 });
+      if (currentX > 0) {
+        setConstraints({ left: 0, right: 1000 });
       } else {
-        setConstraints({ left: -actionWidth, right: actionWidth });
+        setConstraints({ left: -1000, right: 0 });
       }
-      onOpen(itemId);
-    }, [actionWidth, itemId, onOpen, x]);
+    } else {
+      setConstraints({ left: -1000, right: 1000 });
+      animate(x, 0, SMOOTH_SPRING);
+    }
+  }, [isOpen, x]);
 
-    const handleDragEnd = (_, info) => {
-      const dragX = x.get();
-      const velocity = info.velocity.x;
-      const springConfig = { type: 'spring', stiffness: 400, damping: 35 };
-
-      if (dragX < -actionWidth / 2 || velocity < -500) {
-        animate(x, -actionWidth, springConfig);
-        onOpen(itemId);
-      } else if (dragX > actionWidth / 2 || velocity > 500) {
-        animate(x, actionWidth, springConfig);
-        onOpen(itemId);
-      } else {
-        animate(x, 0, { ...springConfig, stiffness: 500 });
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        isOpen &&
+        wrapperRef.current &&
+        !wrapperRef.current.contains(event.target)
+      ) {
         onClose();
       }
     };
+    document.addEventListener('mousedown', handleClickOutside, true);
+    document.addEventListener('touchstart', handleClickOutside, true);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside, true);
+      document.removeEventListener('touchstart', handleClickOutside, true);
+    };
+  }, [isOpen, onClose]);
 
-    return (
-      <motion.div
-        ref={ref}
-        layout={layout}
-        initial={initial}
-        animate={animateProp}
-        exit={exit}
-        transition={transition}
-        className="relative overflow-hidden rounded-xl bg-bg-main mb-3 select-none shadow-sm"
-      >
-        {/* 배경 버튼 (z-index 20) */}
-        <div className="absolute inset-0 flex items-center justify-between px-6 z-20 pointer-events-none">
-          <div className="pointer-events-auto h-full flex items-center">
-            {leftAction}
-          </div>
-          <div className="pointer-events-auto h-full flex items-center">
-            {rightAction}
-          </div>
-        </div>
+  const handleDragStart = () => {
+    dragStartX.current = x.get();
+    onOpen(itemId);
+  };
 
-        {/* 실제 카드 콘텐츠 (z-index 30) */}
+  const handleDragEnd = (_, info) => {
+    const dragX = x.get();
+    const velocity = info.velocity.x;
+    const startX = dragStartX.current;
+
+    const isLeftTrigger =
+      dragX > triggerThreshold && leftAction?.props?.onClick;
+    const isRightTrigger =
+      dragX < -triggerThreshold && rightAction?.props?.onClick;
+
+    if (isLeftTrigger || isRightTrigger) {
+      const isValidTrigger = isLeftTrigger ? startX >= 0 : startX <= 0;
+
+      if (isValidTrigger) {
+        if (isLeftTrigger) leftAction.props.onClick();
+        else rightAction.props.onClick();
+        onClose();
+        return;
+      }
+    }
+
+    if (startX > 10) {
+      if (dragX < actionWidth / 2 || velocity < -300) {
+        onClose();
+      } else {
+        animate(x, actionWidth, SMOOTH_SPRING);
+      }
+      return;
+    }
+
+    if (startX < -10) {
+      if (dragX > -actionWidth / 2 || velocity > 300) {
+        onClose();
+      } else {
+        animate(x, -actionWidth, SMOOTH_SPRING);
+      }
+      return;
+    }
+
+    if (dragX > actionWidth / 2 || velocity > 300) {
+      animate(x, actionWidth, SMOOTH_SPRING);
+      onOpen(itemId);
+    } else if (dragX < -actionWidth / 2 || velocity < -300) {
+      animate(x, -actionWidth, SMOOTH_SPRING);
+      onOpen(itemId);
+    } else {
+      animate(x, 0, SMOOTH_SPRING);
+      onClose();
+    }
+  };
+
+  return (
+    <motion.div
+      ref={wrapperRef}
+      layout={layout}
+      initial={initial}
+      animate={animateProp}
+      exit={exit}
+      transition={transition}
+      className="relative overflow-hidden rounded-xl bg-bg-main mb-3 select-none shadow-sm"
+    >
+      <div className="absolute inset-0 flex items-center justify-between z-0 pointer-events-none">
         <motion.div
-          drag="x"
-          onDragStart={handleDragStart}
-          dragConstraints={constraints}
-          dragElastic={0} // 반대쪽 넘어감 방지를 위해 탄성 제거
-          dragMomentum={false}
-          style={{ x }}
-          onDragEnd={handleDragEnd}
-          onClick={(e) => {
-            if (isOpen || Math.abs(x.get()) > 5) {
-              e.stopPropagation();
-              onClose();
-            }
-          }}
-          className="relative z-30 bg-bg-main cursor-grab active:cursor-grabbing will-change-transform"
+          style={{ opacity: leftOpacity }}
+          className="flex items-center justify-start h-full pl-4 w-1/2"
         >
-          {children}
+          <div className="pointer-events-auto">{leftAction}</div>
         </motion.div>
+        <motion.div
+          style={{ opacity: rightOpacity }}
+          className="flex items-center justify-end h-full pr-4 w-1/2"
+        >
+          <div className="pointer-events-auto">{rightAction}</div>
+        </motion.div>
+      </div>
+
+      <motion.div
+        drag="x"
+        dragConstraints={constraints}
+        dragElastic={0.05}
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        style={{ x, opacity: contentOpacity }}
+        onClick={(e) => {
+          if (Math.abs(x.get()) > 5) {
+            e.stopPropagation();
+            onClose();
+          }
+        }}
+        className="relative z-10 bg-bg-main cursor-grab active:cursor-grabbing"
+      >
+        {children}
       </motion.div>
-    );
-  },
-);
+    </motion.div>
+  );
+};
 
 export default SwipeableWrapper;

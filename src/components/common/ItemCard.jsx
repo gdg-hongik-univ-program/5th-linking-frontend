@@ -29,13 +29,13 @@ const formatDate = (dateString) => {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 };
 
-export default function LinkCard({ link }) {
-  const { title, tags, importance, createdAt } = link;
+export default function ItemCard({ item }) {
+  const { title, tags, importance, createdAt } = item;
 
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      className="flex gap-4 py-2 cursor-pointer group select-none"
+      className="flex gap-3 py-1 cursor-pointer group select-none"
     >
       {/* 1. 좌측 썸네일 영역 */}
       <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
@@ -48,14 +48,14 @@ export default function LinkCard({ link }) {
         )}
         {/* 1-2. D-Day 배지 */}
         <div className="absolute bottom-1.5 right-1.5">
-          <DDayBadge deadline={link.deadline} />
+          <DDayBadge deadline={item.deadline} />
         </div>
       </div>
 
       {/* 2. 우측 정보 영역 */}
       <div className="flex flex-col justify-between flex-1 py-1 min-w-0">
         {/* 2-1. 상단 링크 제목 */}
-        <h3 className="text-[15px] font-medium text-text-main leading-snug line-clamp-2 overflow-hidden text-ellipsis break-keep">
+        <h3 className="text-sm font-medium text-text-main leading-snug line-clamp-2 overflow-hidden text-ellipsis break-keep">
           {title}
         </h3>
 

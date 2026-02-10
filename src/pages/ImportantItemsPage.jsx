@@ -6,29 +6,29 @@ import { useItems } from '../hooks/useItems';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import LinkCard from '../components/common/LinkCard';
+import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
-export default function ImportantLinksPage() {
+export default function ImportantItemsPage() {
   const [search, setSearch] = useState('');
 
   const {
-    items: links,
+    items,
     loading,
     navigate,
     openedItemId,
     setOpenedItemId,
     snackbar,
-    handleDeleteRequest,
+    handleDelete,
     handleUndo,
-    handleDirectEdit,
+    handleEdit,
     handleItemClick,
-  } = useItems('importance');
+  } = useItems('important');
 
-  const filteredLinks = links.filter((link) =>
-    (link.title || link.itemName || '')
+  const filteredItems = items.filter((item) =>
+    (item.title || item.itemName || '')
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
@@ -58,28 +58,37 @@ export default function ImportantLinksPage() {
               </div>
             ) : (
               <AnimatePresence mode="popLayout">
-                {filteredLinks.map((link) => (
+                {filteredItems.map((item) => (
                   <SwipeableWrapper
-                    key={link.itemId}
-                    itemId={link.itemId}
-                    onClick={() => handleItemClick(link.itemId)}
-                    isOpen={openedItemId === link.itemId}
+                    key={item.itemId}
+                    itemId={item.itemId}
+                    isOpen={openedItemId === item.itemId}
                     onOpen={setOpenedItemId}
                     onClose={() => setOpenedItemId(null)}
+                    actionWidth={80}
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, x: -100 }}
                     leftAction={
                       <SwipeActionButton
                         type="edit"
-                        onClick={() => handleDirectEdit(link.itemId)}
+                        onClick={() => handleEdit(item.itemId)}
                       />
                     }
                     rightAction={
                       <SwipeActionButton
                         type="delete"
-                        onClick={() => handleDeleteRequest(link)}
+                        onClick={() => handleDelete(item)}
                       />
                     }
                   >
-                    <LinkCard link={link} />
+                    <div
+                      onClick={() => handleItemClick(item.itemId)}
+                      className="cursor-pointer"
+                    >
+                      <ItemCard item={item} />
+                    </div>
                   </SwipeableWrapper>
                 ))}
               </AnimatePresence>

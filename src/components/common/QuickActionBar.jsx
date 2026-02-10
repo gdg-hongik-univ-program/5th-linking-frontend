@@ -4,9 +4,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const actions = [
-  { id: 'deadline', label: '마감임박', icon: Hourglass, path: '/deadline' },
+  { id: 'deadline', label: '마감임박', icon: Hourglass, path: '/upcoming' },
   { id: 'important', label: '중요', icon: Star, path: '/important' },
-  { id: 'cleanup', label: '청소', icon: BrushCleaning, path: '/cleanup' },
+  { id: 'cleanup', label: '청소', icon: BrushCleaning, path: '/stale' },
   { id: 'trash', label: '휴지통', icon: Trash2, path: '/trash' },
 ];
 
@@ -29,7 +29,7 @@ export default function QuickActionBar() {
                 className="flex flex-col items-center gap-[5px] group outline-none"
               >
                 <Icon
-                  size={18}
+                  size="18"
                   strokeWidth="2"
                   className={`transition-colors ${
                     isActive

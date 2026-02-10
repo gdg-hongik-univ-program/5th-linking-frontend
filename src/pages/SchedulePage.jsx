@@ -5,7 +5,7 @@ import { Bell } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import CalendarPicker from '../components/common/CalendarPicker';
-import LinkCard from '../components/common/LinkCard';
+import ItemCard from '../components/common/ItemCard';
 import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
 
 export default function SchedulePage() {
@@ -112,9 +112,13 @@ export default function SchedulePage() {
   }, [selectedDate]);
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden">
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
       <TabHeader title="일정">
-        <IconButton icon={Bell} onClick={() => navigate('/notification')} />
+        <IconButton
+          icon={Bell}
+          onClick={() => navigate('/notification')}
+          aria-label="알림함"
+        />
       </TabHeader>
 
       <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
@@ -137,9 +141,9 @@ export default function SchedulePage() {
               ? eventList.map((event) => (
                   <div
                     key={event.itemId}
-                    onClick={() => navigate(`/link/${event.itemId}`)}
+                    onClick={() => navigate(`/view/${event.itemId}`)}
                   >
-                    <LinkCard link={event} />
+                    <ItemCard item={event} />
                   </div>
                 ))
               : !loading && (

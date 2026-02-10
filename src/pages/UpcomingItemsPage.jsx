@@ -3,40 +3,40 @@ import { AnimatePresence } from 'framer-motion';
 import { useItems } from '../hooks/useItems';
 import PageHeader from '../components/common/PageHeader';
 import SearchBar from '../components/common/SearchBar';
-import LinkCard from '../components/common/LinkCard';
+import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
-export default function StaleLinksPage() {
+export default function UpcomingItemsPage() {
   const [search, setSearch] = useState('');
   const {
-    items: links,
+    items,
     loading,
     navigate,
     openedItemId,
     setOpenedItemId,
     snackbar,
-    handleDeleteRequest,
+    handleDelete,
     handleUndo,
-    handleRestore, // 보관 기능 사용
+    handleEdit,
     handleItemClick,
-  } = useItems('cleanup');
+  } = useItems('upcoming');
 
-  const filteredLinks = links.filter((link) =>
-    (link.title || link.itemName || '')
+  const filteredItems = items.filter((item) =>
+    (item.title || item.itemName || '')
       .toLowerCase()
       .includes(search.toLowerCase()),
   );
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col h-full">
-      <PageHeader title="정리가 필요한 링크" onBack={() => navigate(-1)} />
+      <PageHeader title="마감임박" onBack={() => navigate(-1)} />
       <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
         <SearchBar
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="오래된 링크 검색"
+          placeholder="마감일 있는 링크 검색"
         />
         <section className="flex flex-col py-6">
           {loading ? (
@@ -45,29 +45,28 @@ export default function StaleLinksPage() {
             </div>
           ) : (
             <AnimatePresence mode="popLayout">
-              {filteredLinks.map((link) => (
+              {filteredItems.map((item) => (
                 <SwipeableWrapper
-                  key={link.itemId}
-                  itemId={link.itemId}
-                  onClick={() => handleItemClick(link.itemId)}
-                  isOpen={openedItemId === link.itemId}
+                  key={item.itemId}
+                  itemId={item.itemId}
+                  onClick={() => handleItemClick(item.itemId)}
+                  isOpen={openedItemId === item.itemId}
                   onOpen={setOpenedItemId}
                   onClose={() => setOpenedItemId(null)}
-                  // 청소 페이지 특성상 '수정' 대신 '보관(기한 연장)'을 배치
                   leftAction={
                     <SwipeActionButton
-                      type="restore"
-                      onClick={() => handleRestore(link.itemId)}
+                      type="edit"
+                      onClick={() => handleEdit(item.itemId)}
                     />
                   }
                   rightAction={
                     <SwipeActionButton
                       type="delete"
-                      onClick={() => handleDeleteRequest(link)}
+                      onClick={() => handleDelete(item)}
                     />
                   }
                 >
-                  <LinkCard link={link} />
+                  <ItemCard item={item} />
                 </SwipeableWrapper>
               ))}
             </AnimatePresence>

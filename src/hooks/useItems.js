@@ -1,16 +1,20 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getItems, deleteItem, restoreItem } from '../api/itemApi';
+
 export const useItems = (filterType) => {
+  const location = useLocation();
   const navigate = useNavigate();
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openedItemId, setOpenedItemId] = useState(null);
-
   const [snackbar, setSnackbar] = useState({ isVisible: false, message: '' });
+
   const deleteTimerRef = useRef(null);
   const pendingItemRef = useRef(null);
 
+  // 데이터 불러오기
   const fetchItems = useCallback(async () => {
     setLoading(true);
     try {
@@ -18,17 +22,34 @@ export const useItems = (filterType) => {
       setItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(`${filterType} 로딩 실패:`, error);
+      setItems([]);
     } finally {
       setLoading(false);
     }
   }, [filterType]);
 
+  // 페이지 진입 및 location 변경 시 데이터 fetch
   useEffect(() => {
     fetchItems();
+  }, [fetchItems, location.key]);
+
+  // 스크롤 시 스와이프 닫기 및 cleanup 로직
+  useEffect(() => {
     const handleGlobalClose = () => setOpenedItemId(null);
     window.addEventListener('scroll', handleGlobalClose, true);
-    return () => window.removeEventListener('scroll', handleGlobalClose, true);
-  }, [fetchItems]);
+
+    return () => {
+      window.removeEventListener('scroll', handleGlobalClose, true);
+      // [핵심] 페이지 이탈 시 대기 중인 삭제 즉시 실행
+      if (deleteTimerRef.current && pendingItemRef.current) {
+        clearTimeout(deleteTimerRef.current);
+        const { item } = pendingItemRef.current;
+        deleteItem(item.itemId).catch(console.error);
+        // 필요 시 로컬 스토리지 등에 기록 보관 가능
+        localStorage.setItem('latestDeletedItem', JSON.stringify(item));
+      }
+    };
+  }, []);
 
   const executeActualDelete = async () => {
     if (!pendingItemRef.current) return;
@@ -37,15 +58,13 @@ export const useItems = (filterType) => {
       await deleteItem(item.itemId);
     } catch (error) {
       console.error('서버 삭제 실패:', error);
-      // 삭제 실패 시 목록 갱신을 통해 UI를 동기화하는 것이 안전합니다.
-      fetchItems();
+      fetchItems(); // 실패 시 UI 복구
     } finally {
       clearDeleteState();
     }
   };
 
-  const handleDeleteRequest = (item) => {
-    // 이미 대기 중인 삭제가 있다면 즉시 실행
+  const handleDelete = (item) => {
     if (deleteTimerRef.current) {
       clearTimeout(deleteTimerRef.current);
       executeActualDelete();
@@ -55,7 +74,7 @@ export const useItems = (filterType) => {
     pendingItemRef.current = { item, index: targetIndex };
 
     setItems((prev) => prev.filter((i) => i.itemId !== item.itemId));
-    setSnackbar({ isVisible: true, message: '링크가 삭제되었습니다.' });
+    setSnackbar({ isVisible: true, message: '링크를 삭제했어요.' });
 
     deleteTimerRef.current = setTimeout(() => {
       executeActualDelete();
@@ -81,38 +100,16 @@ export const useItems = (filterType) => {
     pendingItemRef.current = null;
   };
 
-  const handleRestore = async (id) => {
-    try {
-      await restoreItem(id);
-      setItems((prev) => prev.filter((item) => item.itemId !== id));
-      return true;
-    } catch (error) {
-      console.error('보관 실패:', error);
-      return false;
-    }
-  };
-
-  // navigate 관련 핸들러
-  const handleDirectEdit = (itemId) => {
-    navigate(`/edit/${itemId}`);
-  };
-
-  const handleItemClick = (itemId) => {
-    navigate(`/link/${itemId}`);
-  };
-
   return {
     items,
     loading,
-    navigate,
     openedItemId,
     setOpenedItemId,
     snackbar,
-    handleDeleteRequest,
+    handleDelete,
     handleUndo,
-    handleRestore,
-    handleDirectEdit,
-    handleItemClick,
+    handleEdit: (itemId) => navigate(`/edit/${itemId}`),
+    handleItemClick: (itemId) => navigate(`/view/${itemId}`),
     refetch: fetchItems,
   };
 };
