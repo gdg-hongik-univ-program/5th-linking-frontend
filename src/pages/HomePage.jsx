@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Bell } from 'lucide-react';
-import { getItems, deleteItem } from '../api/itemApi';
+
+import { useItems } from '../hooks/useItems';
+
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
@@ -13,112 +14,20 @@ import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
 export default function HomePage() {
-  const navigate = useNavigate();
   const [search, setSearch] = useState('');
-  const [links, setLinks] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [openedItemId, setOpenedItemId] = useState(null);
-  const [snackbar, setSnackbar] = useState({ isVisible: false, item: null });
 
-  const deleteTimerRef = useRef(null);
-  const pendingItemRef = useRef(null);
-
-  useEffect(() => {
-    const fetchLinks = async () => {
-      try {
-        const data = await getItems();
-        setLinks(data);
-      } catch (error) {
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLinks();
-  }, []);
-
-  const handleDeleteRequest = (item) => {
-    // 1. 기존에 진행 중이던 삭제 작업이 있다면 즉시 서버 처리 (중첩 방지)
-    if (deleteTimerRef.current) {
-      executeActualDelete();
-    }
-
-    // 2. 삭제할 아이템 정보와 위치(index) 저장
-    const targetIndex = links.findIndex((l) => l.itemId === item.itemId);
-    pendingItemRef.current = { item, index: targetIndex };
-
-    // 3. UI에서 즉시 제거 (낙관적 업데이트)
-    setLinks((prev) => prev.filter((l) => l.itemId !== item.itemId));
-
-    // 4. 스낵바 노출 및 3초 타이머 시작
-    setSnackbar({ isVisible: true, message: '링크가 삭제되었습니다.' });
-
-    deleteTimerRef.current = setTimeout(() => {
-      executeActualDelete();
-    }, 3000); // 3초 대기
-  };
-
-  // 실제 서버 API를 호출하는 함수
-  const executeActualDelete = async () => {
-    if (!pendingItemRef.current) return;
-
-    try {
-      const { item } = pendingItemRef.current;
-      await deleteItem(item.itemId);
-      console.log('서버에서 완전히 삭제됨');
-    } catch (error) {
-      console.error('서버 삭제 실패:', error);
-    } finally {
-      clearDeleteState();
-    }
-  };
-
-  // 실행 취소(Undo) 클릭 시 호출
-  const handleUndo = () => {
-    if (!pendingItemRef.current) return;
-
-    // 1. 타이머 중단
-    clearTimeout(deleteTimerRef.current);
-
-    // 2. 원래 위치에 데이터 복원
-    const { item, index } = pendingItemRef.current;
-    setLinks((prev) => {
-      const newList = [...prev];
-      newList.splice(index, 0, item);
-      return newList;
-    });
-
-    // 3. 상태 초기화
-    clearDeleteState();
-  };
-
-  const clearDeleteState = () => {
-    setSnackbar({ isVisible: false, item: null });
-    deleteTimerRef.current = null;
-    pendingItemRef.current = null;
-  };
-
-  {
-    /* 수정 화면으로 이동 (현재는 뷰어로 이동) */
-  }
-  const handleDirectEdit = (itemId) => {
-    navigate(`/link/${itemId}`);
-  };
-
-  const handleItemClick = (itemId) => {
-    navigate(`/link/${itemId}`);
-  };
-
-  {
-    /* 전역 이벤트로 스와이프 액션 닫기 */
-  }
-  useEffect(() => {
-    const handleGlobalClose = () => setOpenedItemId(null);
-    // 스크롤 발생 시 즉시 닫기
-    window.addEventListener('scroll', handleGlobalClose, true);
-    // 배경(main 영역) 터치 시 닫기
-    return () => window.removeEventListener('scroll', handleGlobalClose, true);
-  }, []);
+  const {
+    items: links,
+    loading,
+    navigate,
+    openedItemId,
+    setOpenedItemId,
+    snackbar,
+    handleDeleteRequest,
+    handleUndo,
+    handleDirectEdit,
+    handleItemClick,
+  } = useItems('recent');
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans">
@@ -150,13 +59,12 @@ export default function HomePage() {
                     <SwipeableWrapper
                       key={link.itemId}
                       itemId={link.itemId}
-                      onClick={() => handleItemClick(link.itemId)}
                       isOpen={openedItemId === link.itemId}
                       onOpen={(id) => setOpenedItemId(id)}
                       onClose={() => setOpenedItemId(null)}
                       actionWidth={80}
                       layout
-                      initial={{ opacity: -1, y: 0 }}
+                      initial={{ opacity: 0, y: 0 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{
                         opacity: 0,
@@ -183,7 +91,9 @@ export default function HomePage() {
                         />
                       }
                     >
-                      <LinkCard link={link} />
+                      <div onClick={() => handleItemClick(link.itemId)}>
+                        <LinkCard link={link} />
+                      </div>
                     </SwipeableWrapper>
                   ))}
                 </AnimatePresence>
