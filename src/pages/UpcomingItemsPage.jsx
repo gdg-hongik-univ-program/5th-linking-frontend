@@ -39,7 +39,7 @@ export default function UpcomingItemsPage() {
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
       <PageHeader
-        title="마감임박"
+        title="임박"
         iconType="close"
         onBackClick={() => navigate(-1)}
       >

@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getItem, getConnectedItems, connectItem } from '../api/itemApi';
+import {
+  getItem,
+  getConnectedItems,
+  connectItem,
+  updateItemImportance,
+} from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import BottomSheet from '../components/common/BottomSheet';
@@ -42,12 +47,12 @@ export default function ItemViewerPage() {
         const validItems = await getConnectedItems(targetId);
         setConnectedItems(validItems);
       } catch (connectError) {
-        console.warn('연결된 아이템 조회 실패:', connectError);
+        console.warn('연결된 아이템 목록 조회 실패:', connectError);
         setConnectedItems([]);
       }
     } catch (error) {
-      console.error('상세 정보 조회 실패:', error);
-      alert('아이템을 불러오는데 실패했습니다.');
+      console.error('아이템 상세 조회 실패:', error);
+      alert('링크를 불러오는데 실패했어요.');
       navigate(-1);
     } finally {
       setLoading(false);
@@ -73,7 +78,7 @@ export default function ItemViewerPage() {
       navigator.share({ title: data.title, url: data.url });
     } else {
       navigator.clipboard.writeText(data.url);
-      alert('URL이 복사되었습니다.');
+      alert('URL이 복사되었어요.');
     }
   };
 
@@ -83,12 +88,24 @@ export default function ItemViewerPage() {
 
   const handleConnectById = async (targetLinkItemId) => {
     try {
-      await connectItem(data.itemId, targetLinkItemId);
-      alert('연결되었습니다.');
+      const targetId = data.itemId || itemId;
+      await connectItem(targetId, targetLinkItemId);
+      alert('링크가 서로 연결되었어요.');
       refreshData();
     } catch (error) {
-      console.error('연결 실패:', error);
-      alert('연결에 실패했습니다. ID를 확인해주세요.');
+      console.error('아이템 연결 실패:', error);
+      alert('링크를 서로 연결하는데 실패했어요. ID를 확인해주세요.');
+    }
+  };
+
+  const handleToggleImportance = async () => {
+    try {
+      const targetId = data.itemId || itemId;
+      await updateItemImportance(targetId, !data.importance);
+      setData((prev) => ({ ...prev, importance: !prev.importance }));
+    } catch (error) {
+      console.error('중요도 변경 실패:', error);
+      alert('중요도 변경에 실패했어요.');
     }
   };
 
@@ -277,11 +294,10 @@ export default function ItemViewerPage() {
               )}
             </div>
           </div>
-
           {/* 액션 버튼 영역 */}
           <div className="flex justify-between items-center px-4 py-1">
             <button
-              onClick={() => {}}
+              onClick={handleToggleImportance}
               className="flex flex-col items-center gap-1.5 min-w-[60px] text-text-sub hover:text-text-main transition-colors active:scale-95"
             >
               <div
@@ -311,7 +327,7 @@ export default function ItemViewerPage() {
           <hr className="border-border-default" />
 
           <div className="text-base leading-relaxed text-text-main whitespace-pre-wrap pb-10 mt-1">
-            {data.memo || '메모 내용이 없습니다.'}
+            {data.memo || '메모 내용이 없어요.'}
           </div>
         </div>
       </main>
@@ -349,7 +365,7 @@ export default function ItemViewerPage() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-text-sub gap-2 py-10">
             <LinkIcon size={40} className="opacity-20 mb-2" />
-            <p className="text-sm">연결된 아이템이 없습니다.</p>
+            <p className="text-sm">연결된 아이템이 없어요.</p>
           </div>
         )}
       </BottomSheet>

@@ -15,7 +15,7 @@ export default function NotFoundPage() {
         </div>
 
         <h1 className="text-2xl font-bold mb-2 text-center text-text-main">
-          페이지를 찾을 수 없어요
+          페이지 오류
         </h1>
         <p className="text-text-sub text-center mb-10 leading-relaxed">
           요청하신 페이지가 사라졌거나 <br />
@@ -27,7 +27,7 @@ export default function NotFoundPage() {
             onClick={() => navigate(-1)}
             className="w-full py-3.5 px-4 rounded-full bg-neutral-800 text-text-main font-bold hover:bg-neutral-700 transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
-            이전 페이지로 이동
+            뒤로가기
           </button>
 
           <button

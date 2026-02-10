@@ -1,4 +1,3 @@
-import React from 'react';
 import { differenceInCalendarDays } from 'date-fns';
 
 export default function DDayBadge({ deadline, className = '' }) {
@@ -9,23 +8,28 @@ export default function DDayBadge({ deadline, className = '' }) {
   const diff = differenceInCalendarDays(targetDate, today);
 
   let label = '';
-  let status = 'normal'; // normal, urgent, past
-
+  // 상태 (upcoming, normal, past)
+  let status = 'normal';
+  // D-7 이후부터 D-DAY 이전까지 upcoming
   if (diff === 0) {
     label = 'D-Day';
-    status = 'urgent';
-  } else if (diff > 0) {
+    status = 'upcoming';
+  }
+  // D-8 이전까지 normal
+  else if (diff > 0) {
     label = `D-${diff}`;
-    status = diff <= 7 ? 'urgent' : 'normal'; // 7일 이내면 강조
-  } else {
+    status = diff <= 7 ? 'upcoming' : 'normal';
+  }
+  // D+1과 이후부터 past
+  else {
     label = `D+${Math.abs(diff)}`;
     status = 'past';
   }
 
   const styles = {
-    urgent: 'bg-red-500 text-text-main', // 당일 및 임박
-    normal: 'bg-red-500/10 text-text-error border border-red-500/20', // 여유 있는 마감
-    past: 'bg-bg-card text-text-main opacity-60', // 지난 마감
+    upcoming: 'bg-red-500 text-text-main',
+    normal: 'bg-red-500/10 text-text-error border border-red-500/20',
+    past: 'bg-bg-card text-text-main opacity-60',
   };
 
   return (

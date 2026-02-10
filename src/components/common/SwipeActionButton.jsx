@@ -13,7 +13,7 @@ const BUTTON_CASE = {
   },
   restore: {
     icon: RotateCcw,
-    label: '복구',
+    label: '복원',
     colorClass: 'bg-success-600',
   },
   permanent_delete: {

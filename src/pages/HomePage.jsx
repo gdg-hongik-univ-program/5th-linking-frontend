@@ -25,10 +25,8 @@ export default function HomePage() {
   const deleteTimerRef = useRef(null);
   const pendingItemRef = useRef(null);
 
-  // [수정] 검색 필터링 로직 추가 (search와 items 상태가 정의된 직후에 위치)
   const filteredItems = items.filter((item) => {
     if (!search) return true;
-    // item.itemName이 있다고 가정 (실제 데이터 구조에 맞게 수정 필요: item.title 등)
     const title = item.itemName || item.title || '';
     return title.toLowerCase().includes(search.toLowerCase());
   });
@@ -39,11 +37,10 @@ export default function HomePage() {
       setLoading(true);
       try {
         const data = await getItems();
-        // 배열인지 확인 후 설정
         setItems(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('아이템 로딩 실패:', error);
-        setItems([]); // 에러 시 빈 배열 처리
+        setItems([]);
       } finally {
         setLoading(false);
       }

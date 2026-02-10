@@ -1,10 +1,10 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Bell } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import CalendarPicker from '../components/common/CalendarPicker';
-import itemCard from '../components/common/ItemCard';
 import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
 import ItemCard from '../components/common/ItemCard';
 
@@ -24,10 +24,10 @@ export default function SchedulePage() {
   const [eventList, setEventList] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  //캐시 저장
+  // 캐시 저장
   const [monthCache, setMonthCache] = useState({});
 
-  // 자정 마다 실제 오늘 날짜(today) 동기화
+  // 자정 마다 실제 오늘 날짜 동기화
   useEffect(() => {
     let timer;
     const updateToday = () => {
@@ -141,9 +141,9 @@ export default function SchedulePage() {
               ? eventList.map((event) => (
                   <div
                     key={event.itemId}
-                    onClick={() => navigate(`/link/${event.itemId}`)}
+                    onClick={() => navigate(`/view/${event.itemId}`)}
                   >
-                    <ItemCard link={event} />
+                    <ItemCard item={event} />
                   </div>
                 ))
               : !loading && (

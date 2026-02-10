@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Hourglass, BrushCleaning, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -15,7 +15,6 @@ export default function NotificationPage() {
         const data = await getNotifications();
         setNotifications(data);
       } catch (error) {
-        // 에러 처리
       } finally {
         setLoading(false);
       }
