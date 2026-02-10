@@ -187,7 +187,10 @@ export default function ItemEditorPage() {
       e.preventDefault();
       const newTag = tagInput.trim();
       if (newTag && !formData.tags.includes(newTag)) {
-        setFormData((prev) => ({ ...prev, tags: [...prev.tags, newTag] }));
+        setFormData((prev) => ({
+          ...prev,
+          tags: [...prev.tags, newTag].sort(),
+        }));
         setTagInput('');
       }
     } else if (e.key === 'Backspace' && !tagInput && formData.tags.length > 0) {

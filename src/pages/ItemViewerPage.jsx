@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   PenLine,
 } from 'lucide-react';
+import { differenceInCalendarDays } from 'date-fns';
 
 export default function ItemViewerPage() {
   const navigate = useNavigate();
@@ -158,6 +159,28 @@ export default function ItemViewerPage() {
     return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
   };
 
+  const getDeadlineStatus = (deadline) => {
+    if (!deadline) return null;
+
+    const today = new Date();
+    const targetDate = new Date(deadline);
+    const diff = differenceInCalendarDays(targetDate, today);
+
+    if (diff === 0 || (diff > 0 && diff <= 7)) {
+      return 'upcoming';
+    } else if (diff > 7) {
+      return 'normal';
+    } else {
+      return 'past';
+    }
+  };
+
+  const deadlineStyles = {
+    upcoming: 'bg-error-500 text-text-main',
+    normal: 'bg-error-50 text-text-error',
+    past: 'bg-neutral-500 text-text-main opacity-60',
+  };
+
   const videoId = getYoutubeId(data.url);
   const displayCount = connectedItems.length;
 
@@ -191,7 +214,9 @@ export default function ItemViewerPage() {
           {/* 태그 및 디데이 영역 */}
           <div className="flex flex-wrap gap-2">
             {data.deadline && (
-              <span className="px-3 py-1 bg-error-500 rounded-full text-xs text-error-50 font-bold">
+              <span
+                className={`px-3 py-1 rounded-full text-xs font-bold ${deadlineStyles[getDeadlineStatus(data.deadline)]}`}
+              >
                 {getDDay(data.deadline)}
               </span>
             )}
@@ -199,13 +224,13 @@ export default function ItemViewerPage() {
               data.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 bg-bg-nav rounded-full text-xs text-text-sub"
+                  className="px-3 py-1 bg-bg-card rounded-full text-xs text-text-main"
                 >
                   {tag}
                 </span>
               ))
             ) : (
-              <span className="px-3 py-1 bg-bg-nav rounded-full text-xs text-text-disabled">
+              <span className="px-3 py-1 bg-bg-card rounded-full text-xs text-text-disabled">
                 태그 없음
               </span>
             )}
