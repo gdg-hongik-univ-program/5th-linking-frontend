@@ -29,11 +29,11 @@ const formatDate = (dateString) => {
 };
 
 export default function FolderCard({ folder }) {
-  const { folderName, children, linkCount, createdAt } = folder;
+  const { folderName, childCount, itemCount, createdAt } = folder;
 
-  const folderCount = children?.length || 0;
-  const fileCount = linkCount || 0;
-  const totalCount = folderCount + fileCount;
+  const totalFolders = childCount || 0;
+  const totalItems = itemCount || 0;
+  const totalCount = totalFolders + totalItems;
 
   return (
     <motion.div
@@ -54,9 +54,9 @@ export default function FolderCard({ folder }) {
 
         {/* 2-2. 하단 세부 사항 영역 */}
         <div className="flex flex-col items-end gap-0.5 min-w-0">
-          {/* 2-2-1. 항목 개수 */}
+          {/* 2-2-1. 하위 아이템 및 폴더 개수 */}
           <p className="text-[11px] text-text-sub font-medium">
-            {totalCount}개 항목
+            {totalCount}개
           </p>
 
           {/* 2-2-2. 생성일 */}

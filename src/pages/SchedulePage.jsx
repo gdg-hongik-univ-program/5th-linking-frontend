@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Bell } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import CalendarPicker from '../components/common/CalendarPicker';
-import LinkCard from '../components/common/LinkCard';
+import itemCard from '../components/common/ItemCard';
 import { getCalendarSummary, getDailyEvents } from '../api/calendarApi';
+import ItemCard from '../components/common/ItemCard';
 
 export default function SchedulePage() {
   const navigate = useNavigate();
@@ -112,9 +112,13 @@ export default function SchedulePage() {
   }, [selectedDate]);
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden">
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
       <TabHeader title="일정">
-        <IconButton icon={Bell} onClick={() => navigate('/notification')} />
+        <IconButton
+          icon={Bell}
+          onClick={() => navigate('/notification')}
+          aria-label="알림함"
+        />
       </TabHeader>
 
       <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
@@ -139,7 +143,7 @@ export default function SchedulePage() {
                     key={event.itemId}
                     onClick={() => navigate(`/link/${event.itemId}`)}
                   >
-                    <LinkCard link={event} />
+                    <ItemCard link={event} />
                   </div>
                 ))
               : !loading && (
