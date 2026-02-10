@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   format,
   addMonths,
@@ -82,7 +82,7 @@ export default function CalendarPicker({
             </button>
           )}
 
-          {/* 연월 텍스트 클릭 시 모드 토글 */}
+          {/* 연/월 텍스트 클릭 시 모드 토글 */}
           <button
             onClick={toggleMonthPicker}
             className={`text-xl font-bold text-text-main flex items-center gap-1 transition-colors ${isMonthPickerOpen ? 'text-primary-500' : ''}`}
@@ -117,7 +117,6 @@ export default function CalendarPicker({
       {/* 컨텐츠 영역 */}
       <div className="min-h-[300px]">
         {isMonthPickerOpen ? (
-          /* [Picker View] 연/월 선택 */
           <div className="flex flex-col animate-fadeIn">
             {/* 연도 컨트롤 */}
             <div className="flex items-center justify-center gap-8 mb-6 mt-2">
@@ -166,7 +165,6 @@ export default function CalendarPicker({
             </div>
           </div>
         ) : (
-          /* [Calendar View] */
           <div className="animate-fadeIn">
             <div className="grid grid-cols-7 mb-4">
               {['일', '월', '화', '수', '목', '금', '토'].map((d) => (

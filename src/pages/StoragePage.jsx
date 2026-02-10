@@ -13,7 +13,6 @@ import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
-// ... (findFolderNode, EditModal은 기존과 동일하므로 생략 - 그대로 두세요) ...
 const findFolderNode = (nodes, targetId) => {
   if (!nodes) return null;
   for (const node of nodes) {
