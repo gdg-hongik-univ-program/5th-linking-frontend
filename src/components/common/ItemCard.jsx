@@ -1,5 +1,6 @@
 import { Star, Link as LinkIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import DDayBadge from './DDayBadge';
 
 // 날짜 포맷팅 함수
 const formatDate = (dateString) => {
@@ -34,7 +35,7 @@ export default function ItemCard({ item }) {
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      className="flex gap-4 py-3 cursor-pointer group select-none"
+      className="flex gap-4 py-2 cursor-pointer group select-none"
     >
       {/* 1. 좌측 썸네일 영역 */}
       <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
@@ -45,6 +46,10 @@ export default function ItemCard({ item }) {
             <Star size={14} fill="currentColor" className="text-primary-500" />
           </div>
         )}
+        {/* 1-2. D-Day 배지 */}
+        <div className="absolute bottom-1.5 right-1.5">
+          <DDayBadge deadline={item.deadline} />
+        </div>
       </div>
 
       {/* 2. 우측 정보 영역 */}

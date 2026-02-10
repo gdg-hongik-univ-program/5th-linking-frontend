@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { X, Hourglass, Brush, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Hourglass, BrushCleaning, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getNotifications, markAsRead } from '../api/notificationApi';
@@ -50,7 +50,7 @@ export default function NotificationPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 bg-bg-main text-text-main flex flex-col font-family-sans"
+      className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans"
     >
       <header className="flex items-center px-4 py-4 shrink-0 relative">
         <button onClick={() => navigate(-1)} className="p-2">
@@ -93,19 +93,38 @@ export default function NotificationPage() {
 }
 
 function NotificationItem({ item, onClick }) {
-  const Icon = item.type === 'DEADLINE' ? Hourglass : Brush;
+  const Icon = item.message.includes('마감일이') ? Hourglass : BrushCleaning;
 
-  // 날짜 포맷 (ISO -> YYYY년 MM월 DD일)
-  const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일`;
+  const formatDate = (dateString) => {
+    if (!dateString) return '생성일 없음';
+    const date = new Date(dateString);
+    const now = new Date();
+    if (isNaN(date.getTime())) return '생성일 없음';
+
+    const isToday = date.toDateString() === now.toDateString();
+    const isThisYear = date.getFullYear() === now.getFullYear();
+
+    if (isToday) {
+      let hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? '오후' : '오전';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const strMinutes = minutes < 10 ? '0' + minutes : minutes;
+      return `${ampm} ${hours}:${strMinutes}`;
+    }
+
+    if (isThisYear) {
+      return `${date.getMonth() + 1}월 ${date.getDate()}일`;
+    }
+
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
   };
 
   return (
     <motion.div
       layout
       onClick={onClick}
-      /* 읽은 알림은 약간 투명하게 처리하여 시각적으로 구분 */
       className={`flex gap-4 items-start cursor-pointer transition-opacity ${item.read ? 'opacity-50' : 'opacity-100'}`}
     >
       <div className="pt-1">
