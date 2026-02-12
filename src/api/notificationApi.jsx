@@ -23,3 +23,25 @@ export const markAsRead = async (notificationId) => {
     throw error;
   }
 };
+
+// 3. 전체 읽음 처리
+export const markAllAsRead = async () => {
+  try {
+    const response = await axiosInstance.patch('/notification/all/read');
+    return response.data;
+  } catch (error) {
+    console.error('전체 읽음 처리 실패:', error);
+    throw error;
+  }
+};
+
+// 4. 전체 삭제 처리
+export const deleteAllNotifications = async () => {
+  try {
+    const response = await axiosInstance.delete('/notification/all');
+    return response.data;
+  } catch (error) {
+    console.error('전체 삭제 처리 실패:', error);
+    throw error;
+  }
+};
