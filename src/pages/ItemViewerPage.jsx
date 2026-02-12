@@ -212,7 +212,7 @@ export default function ItemViewerPage() {
 
         <div className="px-6 py-5 flex flex-col gap-5">
           {/* 태그 및 디데이 영역 */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
             {data.deadline && (
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold ${deadlineStyles[getDeadlineStatus(data.deadline)]}`}
@@ -220,25 +220,21 @@ export default function ItemViewerPage() {
                 {getDDay(data.deadline)}
               </span>
             )}
-            {data.tags && data.tags.length > 0 ? (
+            {data.tags &&
+              data.tags.length > 0 &&
               data.tags.map((tag, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 bg-bg-card rounded-full text-xs text-text-main"
+                  className="px-3 py-1 bg-neutral-700 rounded-full text-xs text-text-sub"
                 >
                   {tag}
                 </span>
-              ))
-            ) : (
-              <span className="px-3 py-1 bg-bg-card rounded-full text-xs text-text-disabled">
-                태그 없음
-              </span>
-            )}
+              ))}
           </div>
 
           {/* 제목 및 상세 정보 확장 영역 */}
           <div>
-            <h1 className="text-2xl font-bold leading-tight mb-1.5 text-text-main">
+            <h1 className="text-xl font-bold leading-tight mb-1.5 text-text-main break-words">
               {data.title || '제목 없음'}
             </h1>
 
@@ -259,12 +255,10 @@ export default function ItemViewerPage() {
                 </div>
               ) : (
                 //확장 상태
-                <div className="flex flex-col gap-1.5 mt-2 bg-bg-nav p-3 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex flex-col gap-1.5 mt-2 bg-neutral-700 p-3 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200">
                   {/* 생성일 영역 */}
                   <div className="flex gap-2">
-                    <span className="min-w-[40px] text-text-disabled">
-                      생성일
-                    </span>
+                    <span className="min-w-[40px] text-text-sub">생성일</span>
                     <span className="text-text-main">
                       {formatDateDetail(data.createdAt)}
                     </span>
@@ -272,9 +266,7 @@ export default function ItemViewerPage() {
 
                   {/* 수정일 영역 */}
                   <div className="flex gap-2">
-                    <span className="min-w-[40px] text-text-disabled">
-                      수정일
-                    </span>
+                    <span className="min-w-[40px] text-text-sub">수정일</span>
                     <span className="text-text-main">
                       {formatDateDetail(data.updatedAt || data.createdAt)}
                     </span>
@@ -282,9 +274,7 @@ export default function ItemViewerPage() {
 
                   {/* 마감일 영역 */}
                   <div className="flex gap-2">
-                    <span className="min-w-[40px] text-text-disabled">
-                      마감일
-                    </span>
+                    <span className="min-w-[40px] text-text-sub">마감일</span>
                     <span className="text-text-main">
                       {formatDateDetail(data.deadline, '기한 없음')}
                     </span>
@@ -292,7 +282,7 @@ export default function ItemViewerPage() {
 
                   {/* URL 영역 */}
                   <div className="flex gap-2">
-                    <span className="min-w-[40px] text-text-disabled shrink-0">
+                    <span className="min-w-[40px] text-text-sub shrink-0">
                       URL
                     </span>
                     <span className="text-text-main truncate">{data.url}</span>
@@ -301,9 +291,7 @@ export default function ItemViewerPage() {
                   {/* 위치 및 줄이기 버튼 영역 */}
                   <div className="flex justify-between items-center">
                     <div className="flex gap-2">
-                      <span className="min-w-[40px] text-text-disabled">
-                        위치
-                      </span>
+                      <span className="min-w-[40px] text-text-sub">위치</span>
                       <span className="text-text-main">
                         {data.folderId}번 폴더
                       </span>
@@ -358,7 +346,7 @@ export default function ItemViewerPage() {
       </main>
 
       <BottomSheet
-        title="연결된 아이템"
+        title="연결된 링크"
         count={`${displayCount}개`}
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
@@ -390,7 +378,7 @@ export default function ItemViewerPage() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-text-sub gap-2 py-10">
             <LinkIcon size={40} className="opacity-20 mb-2" />
-            <p className="text-sm">연결된 아이템이 없어요.</p>
+            <p className="text-sm">연결된 링크가 없어요.</p>
           </div>
         )}
       </BottomSheet>

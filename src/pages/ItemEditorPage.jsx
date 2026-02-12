@@ -180,12 +180,23 @@ export default function ItemEditorPage() {
   };
 
   const toggleImportant = () => setIsImportant((prev) => !prev);
-
   const handleTagKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const newTag = tagInput.trim();
+      // 태그 10개 제한 확인
+      if (formData.tags.length >= 10) {
+        alert('태그는 최대 10개까지 추가할 수 있어요.');
+        setTagInput('');
+        return;
+      }
+      // 태그 35자 제한 입력 확인
+      if (newTag.length > 35) {
+        alert('태그 하나엔 최대 35자까지 입력할 수 있어요.');
+        return;
+      }
+
       if (newTag && !formData.tags.includes(newTag)) {
         setFormData((prev) => ({
           ...prev,
@@ -232,6 +243,7 @@ export default function ItemEditorPage() {
           placeholder="제목 입력"
           value={formData.title || ''}
           onChange={handleChange}
+          maxLength={70}
           className="w-full bg-transparent text-2xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none shrink-0 py-2"
         />
 

@@ -69,3 +69,16 @@
   --font-family-sans: 'Noto Sans KR', sans-serif;
   --font-family-logo: 'Outfit', sans-serif;
 }
+
+/* 스크롤바 숨기기 */
+* {
+  /* Firefox */
+  scrollbar-width: none;
+  /* IE and Edge */
+  -ms-overflow-style: none;
+}
+
+*::-webkit-scrollbar {
+  /* Chrome, Safari, Opera */
+  display: none;
+}

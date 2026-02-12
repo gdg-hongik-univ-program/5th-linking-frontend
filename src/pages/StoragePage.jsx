@@ -110,9 +110,17 @@ export default function StoragePage() {
     const fetchItems = async () => {
       setLoading(true);
       try {
-        const data = await getItems(folderId || null);
+        // ✅ 저장소 화면에서 folderId가 없으면 아이템 안 보여줌
+        if (!folderId) {
+          setCurrentItems([]);
+          return;
+        }
+
+        // ✅ 특정 폴더의 아이템만 조회
+        const data = await getItems(folderId);
         let finalData = Array.isArray(data) ? data : [];
-        // 데이터 정제
+
+        // null/undefined 체크
         finalData = finalData
           .filter((item) => item !== null && item !== undefined)
           .map((item) =>
@@ -120,17 +128,9 @@ export default function StoragePage() {
           )
           .filter((item) => item.itemId);
 
-        if (!folderId) {
-          finalData = finalData.filter(
-            (item) =>
-              !item.folderId ||
-              item.folderId === 0 ||
-              String(item.folderId) === 'null',
-          );
-        }
         setCurrentItems(finalData);
       } catch (error) {
-        console.error('아이템 로드 실패:', error);
+        console.error('아이템 목록 조회 실패:', error);
         setCurrentItems([]);
       } finally {
         setLoading(false);
