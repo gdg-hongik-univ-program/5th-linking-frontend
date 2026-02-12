@@ -31,12 +31,12 @@ export default function UpcomingItemsPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
-      <PageHeader title="마감임박" onBack={() => navigate(-1)} />
+      <PageHeader title="임박" onBack={() => navigate(-1)} />
       <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
         <SearchBar
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="마감일 있는 링크 검색"
+          placeholder="디데이가 7일 이내인 링크 검색"
         />
         <section className="flex flex-col py-6">
           {loading ? (
