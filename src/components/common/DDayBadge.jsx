@@ -12,7 +12,7 @@ export default function DDayBadge({ deadline, className = '' }) {
   let status = 'normal';
   // D-7 이후부터 D-DAY 이전까지 upcoming
   if (diff === 0) {
-    label = 'D-Day';
+    label = 'D-DAY';
     status = 'upcoming';
   }
   // D-8 이전까지 normal
