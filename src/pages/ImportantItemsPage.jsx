@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
@@ -13,6 +13,7 @@ import Snackbar from '../components/common/Snackbar';
 
 export default function ImportantItemsPage() {
   const [search, setSearch] = useState('');
+  const scrollRef = useRef(null);
 
   const {
     items,
@@ -24,7 +25,7 @@ export default function ImportantItemsPage() {
     handleDelete,
     handleUndo,
     handleEdit,
-    handleItemClick,
+    handleView,
   } = useItems('important');
 
   const filteredItems = items.filter((item) =>
@@ -34,8 +35,15 @@ export default function ImportantItemsPage() {
   );
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
-      <PageHeader title="중요" onBack={() => navigate(-1)}>
+    <div
+      ref={scrollRef}
+      className="flex-1 h-screen bg-bg-main text-text-main flex flex-col overflow-y-auto font-family-sans overflow-hidden"
+    >
+      <PageHeader
+        title="중요"
+        onBack={() => navigate(-1)}
+        scrollContainerRef={scrollRef}
+      >
         <IconButton
           icon={MoreHorizontal}
           onClick={() => {}}
@@ -43,11 +51,11 @@ export default function ImportantItemsPage() {
         />
       </PageHeader>
 
-      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
+      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col">
         <SearchBar
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="중요 링크 검색"
+          placeholder="중요 표시한 링크 검색"
         />
 
         <section className="flex flex-col py-6">
@@ -84,7 +92,7 @@ export default function ImportantItemsPage() {
                     }
                   >
                     <div
-                      onClick={() => handleItemClick(item.itemId)}
+                      onClick={() => handleView(item.itemId)}
                       className="cursor-pointer"
                     >
                       <ItemCard item={item} />

@@ -69,7 +69,7 @@ export default function ItemViewerPage() {
     navigate(`/edit/${data.itemId || itemId || 23}`, { state: { data } });
   };
 
-  const handleItemClick = (targetId) => {
+  const handleView = (targetId) => {
     navigate(`/view/${targetId}`);
     setIsSheetOpen(false);
   };
@@ -357,7 +357,7 @@ export default function ItemViewerPage() {
             {connectedItems.map((item) => (
               <div
                 key={item.itemId || item.id}
-                onClick={() => handleItemClick(item.itemId || item.id)}
+                onClick={() => handleView(item.itemId || item.id)}
                 className="flex items-center gap-3 p-3 rounded-xl bg-bg-nav active:bg-neutral-700 transition-colors cursor-pointer border border-border-default"
               >
                 <div className="w-10 h-10 rounded-lg bg-bg-card flex items-center justify-center shrink-0">

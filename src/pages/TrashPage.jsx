@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { MoreHorizontal } from 'lucide-react';
@@ -13,6 +13,7 @@ import SwipeActionButton from '../components/common/SwipeActionButton';
 export default function TrashPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const scrollRef = useRef(null);
 
   const [search, setSearch] = useState('');
   const [items, setItems] = useState([]);
@@ -106,39 +107,29 @@ export default function TrashPage() {
 
   return (
     <>
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-      `}</style>
-
-      <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
+      <div
+        ref={scrollRef}
+        className="flex-1 h-screen bg-bg-main text-text-main flex flex-col overflow-y-auto font-family-sans overflow-hidden"
+      >
         <PageHeader
           title="휴지통"
-          // iconType="close" // PageHeader 컴포넌트 스펙에 따라 필요 시 주석 해제
-          onBack={() => navigate(-1)} // onBackClick -> onBack (PageHeader prop 이름 확인 필요)
+          onBack={() => navigate(-1)}
+          scrollContainerRef={scrollRef}
         >
           <IconButton
             icon={MoreHorizontal}
-            onClick={() => console.log('더보기 클릭')}
+            onClick={() => {}}
             aria-label="더보기"
           />
         </PageHeader>
 
-        <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto scrollbar-hide">
-          <div className="mb-6">
-            <SearchBar
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="삭제된 항목 검색"
-            />
-          </div>
-
-          <section className="flex flex-col">
+        <main className="flex-1 px-6 pt-6 pb-24 flex flex-col">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="삭제된 항목 검색"
+          />
+          <section className="flex flex-col py-6">
             <div className="flex flex-col divide-y divide-neutral-800">
               {loading ? (
                 <div className="text-center py-10 text-text-sub">

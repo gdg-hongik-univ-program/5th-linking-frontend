@@ -100,6 +100,19 @@ export const useItems = (filterType) => {
     pendingItemRef.current = null;
   };
 
+  const handleRestore = async (itemId) => {
+    try {
+      await restoreItem(itemId);
+      setSnackbar({ isVisible: true, message: '링크를 복구했어요.' });
+      fetchItems(); // 복구 후 리스트 다시 불러오기
+    } catch (error) {
+      console.error('복구 실패:', error);
+      setSnackbar({ isVisible: true, message: '복구에 실패했어요.' });
+    } finally {
+      setOpenedItemId(null);
+    }
+  };
+
   return {
     items,
     loading,
@@ -108,8 +121,9 @@ export const useItems = (filterType) => {
     snackbar,
     handleDelete,
     handleUndo,
+    handleRestore,
     handleEdit: (itemId) => navigate(`/edit/${itemId}`),
-    handleItemClick: (itemId) => navigate(`/view/${itemId}`),
+    handleView: (itemId) => navigate(`/view/${itemId}`),
     refetch: fetchItems,
   };
 };

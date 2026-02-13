@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { MoreHorizontal } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import PageHeader from '../components/common/PageHeader';
+import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
 import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
@@ -10,6 +12,7 @@ import Snackbar from '../components/common/Snackbar';
 
 export default function StaleItemsPage() {
   const [search, setSearch] = useState('');
+  const scrollRef = useRef(null);
   const {
     items,
     loading,
@@ -20,7 +23,7 @@ export default function StaleItemsPage() {
     handleDelete,
     handleUndo,
     handleRestore,
-    handleItemClick,
+    handleView,
   } = useItems('stale');
 
   const filteredItems = items.filter((item) =>
@@ -30,14 +33,29 @@ export default function StaleItemsPage() {
   );
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col h-full">
-      <PageHeader title="정리가 필요한 링크" onBack={() => navigate(-1)} />
-      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
+    <div
+      ref={scrollRef}
+      className="flex-1 h-screen bg-bg-main text-text-main flex flex-col overflow-y-auto font-family-sans overflow-hidden"
+    >
+      <PageHeader
+        title="정리가 필요한 링크"
+        onBack={() => navigate(-1)}
+        scrollContainerRef={scrollRef}
+      >
+        <IconButton
+          icon={MoreHorizontal}
+          onClick={() => {}}
+          aria-label="더보기"
+        />
+      </PageHeader>
+
+      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col">
         <SearchBar
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="오래된 링크 검색"
         />
+
         <section className="flex flex-col py-6">
           {loading ? (
             <div className="text-center py-10 text-text-sub">
@@ -49,7 +67,6 @@ export default function StaleItemsPage() {
                 <SwipeableWrapper
                   key={item.itemId}
                   itemId={item.itemId}
-                  onClick={() => handleItemClick(item.itemId)}
                   isOpen={openedItemId === item.itemId}
                   onOpen={setOpenedItemId}
                   onClose={() => setOpenedItemId(null)}
@@ -66,7 +83,12 @@ export default function StaleItemsPage() {
                     />
                   }
                 >
-                  <ItemCard item={item} />
+                  <div
+                    onClick={() => handleView(item.itemId)}
+                    className="cursor-pointer"
+                  >
+                    <ItemCard item={item} />
+                  </div>
                 </SwipeableWrapper>
               ))}
             </AnimatePresence>
