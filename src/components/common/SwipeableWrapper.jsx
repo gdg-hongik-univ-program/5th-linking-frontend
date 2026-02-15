@@ -18,6 +18,7 @@ const SwipeableWrapper = ({
   animate: animateProp,
   exit,
   transition,
+  disabled = false,
 }) => {
   const x = useMotionValue(0);
   const wrapperRef = useRef(null);
@@ -128,6 +129,21 @@ const SwipeableWrapper = ({
     }
   };
 
+  if (disabled) {
+    return (
+      <motion.div
+        layout={layout}
+        initial={initial}
+        animate={animateProp}
+        exit={exit}
+        transition={transition}
+        className="relative w-full select-none"
+      >
+        {children}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       ref={wrapperRef}
@@ -136,7 +152,7 @@ const SwipeableWrapper = ({
       animate={animateProp}
       exit={exit}
       transition={transition}
-      className="relative overflow-hidden rounded-xl bg-bg-main mb-3 select-none shadow-sm"
+      className="relative w-full overflow-hidden rounded-xl bg-bg-main select-none shadow-sm"
     >
       <div className="absolute inset-0 flex items-center justify-between z-0 pointer-events-none">
         <motion.div
@@ -167,7 +183,7 @@ const SwipeableWrapper = ({
             onClose();
           }
         }}
-        className="relative z-10 bg-bg-main cursor-grab active:cursor-grabbing"
+        className="relative w-full z-10 bg-bg-main cursor-grab active:cursor-grabbing"
       >
         {children}
       </motion.div>

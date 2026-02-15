@@ -12,7 +12,7 @@ export const getItem = async (itemId) => {
   return response.data;
 };
 
-// 3. 아이템 목록 조회
+// 3. 아이템 다수 조회
 export const getItems = async (folderId = null, filter = null) => {
   // 폴더별 조회
   if (folderId) {
@@ -41,31 +41,44 @@ export const updateItemImportance = async (itemId, importance) => {
   return response.data;
 };
 
-// 6. 아이템 삭제
-export const deleteItem = async (itemId) => {
-  const response = await axiosInstance.delete(`/item/${itemId}`);
+// 6. 아이템 다수 이동
+export const moveItems = async (itemId, folderId) => {
+  const response = await axiosInstance.patch('/item/move', {
+    itemId,
+    folderId,
+  });
   return response.data;
 };
 
-// 7. 휴지통에서 아이템 복원
-export const restoreItem = async (itemId) => {
-  const response = await axiosInstance.post(`/item/${itemId}/restore`);
+// 7. 아이템 다수 삭제
+export const deleteItems = async (itemIds) => {
+  const response = await axiosInstance.delete('/item', {
+    data: { itemIds },
+  });
   return response.data;
 };
 
-// 8. 휴지통에서 아이템 영구 삭제
-export const deleteItemPermanently = async (itemId) => {
-  const response = await axiosInstance.delete(`/item/trash/${itemId}`);
+// 8. 아이템 다수 복원
+export const restoreItems = async (itemIds) => {
+  const response = await axiosInstance.post('/item/restore', { itemIds });
   return response.data;
 };
 
-// 9. 휴지통 비우기
+// 9. 아이템 다수 영구 삭제
+export const deleteItemsPermanently = async (itemIds) => {
+  const response = await axiosInstance.delete('/item/trash', {
+    data: { itemIds },
+  });
+  return response.data;
+};
+
+// 10. 휴지통 전체 비우기
 export const emptyTrash = async () => {
   const response = await axiosInstance.delete('/item/trash/all');
   return response.data;
 };
 
-// 10. 아이템 연결 생성
+// 11. 아이템 연결 생성
 export const connectItem = async (itemId, linkItemId) => {
   const response = await axiosInstance.post('/item/connect', {
     itemId,
@@ -74,7 +87,7 @@ export const connectItem = async (itemId, linkItemId) => {
   return response.data;
 };
 
-// 11. 연결된 아이템 목록 조회
+// 12. 연결된 아이템 다수 조회
 export const getConnectedItems = async (itemId) => {
   const response = await axiosInstance.get(`/item/connect/${itemId}`);
   if (Array.isArray(response.data)) {
@@ -85,7 +98,7 @@ export const getConnectedItems = async (itemId) => {
   return [];
 };
 
-// 12. 아이템 연결 해제
+// 13. 아이템 연결 해제
 export const disconnectItem = async (itemId, linkItemId) => {
   const response = await axiosInstance.delete('/item/connect', {
     data: { itemId, linkItemId },

@@ -1,66 +1,68 @@
-import { Folder } from 'lucide-react';
+import { Folder, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { formatDate } from '../../utils/formatDate';
 
-// 날짜 포맷팅 함수
-const formatDate = (dateString) => {
-  if (!dateString) return '생성일 없음';
-  const date = new Date(dateString);
-  const now = new Date();
-  if (isNaN(date.getTime())) return '생성일 없음';
+export default function FolderCard({
+  folder,
+  isSelectMode = false,
+  isSelected = false,
+  onSelect,
+  onClick,
+}) {
+  const { folderName, totalCount, createdAt } = folder;
 
-  const isToday = date.toDateString() === now.toDateString();
-  const isThisYear = date.getFullYear() === now.getFullYear();
-
-  if (isToday) {
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? '오후' : '오전';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const strMinutes = minutes < 10 ? '0' + minutes : minutes;
-    return `${ampm} ${hours}:${strMinutes}`;
-  }
-
-  if (isThisYear) {
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
-  }
-
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-};
-
-export default function FolderCard({ folder }) {
-  const { folderName, childCount, itemCount, createdAt } = folder;
-
-  const totalFolders = childCount || 0;
-  const totalItems = itemCount || 0;
-  const totalCount = totalFolders + totalItems;
+  const handleClick = () => {
+    if (isSelectMode && onSelect) {
+      onSelect(folder.folderId);
+    } else if (onClick) {
+      onClick();
+    }
+  };
 
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      className="flex gap-4 py-3 cursor-pointer group select-none"
+      onClick={handleClick}
+      className={`flex gap-3 px-6 py-3 cursor-pointer group select-none transition-colors ${
+        isSelected ? 'bg-neutral-800' : 'bg-transparent px-0'
+      }`}
     >
-      {/* 1. 좌측 썸네일 영역 */}
+      {/* 썸네일 */}
       <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
         <Folder size={40} className="text-yellow-500 fill-yellow-500" />
+
+        {/* 선택 모드 체크박스 */}
+        {isSelectMode && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <div
+              className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
+                isSelected
+                  ? 'bg-primary border-primary'
+                  : 'bg-neutral-800/60 border-white'
+              }`}
+            >
+              {isSelected && (
+                <Check size={20} className="text-text-main" strokeWidth={3} />
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 2. 우측 정보 영역 */}
       <div className="flex flex-col justify-between flex-1 py-1 min-w-0">
-        {/* 2-1. 상단 폴더 이름 */}
-        <h3 className="text-[15px] font-medium text-text-main leading-snug line-clamp-2 overflow-hidden text-ellipsis break-keep">
+        {/* 2-1. 상단 폴더 이름 (최대 2줄) */}
+        <h3 className="text-sm font-medium text-text-main leading-snug line-clamp-2">
           {folderName}
         </h3>
 
         {/* 2-2. 하단 세부 사항 영역 */}
-        <div className="flex flex-col items-end gap-0.5 min-w-0">
+        <div className="flex flex-col items-end gap-1 min-w-0">
           {/* 2-2-1. 하위 아이템 및 폴더 개수 */}
-          <p className="text-[11px] text-text-sub font-medium">
-            {totalCount}개
-          </p>
+          <p className="text-xs text-text-sub font-medium">{totalCount}개</p>
 
           {/* 2-2-2. 생성일 */}
-          <p className="text-[11px] text-text-sub opacity-80 shrink-0">
+          <p className="text-xs text-text-sub opacity-80 shrink-0">
             {formatDate(createdAt)}
           </p>
         </div>

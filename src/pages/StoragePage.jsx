@@ -1,22 +1,28 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { MoreHorizontal } from 'lucide-react';
-import { getItems, deleteItem } from '../api/itemApi';
-import { getFolders, updateFolder, deleteFolder } from '../api/folderApi';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { MoreHorizontal, FilePlus, FolderPlus } from 'lucide-react';
+import { useItems } from '../hooks/useItems';
+import { useFolders } from '../hooks/useFolders';
+import { sortData } from '../utils/sortData';
+import { buildMenu } from '../utils/buildMenu';
 import TabHeader from '../components/common/TabHeader';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import ItemCard from '../components/common/ItemCard';
-import FolderCard from '../components/common/FolderCard';
-import SwipeableWrapper from '../components/common/SwipeableWrapper';
+import SelectionHeader from '../components/common/SelectionHeader';
+import ListView from '../components/common/ListView';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
+import ActionSheet from '../components/common/ActionSheet';
+import InputModal from '../components/common/InputModal';
 
+// 폴더 트리에서 폴더 찾기
 const findFolderNode = (nodes, targetId) => {
   if (!nodes) return null;
   for (const node of nodes) {
-    if (String(node.folderId) === String(targetId)) return node;
+    if (String(node.folderId) === String(targetId)) {
+      return node;
+    }
     if (node.children) {
       const found = findFolderNode(node.children, targetId);
       if (found) return found;
@@ -25,500 +31,371 @@ const findFolderNode = (nodes, targetId) => {
   return null;
 };
 
-const EditModal = ({ isOpen, onClose, onSubmit, initialValue }) => {
-  const [value, setValue] = useState(initialValue);
-  useEffect(() => {
-    if (isOpen) setValue(initialValue);
-  }, [isOpen, initialValue]);
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-bg-main w-full max-w-xs rounded-xl p-5 shadow-lg border border-neutral-800">
-        <h3 className="text-lg font-bold text-text-main mb-3">
-          폴더 이름 변경
-        </h3>
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          className="w-full bg-neutral-800 text-text-main p-3 rounded-lg outline-none focus:ring-1 focus:ring-primary mb-4"
-          autoFocus
-        />
-        <div className="flex gap-2 justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-text-sub text-sm rounded-lg hover:bg-neutral-800"
-          >
-            취소
-          </button>
-          <button
-            onClick={() => onSubmit(value)}
-            disabled={!value.trim()}
-            className="px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg disabled:opacity-50"
-          >
-            확인
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export default function StoragePage() {
   const { folderId } = useParams();
+
   const navigate = useNavigate();
 
-  const [search, setSearch] = useState('');
-  const [folderTree, setFolderTree] = useState([]);
-  const [currentItems, setCurrentItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [openedId, setOpenedId] = useState(null);
+  const {
+    items: currentItems,
+    refetch: refetchItems,
+    isLoading: isItemsLoading,
+    snackbar: itemSnackbar,
+    handleDelete: deleteItem,
+    handleUndo: undoItemDelete,
+  } = useItems(folderId);
 
-  // 스낵바 상태 (type으로 구분: 'item' | 'folder')
-  const [snackbar, setSnackbar] = useState({
-    isVisible: false,
-    message: '',
-    type: null,
+  const {
+    folders: rootFolders,
+    isLoading: isFoldersLoading,
+    snackbar: folderSnackbar,
+    handleUpdate: updateFolder,
+    handleDelete: deleteFolder,
+    handleUndo: undoFolderDelete,
+  } = useFolders();
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const isMoreMenuOpen = Boolean(menuAnchor);
+  const [sortOption, setSortOption] = useState({
+    type: 'name',
+    order: 'asc',
+  });
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState({
+    folders: [],
+    items: [],
+  });
+  const [showImportantOnly, setShowImportantOnly] = useState(false);
+
+  const [openedSwipeId, setOpenedSwipeId] = useState(null);
+
+  const [folderRenameModal, setFolderRenameModal] = useState({
+    isOpen: false,
+    folder: null,
+    initialValue: '',
   });
 
-  // [로직 분리] 아이템 삭제 전용 Refs
-  const itemDeleteTimerRef = useRef(null);
-  const pendingItemRef = useRef(null); // { item, index }
+  // 선택된 항목 개수
+  const totalSelectedCount =
+    selectedIds.folders.length + selectedIds.items.length;
 
-  // [로직 분리] 폴더 삭제 전용 Refs
-  const folderDeleteTimerRef = useRef(null);
-  const pendingFolderRef = useRef(null); // { folder, oldTree }
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingFolder, setEditingFolder] = useState(null);
-
-  // 데이터 로드
-  const fetchTree = async () => {
-    try {
-      const data = await getFolders();
-      setFolderTree(data || []);
-    } catch (error) {
-      console.error('폴더 로드 실패:', error);
-    }
+  // 선택된 항목 이동
+  const handleMoveSelected = () => {
+    console.log('이동:', selectedIds);
   };
 
-  useEffect(() => {
-    fetchTree();
-  }, []);
+  // 선택된 항목 삭젠
+  const handleDeleteSelected = () => {
+    console.log('삭제:', selectedIds);
+  };
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      setLoading(true);
-      try {
-        // ✅ 저장소 화면에서 folderId가 없으면 아이템 안 보여줌
-        if (!folderId) {
-          setCurrentItems([]);
-          return;
-        }
-
-        // ✅ 특정 폴더의 아이템만 조회
-        const data = await getItems(folderId);
-        let finalData = Array.isArray(data) ? data : [];
-
-        // null/undefined 체크
-        finalData = finalData
-          .filter((item) => item !== null && item !== undefined)
-          .map((item) =>
-            !item.itemId && item.id ? { ...item, itemId: item.id } : item,
-          )
-          .filter((item) => item.itemId);
-
-        setCurrentItems(finalData);
-      } catch (error) {
-        console.error('아이템 목록 조회 실패:', error);
-        setCurrentItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchItems();
-  }, [folderId]);
-
-  useEffect(() => {
-    const handleGlobalClose = () => setOpenedId(null);
-    window.addEventListener('scroll', handleGlobalClose, true);
-    return () => window.removeEventListener('scroll', handleGlobalClose, true);
-  }, []);
-
-  const displayFolders = useMemo(() => {
-    if (!folderId) return folderTree;
-    const currentNode = findFolderNode(folderTree, folderId);
+  // 현재 폴더의 하위 폴더 목록
+  const currentFolderChildren = useMemo(() => {
+    if (!folderId) return rootFolders;
+    const currentNode = findFolderNode(rootFolders, folderId);
     return currentNode?.children || [];
-  }, [folderTree, folderId]);
+  }, [rootFolders, folderId]);
 
+  // 현재 폴더 이름
   const currentFolderName = useMemo(() => {
-    if (!folderId) return '저장소';
-    const node = findFolderNode(folderTree, folderId);
-    return node ? node.folderName : '폴더';
-  }, [folderTree, folderId]);
+    if (!folderId) return '-';
+    const node = findFolderNode(rootFolders, folderId);
+    return node ? node.folderName : '-';
+  }, [rootFolders, folderId]);
 
-  // ------------------------------------------------------------------
-  // [1] 아이템 삭제 로직 (완전 분리)
-  // ------------------------------------------------------------------
+  // 아이템 검색 필터
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return currentItems;
 
-  const executeItemDelete = async (targetItem) => {
-    // 인자로 받은 targetItem을 직접 사용 (Ref 의존성 최소화)
-    if (!targetItem || !targetItem.itemId) {
-      console.error('>>> [Item] 삭제할 데이터 손실됨');
-      return;
-    }
+    return currentItems.filter((item) =>
+      (item.title ?? '').toLowerCase().includes(q),
+    );
+  }, [currentItems, searchQuery]);
 
-    // 이미 취소된 작업인지 확인 (Ref가 비었거나 다른 아이템이면 스킵)
-    if (
-      !pendingItemRef.current ||
-      pendingItemRef.current.item.itemId !== targetItem.itemId
-    ) {
-      console.log('>>> [Item] 이미 취소된 작업이거나 새로운 작업이 시작됨');
-      return;
-    }
+  // 폴더 검색 필터
+  const filteredFolders = useMemo(() => {
+    if (!searchQuery.trim()) return currentFolderChildren;
+    return currentFolderChildren.filter((folder) =>
+      folder.folderName.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [currentFolderChildren, searchQuery]);
 
-    console.log('>>> [Item] 서버 삭제 요청:', targetItem.itemId);
-    try {
-      await deleteItem(targetItem.itemId);
-      console.log('>>> [Item] 삭제 성공');
-    } catch (error) {
-      console.error('>>> [Item] 삭제 실패:', error);
-      // 실패 시 복구
-      setCurrentItems((prev) => [...prev, targetItem]);
-    } finally {
-      // 정리 (아직도 내가 최신 작업이면)
-      if (
-        pendingItemRef.current &&
-        pendingItemRef.current.item.itemId === targetItem.itemId
-      ) {
-        pendingItemRef.current = null;
-        itemDeleteTimerRef.current = null;
-        setSnackbar((prev) => ({ ...prev, isVisible: false }));
-      }
-    }
-  };
+  // 아이템 중요 표시 필터
+  const finalFilteredItems = useMemo(() => {
+    if (!showImportantOnly) return filteredItems;
+    return filteredItems.filter((item) => item.isImportant);
+  }, [filteredItems, showImportantOnly]);
 
-  const handleDeleteItem = (item) => {
-    // 1. 기존 폴더/아이템 작업 정리 (스낵바가 하나뿐이라 서로 간섭 방지)
-    if (folderDeleteTimerRef.current) {
-      clearTimeout(folderDeleteTimerRef.current);
-      executeFolderDelete(pendingFolderRef.current.folder); // 즉시 실행
-    }
-    if (itemDeleteTimerRef.current) {
-      clearTimeout(itemDeleteTimerRef.current);
-      // 이전 아이템 즉시 실행 (덮어쓰기 아님, 이전 거 완료 처리)
-      if (pendingItemRef.current)
-        executeItemDelete(pendingItemRef.current.item);
-    }
+  // 정렬된 아이템
+  const sortedItems = useMemo(() => {
+    return sortData(finalFilteredItems, sortOption.type, sortOption.order);
+  }, [finalFilteredItems, sortOption]);
 
-    // 2. Ref 설정
-    const index = currentItems.findIndex((i) => i.itemId === item.itemId);
-    pendingItemRef.current = { item, index };
+  // 정렬된 폴더
+  const sortedFolders = useMemo(() => {
+    return sortData(filteredFolders, sortOption.type, sortOption.order);
+  }, [filteredFolders, sortOption]);
 
-    // 3. UI 반영
-    setCurrentItems((prev) => prev.filter((i) => i.itemId !== item.itemId));
-    setSnackbar({
-      isVisible: true,
-      message: '링크를 삭제했어요.',
-      type: 'item',
-    });
+  const totalVisibleCount = sortedFolders.length + sortedItems.length;
 
-    // 4. 타이머 설정 (클로저로 item 전달)
-    console.log('>>> [Item] 타이머 설정:', item.itemId);
-    itemDeleteTimerRef.current = setTimeout(() => {
-      executeItemDelete(item);
-    }, 3000);
-  };
-
-  // ------------------------------------------------------------------
-  // [2] 폴더 삭제 로직 (완전 분리)
-  // ------------------------------------------------------------------
-
-  const executeFolderDelete = async (targetFolder) => {
-    if (!targetFolder || !targetFolder.folderId) return;
-
-    if (
-      !pendingFolderRef.current ||
-      pendingFolderRef.current.folder.folderId !== targetFolder.folderId
-    ) {
-      return;
-    }
-
-    console.log('>>> [Folder] 서버 삭제 요청:', targetFolder.folderId);
-    try {
-      await deleteFolder(targetFolder.folderId);
-      console.log('>>> [Folder] 삭제 성공');
-    } catch (error) {
-      console.error('>>> [Folder] 삭제 실패:', error);
-      fetchTree(); // 트리 복구
-    } finally {
-      if (
-        pendingFolderRef.current &&
-        pendingFolderRef.current.folder.folderId === targetFolder.folderId
-      ) {
-        pendingFolderRef.current = null;
-        folderDeleteTimerRef.current = null;
-        setSnackbar((prev) => ({ ...prev, isVisible: false }));
-      }
-    }
-  };
-
-  const handleDeleteFolder = (folder) => {
-    // 기존 작업 정리
-    if (itemDeleteTimerRef.current) {
-      clearTimeout(itemDeleteTimerRef.current);
-      if (pendingItemRef.current)
-        executeItemDelete(pendingItemRef.current.item);
-    }
-    if (folderDeleteTimerRef.current) {
-      clearTimeout(folderDeleteTimerRef.current);
-      if (pendingFolderRef.current)
-        executeFolderDelete(pendingFolderRef.current.folder);
-    }
-
-    // Ref 설정
-    pendingFolderRef.current = { folder, oldTree: folderTree };
-
-    // UI 반영
-    const removeNode = (nodes, targetId) =>
-      nodes
-        .filter((n) => String(n.folderId) !== String(targetId))
-        .map((n) => ({
-          ...n,
-          children: n.children ? removeNode(n.children, targetId) : [],
-        }));
-    setFolderTree((prev) => removeNode(prev, folder.folderId));
-    setSnackbar({
-      isVisible: true,
-      message: '폴더를 삭제했어요.',
-      type: 'folder',
-    });
-
-    // 타이머 설정
-    console.log('>>> [Folder] 타이머 설정:', folder.folderId);
-    folderDeleteTimerRef.current = setTimeout(() => {
-      executeFolderDelete(folder);
-    }, 3000);
-  };
-
-  // ------------------------------------------------------------------
-  // [3] 실행 취소 (분기 처리)
-  // ------------------------------------------------------------------
-
-  const handleUndo = () => {
-    // 현재 스낵바 타입에 따라 분기
-    if (snackbar.type === 'item' && pendingItemRef.current) {
-      console.log('>>> [Item] 실행 취소');
-      clearTimeout(itemDeleteTimerRef.current);
-
-      const { item, index } = pendingItemRef.current;
-      setCurrentItems((prev) => {
-        const newList = [...prev];
-        if (index !== -1) newList.splice(index, 0, item);
-        else newList.push(item);
-        return newList;
+  // 전체 선택 여부
+  const isAllSelected =
+    totalVisibleCount > 0 && totalSelectedCount === totalVisibleCount;
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      setSelectedIds({ folders: [], items: [] });
+    } else {
+      setSelectedIds({
+        folders: sortedFolders.map((f) => f.folderId),
+        items: sortedItems.map((i) => i.itemId),
       });
-
-      pendingItemRef.current = null;
-      itemDeleteTimerRef.current = null;
-    } else if (snackbar.type === 'folder' && pendingFolderRef.current) {
-      console.log('>>> [Folder] 실행 취소');
-      clearTimeout(folderDeleteTimerRef.current);
-
-      const { oldTree } = pendingFolderRef.current;
-      if (oldTree) setFolderTree(oldTree);
-      else fetchTree();
-
-      pendingFolderRef.current = null;
-      folderDeleteTimerRef.current = null;
     }
-
-    setSnackbar({ isVisible: false, message: '', type: null });
   };
 
-  // ------------------------------------------------------------------
-  // [4] 페이지 이탈 처리
-  // ------------------------------------------------------------------
+  // 항목 목록
+  const combinedList = useMemo(() => {
+    return [...sortedFolders, ...sortedItems];
+  }, [sortedFolders, sortedItems]);
 
+  // 폴더 이동 시 데이터 갱신 및 스와이프 초기화
   useEffect(() => {
-    return () => {
-      // 아이템 잔여 작업 처리
-      if (itemDeleteTimerRef.current && pendingItemRef.current) {
-        clearTimeout(itemDeleteTimerRef.current);
-        const { item } = pendingItemRef.current;
-        if (item) {
-          const BASE_URL = 'https://api.thelinking.store';
-          const token = localStorage.getItem('accessToken');
-          const headers = {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          };
-          fetch(`${BASE_URL}/item/${item.itemId}`, {
-            method: 'DELETE',
-            headers,
-            keepalive: true,
-          }).catch(console.error);
-        }
-      }
+    refetchItems();
+    setOpenedSwipeId(null);
+    setSearchQuery('');
+  }, [folderId, refetchItems]);
 
-      // 폴더 잔여 작업 처리
-      if (folderDeleteTimerRef.current && pendingFolderRef.current) {
-        clearTimeout(folderDeleteTimerRef.current);
-        const { folder } = pendingFolderRef.current;
-        if (folder) {
-          const BASE_URL = 'https://api.thelinking.store';
-          const token = localStorage.getItem('accessToken');
-          const headers = {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          };
-          fetch(`${BASE_URL}/folder/${folder.folderId}`, {
-            method: 'DELETE',
-            headers,
-            keepalive: true,
-          }).catch(console.error);
-        }
-      }
-    };
-  }, []);
-
-  // ------------------------------------------------------------------
-
-  const handleEditFolderClick = (folder) => {
-    setEditingFolder(folder);
-    setIsModalOpen(true);
-    setOpenedId(null);
-  };
-  const handleRenameSubmit = async (newName) => {
-    if (!editingFolder) return;
-    try {
-      await updateFolder(editingFolder.folderId, newName);
-      fetchTree();
-    } catch (e) {
-      console.error(e);
+  // 항목 클릭
+  const handleNavigate = (entry) => {
+    if (entry.itemId) {
+      // 아이템이면 아이템 뷰어로 페이지 이동
+      navigate(`/view/${entry.itemId}`);
+    } else {
+      // 폴더면 해당 폴더로 진입
+      navigate(`/storage/${entry.folderId}`);
     }
-    setIsModalOpen(false);
   };
 
-  const renderMoreButton = (
-    <IconButton
-      icon={MoreHorizontal}
-      onClick={() => console.log('더보기')}
-      aria-label="더보기"
-    />
-  );
+  // 선택 토글
+  const handleToggleSelection = (targetId, type) => {
+    setSelectedIds((prev) => {
+      const list = type === 'item' ? prev.items : prev.folders;
+      const isSelected = list.includes(targetId);
+      const newList = isSelected
+        ? list.filter((id) => id !== targetId)
+        : [...list, targetId];
+
+      return {
+        ...prev,
+        [type === 'item' ? 'items' : 'folders']: newList,
+      };
+    });
+  };
+
+  // 항목 왼쪽 스와이프
+  const handleEditAction = (entry) => {
+    // 아이템이면 아이템 에디터로 페이지 이동
+    if (entry.itemId) {
+      navigate(`/edit/${entry.itemId}`);
+    } else {
+      // 폴더면 폴더 이름 변경 모달 열기
+      setFolderRenameModal({
+        isOpen: true,
+        folder: entry,
+        initialValue: entry.folderName || '',
+      });
+    }
+    setOpenedSwipeId(null);
+  };
+
+  // 항목 오른쪽 스와이프
+  const handleDeleteAction = (entry) => {
+    // 아이템이면 아이템 삭제
+    if (entry.itemId) {
+      deleteItem(entry);
+    }
+    // 폴더면 폴더 삭제
+    else {
+      deleteFolder(entry);
+    }
+    setOpenedSwipeId(null);
+  };
+
+  // 폴더 이름 변경 모달 닫기
+  const handleCloseRenameModal = () => {
+    setFolderRenameModal({
+      isOpen: false,
+      folder: null,
+      initialValue: '',
+    });
+  };
+
+  // 폴더 이름 변경 제출
+  const handleRenameFolderSubmit = async (newName) => {
+    if (folderRenameModal.folder && newName.trim()) {
+      await updateFolder(folderRenameModal.folder.folderId, newName);
+      handleCloseRenameModal();
+    }
+  };
+
+  // 선택 모드 종료
+  const handleExitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedIds({ folders: [], items: [] });
+  };
+
+  const isLoading = isFoldersLoading || isItemsLoading;
+
+  // 스낵바 상태 병합
+  const activeSnackbar = itemSnackbar.isVisible
+    ? itemSnackbar
+    : folderSnackbar.isVisible
+      ? folderSnackbar
+      : { isVisible: false, message: '' };
+
+  const handleSnackbarUndoAction = itemSnackbar.isVisible
+    ? undoItemDelete
+    : undoFolderDelete;
+
+  const actionSheetSections = useMemo(() => {
+    return buildMenu({
+      onSelect: () => {
+        setIsSelectionMode(true);
+        setMenuAnchor(null);
+      },
+      sortOption,
+      setSortOption,
+      showImportantOnly,
+      setShowImportantOnly,
+      customActions: [
+        {
+          id: 'createItem',
+          label: '새 링크',
+          icon: FilePlus,
+          // onClick: handleCreateItem,
+        },
+        {
+          id: 'createFolder',
+          label: '새 폴더',
+          icon: FolderPlus,
+          // onClick: handleCreateFolder,
+        },
+      ],
+      showSortSection: true,
+      showFilterSection: true,
+    });
+  }, [sortOption, showImportantOnly, setSortOption, setShowImportantOnly]);
+
+  const handleOpenMenu = (e) => {
+    setMenuAnchor(e.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setMenuAnchor(null);
+  };
 
   return (
-    <>
-      <style>{`.scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
-      <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden h-full">
-        {!folderId ? (
-          <TabHeader title="저장소">{renderMoreButton}</TabHeader>
-        ) : (
-          <PageHeader title={currentFolderName} onBack={() => navigate(-1)}>
-            {' '}
-            {renderMoreButton}{' '}
-          </PageHeader>
-        )}
-        <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto scrollbar-hide">
-          <div className="mb-6">
-            <SearchBar
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col divide-y divide-neutral-800">
-            {loading ? (
-              <div className="text-center py-10 text-text-sub">로딩 중...</div>
-            ) : (
-              <>
-                {displayFolders.map((folder) => (
-                  <SwipeableWrapper
-                    key={`folder-${folder.folderId}`}
-                    itemId={`folder-${folder.folderId}`}
-                    isOpen={openedId === `folder-${folder.folderId}`}
-                    onOpen={setOpenedId}
-                    onClose={() => setOpenedId(null)}
-                    leftAction={
-                      <SwipeActionButton
-                        type="edit"
-                        onClick={() => handleEditFolderClick(folder)}
-                      />
-                    }
-                    rightAction={
-                      <SwipeActionButton
-                        type="delete"
-                        onClick={() => handleDeleteFolder(folder)}
-                      />
-                    }
-                  >
-                    <div
-                      onClick={() => {
-                        navigate(`/storage/${folder.folderId}`);
-                        setSearch('');
-                        setOpenedId(null);
-                      }}
-                    >
-                      {' '}
-                      <FolderCard folder={folder} />{' '}
-                    </div>
-                  </SwipeableWrapper>
-                ))}
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden h-full">
+      {/* 헤더 */}
+      {folderId ? (
+        <PageHeader title={currentFolderName} onBack={() => navigate(-1)}>
+          <IconButton
+            icon={MoreHorizontal}
+            onClick={handleOpenMenu}
+            aria-label="더보기"
+          />
+        </PageHeader>
+      ) : (
+        <TabHeader title="저장소">
+          <IconButton
+            icon={MoreHorizontal}
+            onClick={handleOpenMenu}
+            aria-label="더보기"
+          />
+        </TabHeader>
+      )}
 
-                {currentItems
-                  .filter((item) => item && item.itemId)
-                  .map((item) => (
-                    <SwipeableWrapper
-                      key={`item-${item.itemId}`}
-                      itemId={`item-${item.itemId}`}
-                      isOpen={openedId === `item-${item.itemId}`}
-                      onOpen={setOpenedId}
-                      onClose={() => setOpenedId(null)}
-                      leftAction={
-                        <SwipeActionButton
-                          type="edit"
-                          onClick={() =>
-                            navigate(`/edit/${item.itemId}`, {
-                              state: { item },
-                            })
-                          }
-                        />
-                      }
-                      rightAction={
-                        <SwipeActionButton
-                          type="delete"
-                          onClick={() => handleDeleteItem(item)}
-                        />
-                      }
-                    >
-                      <div onClick={() => navigate(`/view/${item.itemId}`)}>
-                        {' '}
-                        <ItemCard item={item} />{' '}
-                      </div>
-                    </SwipeableWrapper>
-                  ))}
+      {/* 메인 */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* 상단 */}
+        <div className="px-6 pt-6 flex-shrink-0">
+          {/* 서치 바 */}
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="폴더 또는 링크 검색"
+            mb={isSelectionMode ? 'mb-2' : 'mb-6'}
+          />
 
-                {displayFolders.length === 0 && currentItems.length === 0 && (
-                  <div className="text-center py-10 text-text-sub">
-                    폴더가 비어있습니다.
-                  </div>
-                )}
-              </>
+          {/* 셀렉션 헤더 */}
+          {isSelectionMode && (
+            <div className="mb-3">
+              <SelectionHeader
+                selectedCount={totalSelectedCount}
+                isAllSelected={isAllSelected}
+                onToggleAll={handleToggleAll}
+                onClose={handleExitSelectionMode}
+                onMove={handleMoveSelected}
+                onDelete={handleDeleteSelected}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* 리스트 뷰 */}
+        <div className="flex-1 min-h-0">
+          <ListView
+            data={combinedList}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            openedId={openedSwipeId}
+            setOpenedId={setOpenedSwipeId}
+            isSelectionMode={isSelectionMode}
+            selectedIds={selectedIds}
+            onToggleSelection={handleToggleSelection}
+            onNavigate={handleNavigate}
+            renderLeftAction={(entry) => (
+              <SwipeActionButton
+                type="edit"
+                onClick={() => handleEditAction(entry)}
+              />
             )}
-          </div>
-        </main>
-        <Snackbar
-          isVisible={snackbar.isVisible}
-          message={snackbar.message}
-          onUndo={handleUndo}
-        />
-        <EditModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSubmit={handleRenameSubmit}
-          initialValue={editingFolder?.folderName || ''}
-        />
-      </div>
-    </>
+            renderRightAction={(entry) => (
+              <SwipeActionButton
+                type="delete"
+                onClick={() => handleDeleteAction(entry)}
+              />
+            )}
+            emptyText="폴더가 비어있어요."
+          />
+        </div>
+      </main>
+
+      {/* 모달 */}
+      <InputModal
+        isOpen={folderRenameModal.isOpen}
+        title="폴더 이름 변경"
+        placeholder="폴더 이름을 입력하세요"
+        initialValue={folderRenameModal.initialValue}
+        onClose={handleCloseRenameModal}
+        onSubmit={handleRenameFolderSubmit}
+        submitText="확인"
+        cancelText="취소"
+      />
+
+      <Snackbar
+        isVisible={activeSnackbar.isVisible}
+        message={activeSnackbar.message}
+        onUndo={handleSnackbarUndoAction}
+      />
+
+      <ActionSheet
+        isOpen={isMoreMenuOpen}
+        onClose={handleCloseMenu}
+        sections={actionSheetSections}
+        anchorEl={menuAnchor}
+      />
+    </div>
   );
 }

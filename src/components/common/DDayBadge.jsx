@@ -3,33 +3,20 @@ import { differenceInCalendarDays } from 'date-fns';
 export default function DDayBadge({ deadline, className = '' }) {
   if (!deadline) return null;
 
-  const today = new Date();
-  const targetDate = new Date(deadline);
-  const diff = differenceInCalendarDays(targetDate, today);
+  const diff = differenceInCalendarDays(new Date(deadline), new Date());
 
-  let label = '';
-  // 상태 (upcoming, normal, past)
-  let status = 'normal';
-  // D-7 이후부터 D-DAY 이전까지 upcoming
-  if (diff === 0) {
-    label = 'D-DAY';
-    status = 'upcoming';
-  }
-  // D-8 이전까지 normal
-  else if (diff > 0) {
-    label = `D-${diff}`;
-    status = diff <= 7 ? 'upcoming' : 'normal';
-  }
-  // D+1과 이후부터 past
-  else {
-    label = `D+${Math.abs(diff)}`;
-    status = 'past';
-  }
+  // 1. 라벨 결정: 0일이면 D-DAY, 그 외에는 D-n 또는 D+n
+  const label =
+    diff === 0 ? 'D-DAY' : `D${diff > 0 ? '-' : '+'}${Math.abs(diff)}`;
 
+  // 2. 상태 결정: 과거(past), 7일 이내(upcoming), 그 외(normal)
+  const status = diff < 0 ? 'past' : diff <= 7 ? 'upcoming' : 'normal';
+
+  // 3. 스타일 매핑
   const styles = {
     upcoming: 'bg-error-500 text-text-main',
     normal: 'bg-error-50 text-text-error',
-    past: 'bg-neutral-500 text-text-main',
+    past: 'bg-neutral-500 text-text-main opacity-60',
   };
 
   return (

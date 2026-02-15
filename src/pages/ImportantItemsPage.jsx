@@ -1,13 +1,10 @@
-import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
+import { useState, useMemo } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
-
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import ItemCard from '../components/common/ItemCard';
-import SwipeableWrapper from '../components/common/SwipeableWrapper';
+import ListView from '../components/common/ListView';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
@@ -16,86 +13,76 @@ export default function ImportantItemsPage() {
 
   const {
     items,
-    loading,
-    navigate,
+    isLoading,
     openedItemId,
     setOpenedItemId,
     snackbar,
     handleDelete,
     handleUndo,
     handleEdit,
-    handleItemClick,
+    handleView,
   } = useItems('important');
 
-  const filteredItems = items.filter((item) =>
-    (item.title || item.itemName || '')
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+  // 검색 필터
+  const filteredItems = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return items;
+
+    return items.filter((item) => (item.title ?? '').toLowerCase().includes(q));
+  }, [items, search]);
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
+      {/* 헤더 */}
       <PageHeader title="중요" onBack={() => navigate(-1)}>
         <IconButton
           icon={MoreHorizontal}
-          onClick={() => {}}
+          onClick={() => console.log('더보기 클릭')}
           aria-label="더보기"
         />
       </PageHeader>
 
-      <main className="flex-1 px-6 pt-6 pb-24 flex flex-col overflow-y-auto">
-        <SearchBar
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="중요 링크 검색"
-        />
+      {/* 메인 */}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {/* 서치 바 */}
+        <div className="px-6 pt-6 shrink-0">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="중요 표시한 링크 검색"
+          />
+        </div>
 
-        <section className="flex flex-col py-6">
-          <div className="flex flex-col divide-y divide-neutral-800">
-            {loading ? (
-              <div className="text-center py-10 text-text-sub">
-                불러오는 중...
-              </div>
-            ) : (
-              <AnimatePresence mode="popLayout">
-                {filteredItems.map((item) => (
-                  <SwipeableWrapper
-                    key={item.itemId}
-                    itemId={item.itemId}
-                    isOpen={openedItemId === item.itemId}
-                    onOpen={setOpenedItemId}
-                    onClose={() => setOpenedItemId(null)}
-                    actionWidth={80}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    leftAction={
-                      <SwipeActionButton
-                        type="edit"
-                        onClick={() => handleEdit(item.itemId)}
-                      />
-                    }
-                    rightAction={
-                      <SwipeActionButton
-                        type="delete"
-                        onClick={() => handleDelete(item)}
-                      />
-                    }
-                  >
-                    <div
-                      onClick={() => handleItemClick(item.itemId)}
-                      className="cursor-pointer"
-                    >
-                      <ItemCard item={item} />
-                    </div>
-                  </SwipeableWrapper>
-                ))}
-              </AnimatePresence>
+        {/* 리스트 뷰 */}
+        <div className="flex-1 min-h-0">
+          <ListView
+            data={filteredItems}
+            isLoading={isLoading}
+            searchQuery={search}
+            openedId={openedItemId}
+            setOpenedId={setOpenedItemId}
+            isSelectionMode={false}
+            selectedIds={{ folders: [], items: [] }}
+            onToggleSelection={() => {}}
+            onNavigate={(entry) => handleView(entry.itemId)}
+            renderLeftAction={(item) => (
+              <SwipeActionButton
+                type="edit"
+                onClick={() => handleEdit(item.itemId)}
+              />
             )}
-          </div>
-        </section>
+            renderRightAction={(item) => (
+              <SwipeActionButton
+                type="delete"
+                onClick={() => handleDelete(item)}
+              />
+            )}
+            emptyText="중요 표시한 링크가 없어요."
+          />
+        </div>
       </main>
+
+      {/* 스낵바 */}
       <Snackbar
         isVisible={snackbar.isVisible}
         message={snackbar.message}
