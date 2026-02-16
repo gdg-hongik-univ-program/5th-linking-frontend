@@ -5,6 +5,7 @@ import { useItemCommon } from './useItemCommon';
 
 export const useItems = (folderId = null, filterType = null) => {
   const navigate = useNavigate();
+
   const location = useLocation();
 
   const {
@@ -12,7 +13,7 @@ export const useItems = (folderId = null, filterType = null) => {
     handleRestore: commonRestore,
     handleDelete: commonDelete,
     handleDeletePermanently: commonDeletePermanently,
-    handleEdit: commonEdit,
+    handleGoToEdit: commonEdit,
   } = useItemCommon();
 
   const [items, setItems] = useState([]);
@@ -242,17 +243,29 @@ export const useItems = (folderId = null, filterType = null) => {
     }
   };
 
-  // 아이템 뷰어로 페이지 이동
-  const handleView = (itemId) => {
+  // 아이템 뷰어 페이지로 페이지 이동
+  const handleGoToView = (itemId) => {
     if (itemId) {
       navigate(`/view/${itemId}`);
     }
   };
 
-  // 아이템 에디터로 페이지 이동
-  const handleEdit = (itemId) => {
+  // 아이템 수정 페이지로 페이지 이동
+  const handleGoToEdit = (itemId) => {
     if (itemId) {
       commonEdit(itemId);
+    }
+  };
+
+  // 아이템 생성 페이지로 페이지 이동
+  // 아이템 생성 페이지로 페이지 이동
+  const handleGoToCreate = () => {
+    const targetFolderId =
+      folderId && !isNaN(Number(folderId)) ? folderId : null;
+    if (targetFolderId) {
+      navigate(`/create?folderId=${targetFolderId}`);
+    } else {
+      navigate('/create');
     }
   };
 
@@ -269,7 +282,8 @@ export const useItems = (folderId = null, filterType = null) => {
     handleUndo,
     handleDeletePermanently,
     handleEmptyTrash,
-    handleView,
-    handleEdit,
+    handleGoToView,
+    handleGoToEdit,
+    handleGoToCreate,
   };
 };

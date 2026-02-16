@@ -23,8 +23,8 @@ export default function HomePage() {
     snackbar,
     handleDelete,
     handleUndo,
-    handleView,
-    handleEdit,
+    handleGoToView,
+    handleGoToEdit,
   } = useItems('recent');
 
   // 검색 필터
@@ -76,11 +76,11 @@ export default function HomePage() {
             isSelectionMode={false}
             selectedIds={{ folders: [], items: [] }}
             onToggleSelection={() => {}}
-            onNavigate={(entry) => handleView(entry.itemId)}
+            onNavigate={(entry) => handleGoToView(entry.itemId)}
             renderLeftAction={(entry) => (
               <SwipeActionButton
                 type="edit"
-                onClick={() => handleEdit(entry.itemId)}
+                onClick={() => handleGoToEdit(entry.itemId)}
               />
             )}
             renderRightAction={(entry) => (

@@ -137,7 +137,7 @@ export default function SchedulePage() {
           isSelectionMode={false}
           selectedIds={{ folders: [], items: [] }}
           onToggleSelection={() => {}}
-          onNavigate={(entry) => handleView(entry.itemId)}
+          onNavigate={(entry) => handleGoToView(entry.itemId)}
           swipeEnabled={false}
           renderLeftAction={null}
           renderRightAction={null}

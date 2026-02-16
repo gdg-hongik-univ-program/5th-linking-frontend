@@ -1,10 +1,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MoreHorizontal, FilePlus, FolderPlus } from 'lucide-react';
+import {
+  MoreHorizontal,
+  CircleCheck,
+  FilePlus,
+  FolderPlus,
+} from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import { useFolders } from '../hooks/useFolders';
-import { sortData } from '../utils/sortData';
 import { buildMenu } from '../utils/buildMenu';
+import { findFolderNode } from '../utils/findFolderNode';
+import { sortData } from '../utils/sortData';
 import TabHeader from '../components/common/TabHeader';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
@@ -15,21 +21,6 @@ import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 import ActionSheet from '../components/common/ActionSheet';
 import InputModal from '../components/common/InputModal';
-
-// 폴더 트리에서 폴더 찾기
-const findFolderNode = (nodes, targetId) => {
-  if (!nodes) return null;
-  for (const node of nodes) {
-    if (String(node.folderId) === String(targetId)) {
-      return node;
-    }
-    if (node.children) {
-      const found = findFolderNode(node.children, targetId);
-      if (found) return found;
-    }
-  }
-  return null;
-};
 
 export default function StoragePage() {
   const { folderId } = useParams();
@@ -43,6 +34,7 @@ export default function StoragePage() {
     snackbar: itemSnackbar,
     handleDelete: deleteItem,
     handleUndo: undoItemDelete,
+    handleGoToCreate: goToCreateItem,
   } = useItems(folderId);
 
   const {
@@ -52,6 +44,7 @@ export default function StoragePage() {
     handleUpdate: updateFolder,
     handleDelete: deleteFolder,
     handleUndo: undoFolderDelete,
+    handleCreate: createFolder,
   } = useFolders();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -67,14 +60,37 @@ export default function StoragePage() {
     items: [],
   });
   const [showImportantOnly, setShowImportantOnly] = useState(false);
-
   const [openedSwipeId, setOpenedSwipeId] = useState(null);
 
+  const [isCreateFolderModalOpen, setIsCreateFolderModalOpen] = useState(false);
   const [folderRenameModal, setFolderRenameModal] = useState({
     isOpen: false,
     folder: null,
     initialValue: '',
   });
+
+  // 아이템 생성 페이지로 페이지 이동
+  const handleCreateItemAction = () => {
+    goToCreateItem();
+    setMenuAnchor(null);
+  };
+
+  // 폴더 생성 모달 열기
+  const handleCreateFolderAction = () => {
+    setIsCreateFolderModalOpen(true);
+    setMenuAnchor(null);
+  };
+
+  // 폴더 생성
+  const handleCreateFolderSubmit = async (folderName) => {
+    if (!folderName.trim()) return;
+
+    const result = await createFolder(folderName);
+
+    if (result.success) {
+      setIsCreateFolderModalOpen(false);
+    }
+  };
 
   // 선택된 항목 개수
   const totalSelectedCount =
@@ -85,9 +101,33 @@ export default function StoragePage() {
     console.log('이동:', selectedIds);
   };
 
-  // 선택된 항목 삭젠
-  const handleDeleteSelected = () => {
-    console.log('삭제:', selectedIds);
+  const handleDeleteSelected = async () => {
+    const { folders: folderIds, items: itemIds } = selectedIds;
+    const totalCount = folderIds.length + itemIds.length;
+
+    if (totalCount === 0) return;
+
+    // ID를 기반으로 실제 객체 찾기
+    const foldersToDelete = currentFolderChildren.filter((f) =>
+      folderIds.includes(f.folderId),
+    );
+    const itemsToDelete = currentItems.filter((i) =>
+      itemIds.includes(i.itemId),
+    );
+
+    // 폴더 삭제
+    if (foldersToDelete.length > 0) {
+      deleteFolder(foldersToDelete);
+    }
+
+    // 아이템 삭제
+    if (itemsToDelete.length > 0) {
+      deleteItem(itemsToDelete);
+    }
+
+    // 선택 모드 초기화
+    setIsSelectionMode(false);
+    setSelectedIds({ folders: [], items: [] });
   };
 
   // 현재 폴더의 하위 폴더 목록
@@ -194,7 +234,7 @@ export default function StoragePage() {
   };
 
   // 항목 왼쪽 스와이프
-  const handleEditAction = (entry) => {
+  const handleGoToEditAction = (entry) => {
     // 아이템이면 아이템 에디터로 페이지 이동
     if (entry.itemId) {
       navigate(`/edit/${entry.itemId}`);
@@ -260,32 +300,44 @@ export default function StoragePage() {
 
   const actionSheetSections = useMemo(() => {
     return buildMenu({
-      onSelect: () => {
-        setIsSelectionMode(true);
-        setMenuAnchor(null);
-      },
-      sortOption,
-      setSortOption,
-      showImportantOnly,
-      setShowImportantOnly,
-      customActions: [
+      // 1. 상단 액션 버튼들 (선택 / 새 링크 / 새 폴더)
+      actions: [
+        {
+          id: 'select',
+          label: '선택',
+          icon: CircleCheck,
+          onClick: () => {
+            setIsSelectionMode(true);
+            setMenuAnchor(null);
+          },
+        },
         {
           id: 'createItem',
           label: '새 링크',
           icon: FilePlus,
-          // onClick: handleCreateItem,
+          onClick: handleCreateItemAction,
         },
         {
           id: 'createFolder',
           label: '새 폴더',
           icon: FolderPlus,
-          // onClick: handleCreateFolder,
+          onClick: handleCreateFolderAction,
         },
       ],
-      showSortSection: true,
-      showFilterSection: true,
+
+      // 2. 정렬 옵션 및 키 설정
+      sortOption,
+      setSortOption,
+      // [핵심] 이 페이지에서 보여줄 정렬 기준 모두 나열
+      sortKeys: ['name', 'createdAt', 'dDay'],
+
+      // 3. 필터 옵션 및 키 설정
+      showImportantOnly,
+      setShowImportantOnly,
+      // [핵심] 이 페이지에서 보여줄 필터 나열
+      filterKeys: ['important'],
     });
-  }, [sortOption, showImportantOnly, setSortOption, setShowImportantOnly]);
+  }, [sortOption, showImportantOnly]);
 
   const handleOpenMenu = (e) => {
     setMenuAnchor(e.currentTarget);
@@ -358,7 +410,7 @@ export default function StoragePage() {
             renderLeftAction={(entry) => (
               <SwipeActionButton
                 type="edit"
-                onClick={() => handleEditAction(entry)}
+                onClick={() => handleGoToEditAction(entry)}
               />
             )}
             renderRightAction={(entry) => (
@@ -372,7 +424,19 @@ export default function StoragePage() {
         </div>
       </main>
 
-      {/* 모달 */}
+      {/* 폴더 생성 모달 */}
+      <InputModal
+        isOpen={isCreateFolderModalOpen}
+        title="새 폴더 생성"
+        placeholder="폴더 이름을 입력하세요"
+        initialValue=""
+        onClose={() => setIsCreateFolderModalOpen(false)}
+        onSubmit={handleCreateFolderSubmit}
+        submitText="생성"
+        cancelText="취소"
+      />
+
+      {/* 폴더 이름 변경 모달 */}
       <InputModal
         isOpen={folderRenameModal.isOpen}
         title="폴더 이름 변경"
