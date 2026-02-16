@@ -26,7 +26,7 @@ export default function HomePage() {
     handleDelete,
     handleUndo,
     handleEdit,
-    handleItemClick,
+    handleView,
   } = useItems('recent');
 
   const filteredItems = items.filter((item) => {
@@ -85,7 +85,7 @@ export default function HomePage() {
                         isOpen={openedItemId === item.itemId}
                         onOpen={setOpenedItemId}
                         onClose={() => setOpenedItemId(null)}
-                        actionWidth={80}
+                        actionWidth={60}
                         layout
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
@@ -104,7 +104,16 @@ export default function HomePage() {
                         }
                       >
                         <div
-                          onClick={() => handleItemClick(item.itemId)}
+                          onClick={(e) => {
+                            // 어떤 카드라도 열려있는 상태라면 상세 페이지 이동 차단
+                            if (openedItemId !== null) {
+                              e.stopPropagation();
+                              setOpenedItemId(null);
+                              return;
+                            }
+
+                            handleView(item.itemId);
+                          }}
                           className="cursor-pointer"
                         >
                           <ItemCard item={item} />

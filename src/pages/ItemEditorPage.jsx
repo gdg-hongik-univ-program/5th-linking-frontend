@@ -1,8 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { format, parseISO, isValid } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion'; // 애니메이션 추가
 import { getItem, createItem, updateItem } from '../api/itemApi';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
+import CalendarPicker from '../components/common/CalendarPicker';
 import {
   Star,
   MoreHorizontal,
@@ -21,7 +24,6 @@ export default function ItemEditorPage() {
   const yearRef = useRef(null);
   const monthRef = useRef(null);
   const dayRef = useRef(null);
-  const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -37,19 +39,42 @@ export default function ItemEditorPage() {
   const [dateParts, setDateParts] = useState({ year: '', month: '', day: '' });
   const [isImportant, setIsImportant] = useState(false);
 
+  // 캘린더 관련 상태
+  const [today, setToday] = useState(new Date());
+  const [viewDate, setViewDate] = useState(new Date());
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
   const hasInput = dateParts.year || dateParts.month || dateParts.day;
+
+  // 자정 날짜 동기화
+  useEffect(() => {
+    let timer;
+    const updateToday = () => {
+      const now = new Date();
+      setToday((prev) =>
+        prev.toDateString() !== now.toDateString() ? now : prev,
+      );
+      const tomorrow = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+      );
+      timer = setTimeout(updateToday, tomorrow.getTime() - now.getTime() + 100);
+    };
+    updateToday();
+    window.addEventListener('focus', updateToday);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('focus', updateToday);
+    };
+  }, []);
 
   // 데이터 로딩
   useEffect(() => {
     const loadData = async () => {
       if (itemId) {
         try {
-          let currentData = location.state?.item;
-          if (!currentData) {
-            currentData = await getItem(itemId);
-          }
-
-          // 폼 데이터 세팅
+          let currentData = location.state?.item || (await getItem(itemId));
           setFormData({
             title: currentData.title || '',
             url: currentData.url || '',
@@ -60,21 +85,22 @@ export default function ItemEditorPage() {
           });
           setIsImportant(currentData.importance || false);
         } catch (error) {
-          console.error('상세 데이터 로드 실패:', error);
-          alert('데이터를 불러오는데 실패했습니다.');
+          console.error('데이터 로드 실패:', error);
         }
       }
     };
     loadData();
   }, [itemId, location.state]);
 
-  // 마감일이 변경되면 dateParts 업데이트
+  // 마감일 변경 시 dateParts 동기화
   useEffect(() => {
     if (formData.deadline) {
       const cleanDate = formData.deadline.split('T')[0];
       const parts = cleanDate.split('-');
       if (parts.length === 3) {
         setDateParts({ year: parts[0], month: parts[1], day: parts[2] });
+        const parsedDate = parseISO(cleanDate);
+        if (isValid(parsedDate)) setViewDate(parsedDate);
       }
     }
   }, [formData.deadline]);
@@ -96,61 +122,42 @@ export default function ItemEditorPage() {
   }, [dateParts.year, dateParts.month]);
 
   const handleSave = async () => {
-    // 제목 필수 입력 체크 로직
-    if (!formData.title.trim()) {
-      return alert('제목을 입력해주세요.');
-    }
-
+    if (!formData.title.trim()) return alert('제목을 입력해주세요.');
     if (!formData.folderId) return alert('폴더 ID를 입력해주세요.');
 
     let finalDeadline = null;
     if (dateParts.year && dateParts.month && dateParts.day) {
       finalDeadline = `${dateParts.year}-${dateParts.month.padStart(2, '0')}-${dateParts.day.padStart(2, '0')}`;
-    } else if (formData.deadline && !hasInput) {
-      finalDeadline = formData.deadline.split('T')[0];
     }
 
     const payload = {
-      url: formData.url,
-      title: formData.title,
+      ...formData,
       folderId: Number(formData.folderId),
-      memo: formData.memo,
       importance: isImportant,
       deadline: finalDeadline,
-      tags: formData.tags,
       ...(itemId && { itemId: Number(itemId) }),
     };
 
     try {
-      if (itemId) {
-        await updateItem(payload);
-        alert('수정되었습니다.');
-      } else {
-        await createItem(payload);
-        alert('성공적으로 저장되었습니다!');
-      }
+      itemId ? await updateItem(payload) : await createItem(payload);
       navigate(-1);
     } catch (error) {
-      console.error('저장 실패:', error);
       alert('저장에 실패했습니다.');
     }
   };
 
-  // UI 핸들러들
   const handleDateChange = (e, part) => {
     const rawValue = e.target.value.replace(/[^0-9]/g, '');
     const maxLength = part === 'year' ? 4 : 2;
-    const newValue = rawValue.slice(0, maxLength);
-    setDateParts((prev) => ({ ...prev, [part]: newValue }));
+    setDateParts((prev) => ({ ...prev, [part]: rawValue.slice(0, maxLength) }));
   };
 
   const handleBlur = (part) => {
-    const value = dateParts[part];
-    if (!value) return;
-    let newValue = value;
-    if (part !== 'year' && value.length === 1) {
-      newValue = value.padStart(2, '0');
-      setDateParts((prev) => ({ ...prev, [part]: newValue }));
+    if (part !== 'year' && dateParts[part].length === 1) {
+      setDateParts((prev) => ({
+        ...prev,
+        [part]: dateParts[part].padStart(2, '0'),
+      }));
     }
   };
 
@@ -159,27 +166,18 @@ export default function ItemEditorPage() {
     setFormData((prev) => ({ ...prev, deadline: '' }));
   };
 
-  const focusInput = (ref) => ref.current?.focus();
-
-  const handleCalendarClick = () => {
-    try {
-      hiddenDateRef.current?.showPicker();
-    } catch {
-      hiddenDateRef.current?.focus();
-    }
+  // 캘린더에서 날짜 선택 시 호출
+  const handleDateSelectFromPicker = (date) => {
+    const y = format(date, 'yyyy');
+    const m = format(date, 'MM');
+    const d = format(date, 'dd');
+    setDateParts({ year: y, month: m, day: d });
+    setFormData((prev) => ({ ...prev, deadline: `${y}-${m}-${d}` }));
+    setIsCalendarOpen(false);
   };
 
-  const handleHiddenDateChange = (e) => {
-    if (e.target.value)
-      setFormData((prev) => ({ ...prev, deadline: e.target.value }));
-  };
+  const toggleImportant = () => setIsImportant(!isImportant);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const toggleImportant = () => setIsImportant((prev) => !prev);
   const handleTagKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
     if (e.key === 'Enter' || e.key === ',') {
@@ -215,25 +213,26 @@ export default function ItemEditorPage() {
       tags: prev.tags.filter((t) => t !== tagToRemove),
     }));
   };
-
   const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   return (
     <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
-      {/* 헤더 컴포넌트 적용 */}
       <PageHeader>
-        <IconButton icon={Save} onClick={handleSave} aria-label="저장하기" />
-
+        <IconButton icon={Save} onClick={handleSave} />
         <IconButton
           icon={Star}
           onClick={toggleImportant}
           color={
             isImportant ? 'text-primary-500 fill-primary-500' : 'text-text-main'
           }
-          aria-label="중요도 토글"
         />
-
-        <IconButton icon={MoreHorizontal} aria-label="더보기" />
+        <IconButton icon={MoreHorizontal} />
       </PageHeader>
 
       <main className="flex-1 px-6 pt-2 pb-40 flex flex-col gap-8 overflow-y-auto scrollbar-hide">
@@ -241,7 +240,7 @@ export default function ItemEditorPage() {
           type="text"
           name="title"
           placeholder="제목 입력"
-          value={formData.title || ''}
+          value={formData.title}
           onChange={handleChange}
           maxLength={70}
           className="w-full bg-transparent text-2xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none shrink-0 py-2"
@@ -263,12 +262,12 @@ export default function ItemEditorPage() {
           </div>
 
           <div className="flex items-center">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
+            <label className="w-20 text-text-sub text-sm font-medium">
               마감일
             </label>
             <div className="flex items-center flex-1 relative">
               <div
-                onClick={() => focusInput(yearRef)}
+                onClick={() => yearRef.current?.focus()}
                 className="flex items-center mr-1 cursor-text"
               >
                 <input
@@ -286,7 +285,7 @@ export default function ItemEditorPage() {
                 </span>
               </div>
               <div
-                onClick={() => focusInput(monthRef)}
+                onClick={() => monthRef.current?.focus()}
                 className="flex items-center mr-1 cursor-text"
               >
                 <input
@@ -304,7 +303,7 @@ export default function ItemEditorPage() {
                 </span>
               </div>
               <div
-                onClick={() => focusInput(dayRef)}
+                onClick={() => dayRef.current?.focus()}
                 className="flex items-center mr-auto cursor-text"
               >
                 <input
@@ -332,20 +331,12 @@ export default function ItemEditorPage() {
                   </button>
                 )}
                 <button
-                  type="button"
-                  onClick={handleCalendarClick}
+                  onClick={() => setIsCalendarOpen(true)}
                   className="p-2 text-text-sub hover:text-primary-500"
                 >
                   <CalendarIcon size={20} />
                 </button>
               </div>
-              <input
-                ref={hiddenDateRef}
-                type="date"
-                onChange={handleHiddenDateChange}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-                tabIndex={-1}
-              />
             </div>
           </div>
 
@@ -371,13 +362,11 @@ export default function ItemEditorPage() {
                   className="flex items-center gap-1 px-3 py-1.5 bg-neutral-700 text-text-main rounded-full text-sm font-medium"
                 >
                   <span>{tag}</span>
-                  <button
-                    type="button"
+                  <X
+                    size={14}
                     onClick={() => removeTag(tag)}
                     className="text-neutral-400 hover:text-white"
-                  >
-                    <X size={14} />
-                  </button>
+                  />
                 </div>
               ))}
             </div>
@@ -396,10 +385,7 @@ export default function ItemEditorPage() {
                 onChange={handleChange}
                 className="flex-1 bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none text-base py-2 mr-auto"
               />
-              <button
-                type="button"
-                className="p-2 text-text-sub hover:text-primary-500 transition-colors -mr-2"
-              >
+              <button className="p-2 text-text-sub hover:text-primary-500 transition-colors -mr-2">
                 <FolderSearch size={20} />
               </button>
             </div>
@@ -414,6 +400,46 @@ export default function ItemEditorPage() {
           className="w-full flex-1 min-h-[200px] bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none resize-none text-base leading-loose py-2"
         />
       </main>
+
+      {/* 팝업 캘린더 피커  */}
+      <AnimatePresence>
+        {isCalendarOpen && (
+          <>
+            {/* 배경처리 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsCalendarOpen(false)}
+              className="absolute w-full inset-0 z-50 backdrop-blur-[3px]"
+            />
+            {/* 캘린더 */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="absolute inset-x-6 top-[20%] z-60 bg-bg-main rounded-3xl border border-neutral-800 shadow-2xl overflow-hidden"
+            >
+              <div className="p-2">
+                <CalendarPicker
+                  viewDate={viewDate}
+                  setViewDate={setViewDate}
+                  selectedDate={
+                    hasInput
+                      ? new Date(
+                          `${dateParts.year}-${dateParts.month}-${dateParts.day}`,
+                        )
+                      : null
+                  }
+                  onDateClick={handleDateSelectFromPicker}
+                  today={today}
+                  showDots={false}
+                />
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

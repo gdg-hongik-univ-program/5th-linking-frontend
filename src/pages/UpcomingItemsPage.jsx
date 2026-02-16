@@ -68,8 +68,24 @@ export default function UpcomingItemsPage() {
                   key={item.itemId}
                   itemId={item.itemId}
                   isOpen={openedItemId === item.itemId}
-                  onOpen={setOpenedItemId}
+                  onOpen={(id) => setOpenedItemId(id)}
                   onClose={() => setOpenedItemId(null)}
+                  actionWidth={60}
+                  layout
+                  initial={{ opacity: 0, y: 0 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{
+                    opacity: 0,
+                    x: -100,
+                    transition: { duration: 0.2, ease: 'easeIn' },
+                  }}
+                  transition={{
+                    duration: 0.2,
+                    ease: 'easeOut',
+                    type: 'spring',
+                    stiffness: 300,
+                    damping: 30,
+                  }}
                   leftAction={
                     <SwipeActionButton
                       type="edit"
@@ -84,7 +100,16 @@ export default function UpcomingItemsPage() {
                   }
                 >
                   <div
-                    onClick={() => handleView(item.itemId)}
+                    onClick={(e) => {
+                      // 어떤 카드라도 열려있는 상태라면 상세 페이지 이동 차단
+                      if (openedItemId !== null) {
+                        e.stopPropagation();
+                        setOpenedItemId(null);
+                        return;
+                      }
+
+                      handleView(item.itemId);
+                    }}
                     className="cursor-pointer"
                   >
                     <ItemCard item={item} />

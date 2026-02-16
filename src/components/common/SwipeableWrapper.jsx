@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, useMotionValue, animate, useTransform } from 'framer-motion';
 
 const SMOOTH_SPRING = { type: 'spring', stiffness: 120, damping: 20, mass: 1 };
@@ -11,7 +11,7 @@ const SwipeableWrapper = ({
   onClose,
   leftAction,
   rightAction,
-  actionWidth = 80,
+  actionWidth = 60,
   triggerThreshold = 280,
   layout,
   initial,
@@ -23,23 +23,16 @@ const SwipeableWrapper = ({
   const wrapperRef = useRef(null);
   const dragStartX = useRef(0);
 
-  // 1. 배경 버튼 투명도
-  const leftOpacity = useTransform(x, [0, actionWidth], [0, 1]);
-  const rightOpacity = useTransform(x, [0, -actionWidth], [0, 1]);
-
+  // 카드 투명도 조절
   const contentOpacity = useTransform(
     x,
-    // [왼쪽 풀 스와이프 끝, 왼쪽 액션 열림, 중앙, 오른쪽 액션 열림, 오른쪽 풀 스와이프 끝]
     [-triggerThreshold, -actionWidth, 0, actionWidth, triggerThreshold],
-    // [흐려짐(0.5), 선명함(1), 선명함(1), 선명함(1), 흐려짐(0.5)]
     [0.5, 1, 1, 1, 0.5],
   );
 
-  const [constraints, setConstraints] = useState({
-    left: -1000,
-    right: 1000,
-  });
+  const [constraints, setConstraints] = useState({ left: -1000, right: 1000 });
 
+  // 좌우 스와이프 막기
   useEffect(() => {
     if (isOpen) {
       const currentX = x.get();
@@ -77,6 +70,7 @@ const SwipeableWrapper = ({
     onOpen(itemId);
   };
 
+  // 드래그 종료 시 판정 로직
   const handleDragEnd = (_, info) => {
     const dragX = x.get();
     const velocity = info.velocity.x;
@@ -89,7 +83,6 @@ const SwipeableWrapper = ({
 
     if (isLeftTrigger || isRightTrigger) {
       const isValidTrigger = isLeftTrigger ? startX >= 0 : startX <= 0;
-
       if (isValidTrigger) {
         if (isLeftTrigger) leftAction.props.onClick();
         else rightAction.props.onClick();
@@ -99,20 +92,14 @@ const SwipeableWrapper = ({
     }
 
     if (startX > 10) {
-      if (dragX < actionWidth / 2 || velocity < -300) {
-        onClose();
-      } else {
-        animate(x, actionWidth, SMOOTH_SPRING);
-      }
+      if (dragX < actionWidth / 2 || velocity < -300) onClose();
+      else animate(x, actionWidth, SMOOTH_SPRING);
       return;
     }
 
     if (startX < -10) {
-      if (dragX > -actionWidth / 2 || velocity > 300) {
-        onClose();
-      } else {
-        animate(x, -actionWidth, SMOOTH_SPRING);
-      }
+      if (dragX > -actionWidth / 2 || velocity > 300) onClose();
+      else animate(x, -actionWidth, SMOOTH_SPRING);
       return;
     }
 
@@ -138,19 +125,23 @@ const SwipeableWrapper = ({
       transition={transition}
       className="relative overflow-hidden rounded-xl bg-bg-main mb-3 select-none shadow-sm"
     >
-      <div className="absolute inset-0 flex items-center justify-between z-0 pointer-events-none">
-        <motion.div
-          style={{ opacity: leftOpacity }}
-          className="flex items-center justify-start h-full pl-4 w-1/2"
-        >
-          <div className="pointer-events-auto">{leftAction}</div>
-        </motion.div>
-        <motion.div
-          style={{ opacity: rightOpacity }}
-          className="flex items-center justify-end h-full pr-4 w-1/2"
-        >
-          <div className="pointer-events-auto">{rightAction}</div>
-        </motion.div>
+      <div className="absolute inset-0 flex items-center justify-between z-0 pointer-events-none px-2">
+        <div className="absolute left-0 h-full flex items-center pointer-events-auto">
+          {leftAction &&
+            React.cloneElement(leftAction, {
+              x,
+              direction: 'left',
+              triggerThreshold,
+            })}
+        </div>
+        <div className="absolute right-0 h-full flex items-center pointer-events-auto">
+          {rightAction &&
+            React.cloneElement(rightAction, {
+              x,
+              direction: 'right',
+              triggerThreshold,
+            })}
+        </div>
       </div>
 
       <motion.div
@@ -167,7 +158,7 @@ const SwipeableWrapper = ({
             onClose();
           }
         }}
-        className="relative z-10 bg-bg-main cursor-grab active:cursor-grabbing"
+        className="relative z-10 bg-bg-main cursor-grab active:cursor-grabbing border border-neutral-800/50 rounded-xl"
       >
         {children}
       </motion.div>
