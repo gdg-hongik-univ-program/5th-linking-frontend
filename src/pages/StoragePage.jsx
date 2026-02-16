@@ -12,6 +12,7 @@ import FolderCard from '../components/common/FolderCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 const findFolderNode = (nodes, targetId) => {
   if (!nodes) return null;
@@ -429,7 +430,9 @@ export default function StoragePage() {
           </div>
           <div className="flex flex-col divide-y divide-neutral-800">
             {loading ? (
-              <div className="text-center py-10 text-text-sub">로딩 중...</div>
+              <div className="text-center py-10 text-text-sub">
+                <LoadingOverlay />
+              </div>
             ) : (
               <>
                 {displayFolders.map((folder) => (

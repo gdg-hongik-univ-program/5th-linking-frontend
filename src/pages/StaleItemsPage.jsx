@@ -9,6 +9,7 @@ import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function StaleItemsPage() {
   const [search, setSearch] = useState('');
@@ -58,9 +59,7 @@ export default function StaleItemsPage() {
 
         <section className="flex flex-col py-6">
           {loading ? (
-            <div className="text-center py-10 text-text-sub">
-              불러오는 중...
-            </div>
+            <LoadingOverlay />
           ) : (
             <AnimatePresence mode="popLayout">
               {filteredItems.map((item) => (

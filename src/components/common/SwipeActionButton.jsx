@@ -17,8 +17,6 @@ export default function SwipeActionButton({ type, onClick, x, direction }) {
   const CASE = BUTTON_CASE[type];
   const Icon = CASE.icon;
 
-  // 1. 드래그 거리(x)에 따라 버튼의 너비를 직접 변형
-  // x가 0일 땐 너비 0, 당길수록 x의 절대값만큼 너비가 늘어납니다.
   const width = useTransform(
     x,
     direction === 'left' ? [0, 280] : [0, -280],
@@ -35,7 +33,6 @@ export default function SwipeActionButton({ type, onClick, x, direction }) {
           e.stopPropagation();
           onClick?.();
         }}
-        // 캡슐 형태(rounded-[99px])와 고정 높이를 유지하며 가로로만 늘어납니다.
         className={`
           flex items-center justify-center w-full h-[96px] rounded-[99px] text-white shadow-sm transition-transform active:scale-95
           ${CASE.colorClass}

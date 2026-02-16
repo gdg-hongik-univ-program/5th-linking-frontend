@@ -11,6 +11,7 @@ import {
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
 import NotificationItem from '../components/common/NotificationItem';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function NotificationPage() {
   const navigate = useNavigate();
@@ -72,6 +73,7 @@ export default function NotificationPage() {
       }
       // 아이템 상세 페이지로 이동
       if (notif.itemId) navigate(`/view/${notif.itemId}`);
+      else navigate('/stale');
     } catch (error) {
       console.error(error);
     }
@@ -125,11 +127,9 @@ export default function NotificationPage() {
         </div>
 
         {/* 리스트 및 상태 영역 */}
-        <div className="flex-1">
+        <div div className="flex flex-col divide-y divide-neutral-800">
           {loading ? (
-            <div className="flex items-center justify-center min-h-[60vh]">
-              <Loader2 size={36} className="animate-spin text-primary-500" />
-            </div>
+            <LoadingOverlay />
           ) : notifications.length === 0 ? (
             <div className="flex items-center justify-center min-h-[60vh]">
               <p className="text-text-sub opacity-40 text-[15px]">
@@ -150,7 +150,6 @@ export default function NotificationPage() {
             </div>
           )}
         </div>
-        <div className="h-[1px] bg-text-sub/20 my-4 w-full" />
       </main>
     </motion.div>
   );

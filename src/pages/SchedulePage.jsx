@@ -134,7 +134,7 @@ export default function SchedulePage() {
 
         <section className="mt-8 px-6 pb-24">
           <h3 className="text-lg font-bold mb-4">
-            {format(selectedDate, 'M월 d일')} 일정
+            {format(selectedDate, 'M월 d일')}
           </h3>
           <div className="flex flex-col gap-3">
             {eventList.length > 0
@@ -148,7 +148,7 @@ export default function SchedulePage() {
                 ))
               : !loading && (
                   <div className="py-12 text-center text-text-sub text-sm">
-                    일정이 없습니다.
+                    관련된 링크가 없습니다.
                   </div>
                 )}
           </div>

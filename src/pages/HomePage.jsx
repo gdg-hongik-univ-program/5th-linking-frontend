@@ -12,6 +12,7 @@ import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -37,16 +38,6 @@ export default function HomePage() {
 
   return (
     <>
-      <style>{`
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}</style>
-
       <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden h-full">
         <TabHeader title="홈">
           <IconButton
@@ -72,9 +63,7 @@ export default function HomePage() {
             <h2 className="text-lg font-bold">최근 저장한 링크</h2>
             <div className="flex flex-col divide-y divide-neutral-800">
               {loading ? (
-                <div className="text-center py-10 text-text-sub">
-                  불러오는 중...
-                </div>
+                <LoadingOverlay />
               ) : (
                 <div className="flex flex-col relative overflow-hidden">
                   <AnimatePresence mode="popLayout">

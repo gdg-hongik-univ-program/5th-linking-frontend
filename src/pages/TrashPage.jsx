@@ -9,6 +9,7 @@ import SearchBar from '../components/common/SearchBar';
 import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function TrashPage() {
   const navigate = useNavigate();
@@ -130,76 +131,72 @@ export default function TrashPage() {
             placeholder="삭제된 항목 검색"
           />
           <section className="flex flex-col py-6">
-            <div className="flex flex-col divide-y divide-neutral-800">
-              {loading ? (
-                <div className="text-center py-10 text-text-sub">
-                  불러오는 중...
-                </div>
-              ) : filteredItems.length === 0 ? (
-                <div className="text-center py-10 text-text-sub opacity-50">
-                  {search ? '검색 결과가 없어요.' : '휴지통이 비어있어요.'}
-                </div>
-              ) : (
-                <div className="flex flex-col relative overflow-hidden">
-                  <AnimatePresence mode="popLayout">
-                    {filteredItems.map((item) => (
-                      <SwipeableWrapper
-                        key={item.itemId}
-                        itemId={item.itemId}
-                        isOpen={openedItemId === item.itemId}
-                        onOpen={(id) => setOpenedItemId(id)}
-                        onClose={() => setOpenedItemId(null)}
-                        actionWidth={60}
-                        layout
-                        initial={{ opacity: 0, y: 0 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{
-                          opacity: 0,
-                          x: -100,
-                          transition: { duration: 0.2, ease: 'easeIn' },
-                        }}
-                        transition={{
-                          duration: 0.2,
-                          ease: 'easeOut',
-                          type: 'spring',
-                          stiffness: 300,
-                          damping: 30,
-                        }}
-                        // 왼쪽: 복구, 오른쪽: 영구 삭제
-                        leftAction={
-                          <SwipeActionButton
-                            type="restore"
-                            onClick={() => handleRestore(item.itemId)}
-                          />
-                        }
-                        rightAction={
-                          <SwipeActionButton
-                            type="delete" // 아이콘 타입이 permanent_delete가 없다면 delete로 대체
-                            onClick={() => handleDeleteForever(item.itemId)}
-                          />
-                        }
-                      >
-                        <div
-                          onClick={(e) => {
-                            // 어떤 카드라도 열려있는 상태라면 상세 페이지 이동 차단
-                            if (openedItemId !== null) {
-                              e.stopPropagation();
-                              setOpenedItemId(null);
-                              return;
-                            }
+            {loading ? (
+              <LoadingOverlay />
+            ) : filteredItems.length === 0 ? (
+              <div className="text-center py-10 text-text-sub opacity-50">
+                {search ? '검색 결과가 없어요.' : '휴지통이 비어있어요.'}
+              </div>
+            ) : (
+              <div className="flex flex-col relative overflow-hidden">
+                <AnimatePresence mode="popLayout">
+                  {filteredItems.map((item) => (
+                    <SwipeableWrapper
+                      key={item.itemId}
+                      itemId={item.itemId}
+                      isOpen={openedItemId === item.itemId}
+                      onOpen={(id) => setOpenedItemId(id)}
+                      onClose={() => setOpenedItemId(null)}
+                      actionWidth={60}
+                      layout
+                      initial={{ opacity: 0, y: 0 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{
+                        opacity: 0,
+                        x: -100,
+                        transition: { duration: 0.2, ease: 'easeIn' },
+                      }}
+                      transition={{
+                        duration: 0.2,
+                        ease: 'easeOut',
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 30,
+                      }}
+                      // 왼쪽: 복구, 오른쪽: 영구 삭제
+                      leftAction={
+                        <SwipeActionButton
+                          type="restore"
+                          onClick={() => handleRestore(item.itemId)}
+                        />
+                      }
+                      rightAction={
+                        <SwipeActionButton
+                          type="delete" // 아이콘 타입이 permanent_delete가 없다면 delete로 대체
+                          onClick={() => handleDeleteForever(item.itemId)}
+                        />
+                      }
+                    >
+                      <div
+                        onClick={(e) => {
+                          // 어떤 카드라도 열려있는 상태라면 상세 페이지 이동 차단
+                          if (openedItemId !== null) {
+                            e.stopPropagation();
+                            setOpenedItemId(null);
+                            return;
+                          }
 
-                            handleView(item.itemId);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <ItemCard item={item} />
-                        </div>
-                      </SwipeableWrapper>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
+                          handleView(item.itemId);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        <ItemCard item={item} />
+                      </div>
+                    </SwipeableWrapper>
+                  ))}
+                </AnimatePresence>
+              </div>
+            )}
           </section>
         </main>
       </div>

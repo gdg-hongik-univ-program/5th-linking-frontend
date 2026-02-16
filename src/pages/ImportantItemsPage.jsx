@@ -10,6 +10,7 @@ import ItemCard from '../components/common/ItemCard';
 import SwipeableWrapper from '../components/common/SwipeableWrapper';
 import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 export default function ImportantItemsPage() {
   const [search, setSearch] = useState('');
@@ -59,58 +60,54 @@ export default function ImportantItemsPage() {
         />
 
         <section className="flex flex-col py-6">
-          <div className="flex flex-col divide-y divide-neutral-800">
-            {loading ? (
-              <div className="text-center py-10 text-text-sub">
-                불러오는 중...
-              </div>
-            ) : (
-              <AnimatePresence mode="popLayout">
-                {filteredItems.map((item) => (
-                  <SwipeableWrapper
-                    key={item.itemId}
-                    itemId={item.itemId}
-                    isOpen={openedItemId === item.itemId}
-                    onOpen={setOpenedItemId}
-                    onClose={() => setOpenedItemId(null)}
-                    actionWidth={60}
-                    layout
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    leftAction={
-                      <SwipeActionButton
-                        type="edit"
-                        onClick={() => handleEdit(item.itemId)}
-                      />
-                    }
-                    rightAction={
-                      <SwipeActionButton
-                        type="delete"
-                        onClick={() => handleDelete(item)}
-                      />
-                    }
-                  >
-                    <div
-                      onClick={(e) => {
-                        // 어떤 카드라도 열려있는 상태라면 상세 페이지 이동 차단
-                        if (openedItemId !== null) {
-                          e.stopPropagation();
-                          setOpenedItemId(null);
-                          return;
-                        }
+          {loading ? (
+            <LoadingOverlay />
+          ) : (
+            <AnimatePresence mode="popLayout">
+              {filteredItems.map((item) => (
+                <SwipeableWrapper
+                  key={item.itemId}
+                  itemId={item.itemId}
+                  isOpen={openedItemId === item.itemId}
+                  onOpen={setOpenedItemId}
+                  onClose={() => setOpenedItemId(null)}
+                  actionWidth={60}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  leftAction={
+                    <SwipeActionButton
+                      type="edit"
+                      onClick={() => handleEdit(item.itemId)}
+                    />
+                  }
+                  rightAction={
+                    <SwipeActionButton
+                      type="delete"
+                      onClick={() => handleDelete(item)}
+                    />
+                  }
+                >
+                  <div
+                    onClick={(e) => {
+                      // 어떤 카드라도 열려있는 상태라면 상세 페이지 이동 차단
+                      if (openedItemId !== null) {
+                        e.stopPropagation();
+                        setOpenedItemId(null);
+                        return;
+                      }
 
-                        handleView(item.itemId);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      <ItemCard item={item} />
-                    </div>
-                  </SwipeableWrapper>
-                ))}
-              </AnimatePresence>
-            )}
-          </div>
+                      handleView(item.itemId);
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <ItemCard item={item} />
+                  </div>
+                </SwipeableWrapper>
+              ))}
+            </AnimatePresence>
+          )}
         </section>
       </main>
       <Snackbar
