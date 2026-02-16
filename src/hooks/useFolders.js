@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import {
   createFolder,
   getFolders,
@@ -12,6 +12,8 @@ import {
 
 export const useFolders = () => {
   const location = useLocation();
+
+  const { folderId } = useParams();
 
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,8 +77,9 @@ export const useFolders = () => {
 
   // 폴더 생성
   const handleCreate = async (folderName, parentId = null) => {
+    const targetParentId = parentId ?? (folderId ? Number(folderId) : null);
     try {
-      const newFolder = await createFolder(folderName, parentId);
+      const newFolder = await createFolder(folderName, targetParentId);
       await fetchFolders();
       return { success: true, folder: newFolder };
     } catch (error) {

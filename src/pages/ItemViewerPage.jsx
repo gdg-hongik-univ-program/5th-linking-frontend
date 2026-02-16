@@ -1,14 +1,5 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { differenceInCalendarDays, format } from 'date-fns';
-import { useItem } from '../hooks/useItem';
-import { useFolders } from '../hooks/useFolders';
-import { formatDate } from '../utils/formatDate';
-import PageHeader from '../components/common/PageHeader';
-import IconButton from '../components/common/IconButton';
-import BottomSheet from '../components/common/BottomSheet';
-import Snackbar from '../components/common/Snackbar';
-import LoadingSpinner from '../components/common/LoadingSpinner';
 import {
   PenLine,
   MoreHorizontal,
@@ -18,35 +9,21 @@ import {
   Share2,
   Unlink,
 } from 'lucide-react';
-
-// 폴더 경로 찾기
-const findFolderPath = (nodes, targetId, currentPath = []) => {
-  if (!nodes) return null;
-  for (const node of nodes) {
-    if (String(node.folderId) === String(targetId)) {
-      return [...currentPath, node.folderName];
-    }
-    if (node.children) {
-      const foundPath = findFolderPath(node.children, targetId, [
-        ...currentPath,
-        node.folderName,
-      ]);
-      if (foundPath) return foundPath;
-    }
-  }
-  return null;
-};
-
-// 유튜브 ID 추출
-const getYoutubeId = (url) => {
-  if (!url) return null;
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return match && match[2].length === 11 ? match[2] : null;
-};
+import { differenceInCalendarDays, format } from 'date-fns';
+import { useItem } from '../hooks/useItem';
+import { useFolders } from '../hooks/useFolders';
+import { findFolderPath } from '../utils/findFolderPath';
+import { formatDate } from '../utils/formatDate';
+import { getYoutubeId } from '../utils/getYoutubeId';
+import LoadingSpinner from '../components/common/LoadingSpinner';
+import PageHeader from '../components/common/PageHeader';
+import IconButton from '../components/common/IconButton';
+import BottomSheet from '../components/common/BottomSheet';
+import Snackbar from '../components/common/Snackbar';
 
 export default function ItemViewerPage() {
   const navigate = useNavigate();
+
   const { itemId } = useParams();
 
   const {
@@ -59,7 +36,7 @@ export default function ItemViewerPage() {
     handleConnect,
     handleDisconnect,
     handleUndo,
-    handleEdit,
+    handleGoToEdit,
     handleVisit,
     handleShare,
   } = useItem(itemId);
@@ -70,7 +47,7 @@ export default function ItemViewerPage() {
 
   // 폴더 경로 표시
   const folderPathDisplay = useMemo(() => {
-    if (!item?.folderId) return '저장소';
+    if (!item?.folderId) return '저장소 최상단';
     const pathArray = findFolderPath(folderTree, item.folderId);
     return pathArray ? pathArray.join('/') : '알 수 없는 폴더';
   }, [folderTree, item?.folderId]);
@@ -110,7 +87,11 @@ export default function ItemViewerPage() {
   return (
     <div className="h-full flex flex-col font-family-sans bg-bg-main text-text-main relative overflow-hidden">
       <PageHeader onBack={() => navigate(-1)}>
-        <IconButton icon={PenLine} onClick={handleEdit} aria-label="수정하기" />
+        <IconButton
+          icon={PenLine}
+          onClick={handleGoToEdit}
+          aria-label="수정하기"
+        />
         <IconButton icon={MoreHorizontal} aria-label="더보기" />
       </PageHeader>
 
@@ -290,7 +271,6 @@ export default function ItemViewerPage() {
         {isLoadingConnectedItems ? (
           <div className="py-10 text-center text-text-sub flex flex-col items-center gap-2">
             <LoadingSpinner size="md" color="text-text-sub" />
-            <span className="text-sm">목록을 불러오는 중...</span>
           </div>
         ) : connectedItems && connectedItems.length > 0 ? (
           <div className="flex flex-col gap-3 pb-6">

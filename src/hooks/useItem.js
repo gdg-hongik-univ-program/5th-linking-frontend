@@ -19,7 +19,7 @@ export const useItem = (itemId) => {
     handleRestore: commonRestore,
     handleDelete: commonDelete,
     handleDeletePermanently: commonDeletePermanently,
-    handleEdit: commonEdit,
+    handleGoToEdit: commonEdit,
   } = useItemCommon();
 
   const [item, setItem] = useState(null);
@@ -97,6 +97,7 @@ export const useItem = (itemId) => {
   const handleCreate = async (payload) => {
     try {
       const newItem = await createItem(payload);
+      navigate(`/view/${newItem.itemId}`);
       return { success: true, item: newItem };
     } catch (error) {
       alert('링크를 생성하는 데에 실패했어요.');
@@ -107,8 +108,13 @@ export const useItem = (itemId) => {
   // 아이템 수정
   const handleUpdate = async (payload) => {
     if (!itemId) return;
+
     try {
-      const updatedData = await updateItem(itemId, payload);
+      const updatedData = await updateItem({
+        itemId: Number(itemId),
+        ...payload,
+      });
+
       setItem((prev) => ({ ...prev, ...updatedData }));
       navigate(`/view/${itemId}`);
 
@@ -206,7 +212,7 @@ export const useItem = (itemId) => {
   };
 
   // 아이템 에디터로 페이지 이동
-  const handleEdit = () => {
+  const handleGoToEdit = () => {
     if (item?.itemId) {
       commonEdit(item.itemId);
     }
@@ -271,7 +277,7 @@ export const useItem = (itemId) => {
     handleUndo,
     handleRestore,
     handleDeletePermanently,
-    handleEdit,
+    handleGoToEdit,
     handleVisit,
     handleShare,
     handleConnect,

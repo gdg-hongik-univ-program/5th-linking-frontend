@@ -19,8 +19,8 @@ export default function StaleItemsPage() {
     snackbar,
     handleDelete,
     handleUndo,
-    handleEdit,
-    handleView,
+    handleGoToEdit,
+    handleGoToView,
   } = useItems('stale');
 
   // 검색 필터
@@ -64,11 +64,11 @@ export default function StaleItemsPage() {
             isSelectionMode={false}
             selectedIds={{ folders: [], items: [] }}
             onToggleSelection={() => {}}
-            onNavigate={(entry) => handleView(entry.itemId)}
+            onNavigate={(entry) => handleGoToView(entry.itemId)}
             renderLeftAction={(item) => (
               <SwipeActionButton
                 type="edit"
-                onClick={() => handleEdit(item.itemId)}
+                onClick={() => handleGoToEdit(item.itemId)}
               />
             )}
             renderRightAction={(item) => (

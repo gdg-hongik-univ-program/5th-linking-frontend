@@ -53,7 +53,7 @@ export const useItemCommon = () => {
     }
   };
 
-  const handleEdit = (itemId) => {
+  const handleGoToEdit = (itemId) => {
     if (!itemId) {
       console.error('아이템 ID가 없습니다.');
       return;
@@ -66,6 +66,6 @@ export const useItemCommon = () => {
     handleRestore,
     handleDelete,
     handleDeletePermanently,
-    handleEdit,
+    handleGoToEdit,
   };
 };

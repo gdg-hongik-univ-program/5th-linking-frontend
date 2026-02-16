@@ -1,28 +1,25 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { getItem, createItem, updateItem } from '../api/itemApi';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { Star, Save, Hourglass, CircleX, Folder, Hash, X } from 'lucide-react';
+import { useItem } from '../hooks/useItem';
+import { useFolders } from '../hooks/useFolders';
+import { findFolderPath } from '../utils/findFolderPath';
 import PageHeader from '../components/common/PageHeader';
 import IconButton from '../components/common/IconButton';
-import {
-  Star,
-  MoreHorizontal,
-  FolderSearch,
-  Save,
-  Calendar as CalendarIcon,
-  XCircle,
-  X,
-} from 'lucide-react';
+import FolderPicker from '../components/common/FolderPicker';
 
 export default function ItemEditorPage() {
-  const navigate = useNavigate();
   const { itemId } = useParams();
-  const location = useLocation();
 
-  const yearRef = useRef(null);
-  const monthRef = useRef(null);
-  const dayRef = useRef(null);
+  const [searchParams] = useSearchParams();
+  const folderIdParam = searchParams.get('folderId');
+
+  const { item: fetchedItem, handleCreate, handleUpdate } = useItem(itemId);
+  const { folders: folderTree } = useFolders();
+
   const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
+  const memoRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -30,137 +27,75 @@ export default function ItemEditorPage() {
     deadline: '',
     tags: [],
     memo: '',
-    folderId: '',
+    folderId: folderIdParam || '',
   });
 
   const [tagInput, setTagInput] = useState('');
-  const [dateParts, setDateParts] = useState({ year: '', month: '', day: '' });
   const [isImportant, setIsImportant] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  const hasInput = dateParts.year || dateParts.month || dateParts.day;
+  // 폴더 경로 표시
+  const folderPathString = useMemo(() => {
+    if (!formData.folderId) return '저장소 최상단';
+    const pathArray = findFolderPath(folderTree, formData.folderId);
+    if (pathArray) return pathArray.join('/');
+    return `폴더 표시하는 중...`;
+  }, [folderTree, formData.folderId]);
 
-  // 데이터 로딩
+  // 불러오기
   useEffect(() => {
-    const loadData = async () => {
-      if (itemId) {
-        try {
-          let currentData = location.state?.item;
-          if (!currentData) {
-            currentData = await getItem(itemId);
-          }
+    if (fetchedItem) {
+      setFormData({
+        title: fetchedItem.title || '',
+        url: fetchedItem.url || '',
+        deadline: fetchedItem.deadline || '',
+        tags: fetchedItem.tags || [],
+        memo: fetchedItem.memo || '',
+        folderId: fetchedItem.folderId || '',
+      });
+      setIsImportant(fetchedItem.importance || false);
+    } else if (folderIdParam) {
+      setFormData((prev) => {
+        if (String(prev.folderId) === String(folderIdParam)) return prev;
+        return { ...prev, folderId: folderIdParam };
+      });
+    }
+  }, [fetchedItem, folderIdParam]);
 
-          // 폼 데이터 세팅
-          setFormData({
-            title: currentData.title || '',
-            url: currentData.url || '',
-            deadline: currentData.deadline || '',
-            tags: currentData.tags || [],
-            memo: currentData.memo || '',
-            folderId: currentData.folderId || '',
-          });
-          setIsImportant(currentData.importance || false);
-        } catch (error) {
-          console.error('상세 데이터 로드 실패:', error);
-          alert('데이터를 불러오는데 실패했습니다.');
-        }
-      }
-    };
-    loadData();
-  }, [itemId, location.state]);
-
-  // 마감일이 변경되면 dateParts 업데이트
   useEffect(() => {
-    if (formData.deadline) {
-      const cleanDate = formData.deadline.split('T')[0];
-      const parts = cleanDate.split('-');
-      if (parts.length === 3) {
-        setDateParts({ year: parts[0], month: parts[1], day: parts[2] });
-      }
+    if (memoRef.current) {
+      memoRef.current.style.height = 'auto';
+      memoRef.current.style.height = memoRef.current.scrollHeight + 'px';
     }
-  }, [formData.deadline]);
-
-  // 날짜 입력 포커스 이동 로직
-  useEffect(() => {
-    if (
-      dateParts.year.length === 4 &&
-      document.activeElement === yearRef.current
-    ) {
-      monthRef.current?.focus();
-    }
-    if (
-      dateParts.month.length === 2 &&
-      document.activeElement === monthRef.current
-    ) {
-      dayRef.current?.focus();
-    }
-  }, [dateParts.year, dateParts.month]);
+  }, [formData.memo]);
 
   const handleSave = async () => {
-    // 제목 필수 입력 체크 로직
-    if (!formData.title.trim()) {
-      return alert('제목을 입력해주세요.');
-    }
-
-    if (!formData.folderId) return alert('폴더 ID를 입력해주세요.');
-
-    let finalDeadline = null;
-    if (dateParts.year && dateParts.month && dateParts.day) {
-      finalDeadline = `${dateParts.year}-${dateParts.month.padStart(2, '0')}-${dateParts.day.padStart(2, '0')}`;
-    } else if (formData.deadline && !hasInput) {
-      finalDeadline = formData.deadline.split('T')[0];
-    }
+    if (!formData.title.trim()) return alert('제목을 입력해주세요.');
+    const targetFolderId = formData.folderId ? Number(formData.folderId) : null;
+    const finalDeadline = formData.deadline
+      ? formData.deadline.split('T')[0]
+      : null;
 
     const payload = {
       url: formData.url,
       title: formData.title,
-      folderId: Number(formData.folderId),
+      folderId: targetFolderId,
       memo: formData.memo,
       importance: isImportant,
       deadline: finalDeadline,
       tags: formData.tags,
-      ...(itemId && { itemId: Number(itemId) }),
     };
+    if (itemId) await handleUpdate(payload);
+    else await handleCreate(payload);
+  };
 
-    try {
-      if (itemId) {
-        await updateItem(payload);
-        alert('수정되었습니다.');
-      } else {
-        await createItem(payload);
-        alert('성공적으로 저장되었습니다!');
-      }
-      navigate(-1);
-    } catch (error) {
-      console.error('저장 실패:', error);
-      alert('저장에 실패했습니다.');
+  const handleHiddenDateChange = (e) => {
+    if (e.target.value) {
+      setFormData((prev) => ({ ...prev, deadline: e.target.value }));
     }
   };
 
-  // UI 핸들러들
-  const handleDateChange = (e, part) => {
-    const rawValue = e.target.value.replace(/[^0-9]/g, '');
-    const maxLength = part === 'year' ? 4 : 2;
-    const newValue = rawValue.slice(0, maxLength);
-    setDateParts((prev) => ({ ...prev, [part]: newValue }));
-  };
-
-  const handleBlur = (part) => {
-    const value = dateParts[part];
-    if (!value) return;
-    let newValue = value;
-    if (part !== 'year' && value.length === 1) {
-      newValue = value.padStart(2, '0');
-      setDateParts((prev) => ({ ...prev, [part]: newValue }));
-    }
-  };
-
-  const handleClearDate = () => {
-    setDateParts({ year: '', month: '', day: '' });
-    setFormData((prev) => ({ ...prev, deadline: '' }));
-  };
-
-  const focusInput = (ref) => ref.current?.focus();
-
+  // 마감일 선택기 열기
   const handleCalendarClick = () => {
     try {
       hiddenDateRef.current?.showPicker();
@@ -169,9 +104,10 @@ export default function ItemEditorPage() {
     }
   };
 
-  const handleHiddenDateChange = (e) => {
-    if (e.target.value)
-      setFormData((prev) => ({ ...prev, deadline: e.target.value }));
+  // 마감일 한 번에 지우기
+  const handleClearDate = (e) => {
+    e.stopPropagation();
+    setFormData((prev) => ({ ...prev, deadline: '' }));
   };
 
   const handleChange = (e) => {
@@ -179,24 +115,24 @@ export default function ItemEditorPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // 중요도 토글
   const toggleImportant = () => setIsImportant((prev) => !prev);
+
+  // 태그 입력
   const handleTagKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const newTag = tagInput.trim();
-      // 태그 10개 제한 확인
       if (formData.tags.length >= 10) {
         alert('태그는 최대 10개까지 추가할 수 있어요.');
         setTagInput('');
         return;
       }
-      // 태그 35자 제한 입력 확인
       if (newTag.length > 35) {
         alert('태그 하나엔 최대 35자까지 입력할 수 있어요.');
         return;
       }
-
       if (newTag && !formData.tags.includes(newTag)) {
         setFormData((prev) => ({
           ...prev,
@@ -209,6 +145,7 @@ export default function ItemEditorPage() {
     }
   };
 
+  // 태그 삭제
   const removeTag = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
@@ -216,204 +153,188 @@ export default function ItemEditorPage() {
     }));
   };
 
-  const getColor = (val) => (val ? 'text-text-main' : 'text-text-disabled');
+  // 위치 선택기 열기
+  const handleFolderSelect = (selectedId) => {
+    setFormData((prev) => ({ ...prev, folderId: selectedId || '' }));
+  };
+
+  // 날짜 포맷 표시
+  const formattedDateString = useMemo(() => {
+    if (!formData.deadline) return '';
+    const date = new Date(formData.deadline);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}년 ${month}월 ${day}일`;
+  }, [formData.deadline]);
 
   return (
-    <div className="h-full flex flex-col font-family-sans relative overflow-hidden bg-bg-main">
-      {/* 헤더 컴포넌트 적용 */}
+    <div className="h-full flex flex-col font-family-sans bg-bg-main">
       <PageHeader>
         <IconButton icon={Save} onClick={handleSave} aria-label="저장하기" />
-
-        <IconButton
-          icon={Star}
-          onClick={toggleImportant}
-          color={
-            isImportant ? 'text-primary-500 fill-primary-500' : 'text-text-main'
-          }
-          aria-label="중요도 토글"
-        />
-
-        <IconButton icon={MoreHorizontal} aria-label="더보기" />
       </PageHeader>
 
-      <main className="flex-1 px-6 pt-2 pb-40 flex flex-col gap-8 overflow-y-auto scrollbar-hide">
-        <input
-          type="text"
-          name="title"
-          placeholder="제목 입력"
-          value={formData.title || ''}
-          onChange={handleChange}
-          maxLength={70}
-          className="w-full bg-transparent text-2xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none shrink-0 py-2"
-        />
-
-        <div className="flex flex-col gap-8 shrink-0">
-          <div className="flex items-center">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              URL
-            </label>
-            <input
-              type="text"
-              name="url"
-              placeholder="URL 입력"
-              value={formData.url || ''}
-              onChange={handleChange}
-              className="flex-1 bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none text-base py-2"
-            />
-          </div>
-
-          <div className="flex items-center">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              마감일
-            </label>
-            <div className="flex items-center flex-1 relative">
-              <div
-                onClick={() => focusInput(yearRef)}
-                className="flex items-center mr-1 cursor-text"
-              >
-                <input
-                  ref={yearRef}
-                  type="text"
-                  maxLength={4}
-                  placeholder="YYYY"
-                  value={dateParts.year}
-                  onChange={(e) => handleDateChange(e, 'year')}
-                  onBlur={() => handleBlur('year')}
-                  className={`w-9 bg-transparent focus:outline-none text-base py-2 placeholder:text-text-disabled text-right ${getColor(dateParts.year)}`}
-                />
-                <span className={`text-base ${getColor(dateParts.year)}`}>
-                  년
-                </span>
-              </div>
-              <div
-                onClick={() => focusInput(monthRef)}
-                className="flex items-center mr-1 cursor-text"
-              >
-                <input
-                  ref={monthRef}
-                  type="text"
-                  maxLength={2}
-                  placeholder="MM"
-                  value={dateParts.month}
-                  onChange={(e) => handleDateChange(e, 'month')}
-                  onBlur={() => handleBlur('month')}
-                  className={`w-6 bg-transparent focus:outline-none text-base py-2 placeholder:text-text-disabled text-right ${getColor(dateParts.month)}`}
-                />
-                <span className={`text-base ${getColor(dateParts.month)}`}>
-                  월
-                </span>
-              </div>
-              <div
-                onClick={() => focusInput(dayRef)}
-                className="flex items-center mr-auto cursor-text"
-              >
-                <input
-                  ref={dayRef}
-                  type="text"
-                  maxLength={2}
-                  placeholder="DD"
-                  value={dateParts.day}
-                  onChange={(e) => handleDateChange(e, 'day')}
-                  onBlur={() => handleBlur('day')}
-                  className={`w-6 bg-transparent focus:outline-none text-base py-2 placeholder:text-text-disabled text-right ${getColor(dateParts.day)}`}
-                />
-                <span className={`text-base ${getColor(dateParts.day)}`}>
-                  {hasInput ? '일' : '일 입력'}
-                </span>
-              </div>
-              <div className="flex items-center -mr-2">
-                {hasInput && (
-                  <button
-                    type="button"
-                    onClick={handleClearDate}
-                    className="p-2 text-text-sub hover:text-text-main"
-                  >
-                    <XCircle size={20} />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleCalendarClick}
-                  className="p-2 text-text-sub hover:text-primary-500"
-                >
-                  <CalendarIcon size={20} />
-                </button>
-              </div>
+      <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+        <div className="flex-1 flex flex-col px-5 py-4 gap-4 min-h-full">
+          {/* 제목 */}
+          <div className="flex flex-col gap-1 shrink-0">
+            <div className="flex items-start gap-2">
               <input
-                ref={hiddenDateRef}
-                type="date"
-                onChange={handleHiddenDateChange}
-                className="absolute opacity-0 pointer-events-none w-0 h-0"
-                tabIndex={-1}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center">
-              <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-                태그
-              </label>
-              <input
-                ref={tagInputRef}
                 type="text"
-                placeholder="태그 입력 후 엔터"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                className="flex-1 bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none text-base py-2"
-              />
-            </div>
-            <div className="flex flex-wrap gap-2 pl-20">
-              {formData.tags.map((tag, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-neutral-700 text-text-main rounded-full text-sm font-medium"
-                >
-                  <span>{tag}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeTag(tag)}
-                    className="text-neutral-400 hover:text-white"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <label className="w-20 text-text-sub text-sm font-medium shrink-0">
-              위치
-            </label>
-            <div className="flex items-center flex-1 relative">
-              <input
-                type="number"
-                name="folderId"
-                placeholder="폴더 ID (임시)"
-                value={formData.folderId || ''}
+                name="title"
+                placeholder="제목을 입력하세요"
+                value={formData.title || ''}
                 onChange={handleChange}
-                className="flex-1 bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none text-base py-2 mr-auto"
+                maxLength={70}
+                className="flex-1 bg-transparent text-xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none leading-tight py-1"
               />
               <button
-                type="button"
-                className="p-2 text-text-sub hover:text-primary-500 transition-colors -mr-2"
+                onClick={toggleImportant}
+                className={`p-1 mt-1 rounded-full transition-colors ${isImportant ? 'text-primary-500' : 'text-text-disabled hover:text-text-sub'}`}
               >
-                <FolderSearch size={20} />
+                <Star
+                  size={24}
+                  fill={isImportant ? 'currentColor' : 'none'}
+                  strokeWidth={isImportant ? 0 : 2}
+                />
               </button>
             </div>
+
+            {/* URL */}
+            <div className="flex items-center gap-2 text-text-sub">
+              <input
+                type="text"
+                name="url"
+                placeholder="URL 입력"
+                value={formData.url || ''}
+                onChange={handleChange}
+                className="flex-1 bg-transparent text-sm text-text-sub placeholder:text-text-disabled focus:outline-none focus:text-text-main transition-colors"
+              />
+            </div>
+          </div>
+
+          <hr className="border-neutral-800 shrink-0" />
+
+          {/* 세부 사항 설정 */}
+          <div className="flex flex-col gap-0 shrink-0">
+            {/* 위치 */}
+            <div className="flex items-center justify-between py-2.5 -mx-2 px-2">
+              <div className="flex items-center gap-3 text-text-sub">
+                <Folder size={20} />
+                <span className="text-sm font-medium">위치</span>
+              </div>
+              <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
+                <button
+                  onClick={() => setIsPickerOpen(true)}
+                  className={`text-sm truncate text-right max-w-[200px] hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors ${!formData.folderId ? 'text-text-sub' : 'text-text-main'}`}
+                >
+                  {folderPathString}
+                </button>
+              </div>
+            </div>
+
+            {/* 마감일 */}
+            <div className="flex items-center justify-between py-2.5 -mx-2 px-2">
+              <div className="flex items-center gap-3 text-text-sub shrink-0">
+                <Hourglass size={20} />
+                <span className="text-sm font-medium">마감일</span>
+              </div>
+
+              <div className="flex items-center justify-end relative">
+                {formData.deadline ? (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleCalendarClick}
+                      className="text-sm text-text-main tabular-nums hover:text-primary-500 transition-colors py-1 px-2 -mr-2 rounded"
+                    >
+                      {formattedDateString}
+                    </button>
+                    <button
+                      onClick={handleClearDate}
+                      className="text-text-disabled hover:text-text-sub p-1 ml-1"
+                    >
+                      <CircleX size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleCalendarClick}
+                    className="text-sm text-text-sub hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors text-right"
+                  >
+                    마감일 없음
+                  </button>
+                )}
+                <input
+                  ref={hiddenDateRef}
+                  type="date"
+                  value={
+                    formData.deadline ? formData.deadline.split('T')[0] : ''
+                  }
+                  onChange={handleHiddenDateChange}
+                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full pointer-events-none"
+                  tabIndex={-1}
+                />
+              </div>
+            </div>
+
+            {/* 태그 */}
+            <div className="flex flex-col py-2.5 -mx-2 px-2 gap-2">
+              <div className="flex items-center gap-3 text-text-sub">
+                <Hash size={20} />
+                <input
+                  ref={tagInputRef}
+                  type="text"
+                  placeholder="태그 입력 후 엔터로 추가"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  className="flex-1 bg-transparent text-sm text-text-main placeholder:text-text-disabled focus:outline-none"
+                />
+              </div>
+              {formData.tags.length > 0 && (
+                <div className="flex flex-wrap gap-2 pl-8">
+                  {formData.tags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-neutral-700 text-text-main rounded-full text-sm font-medium"
+                    >
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => removeTag(tag)}
+                        className="text-neutral-400 hover:text-white ml-0.5"
+                      >
+                        <X size={14} />
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <hr className="border-neutral-800 shrink-0" />
+
+          {/* 메모 */}
+          <div className="flex-1 flex flex-col min-h-[300px]">
+            <textarea
+              ref={memoRef}
+              name="memo"
+              placeholder="메모 입력"
+              value={formData.memo || ''}
+              onChange={handleChange}
+              className="w-full min-h-[500px] bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none resize-none text-base leading-relaxed overflow-hidden"
+            />
           </div>
         </div>
-
-        <textarea
-          name="memo"
-          placeholder="메모 입력"
-          value={formData.memo || ''}
-          onChange={handleChange}
-          className="w-full flex-1 min-h-[200px] bg-transparent text-text-main placeholder:text-text-disabled focus:outline-none resize-none text-base leading-loose py-2"
-        />
       </main>
+
+      <FolderPicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={handleFolderSelect}
+        title="저장 위치 선택"
+      />
     </div>
   );
 }

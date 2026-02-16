@@ -20,7 +20,7 @@ export default function TrashPage() {
     handleRestore,
     handleDeletePermanently,
     handleUndo,
-    handleView,
+    handleGoToView,
   } = useItems('trash');
 
   // 검색 필터
@@ -64,7 +64,7 @@ export default function TrashPage() {
             isSelectionMode={false}
             selectedIds={{ folders: [], items: [] }}
             onToggleSelection={() => {}}
-            onNavigate={(entry) => handleView(entry.itemId)}
+            onNavigate={(entry) => handleGoToView(entry.itemId)}
             renderLeftAction={(item) => (
               <SwipeActionButton
                 type="restore"
