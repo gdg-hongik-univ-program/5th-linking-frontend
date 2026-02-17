@@ -1,15 +1,26 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import Input from '../components/common/Input';
+import { useAuth } from '../context/AuthProvider';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { isAuthenticated, isLoading, loginSuccess } = useAuth();
+
+  const from = location.state?.from?.pathname || '/';
 
   const [formData, setFormData] = useState({
-    loginId: '',
+    loginId: location.state?.loginId || '',
     password: '',
   });
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate, from]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,9 +40,10 @@ function LoginPage() {
 
     try {
       const response = await axiosInstance.post('/user/sign-in', formData);
-      console.log('로그인 성공', response.data);
+      loginSuccess(response.data);
+
       alert('로그인에 성공했습니다!');
-      navigate('/home');
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
       const errorMessage =
@@ -39,6 +51,8 @@ function LoginPage() {
       alert(errorMessage);
     }
   };
+
+  if (isLoading) return null;
 
   return (
     <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main">
@@ -62,6 +76,7 @@ function LoginPage() {
           value={formData.loginId}
           onChange={handleChange}
           placeholder="아이디를 입력해주세요"
+          onClear={() => setFormData({ ...formData, loginId: '' })} // 지난번에 만든 삭제 기능 활용!
         />
 
         <Input
@@ -70,6 +85,7 @@ function LoginPage() {
           value={formData.password}
           onChange={handleChange}
           placeholder="비밀번호를 입력해주세요"
+          onClear={() => setFormData({ ...formData, password: '' })}
         />
 
         <button

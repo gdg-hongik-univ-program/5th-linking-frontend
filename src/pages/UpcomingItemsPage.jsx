@@ -32,7 +32,7 @@ export default function UpcomingItemsPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <PageHeader title="임박" onBackClick={() => navigate(-1)}>
+      <PageHeader title="임박" onBack={() => navigate(-1)}>
         <IconButton
           icon={MoreHorizontal}
           onClick={() => console.log('더보기 클릭')}

@@ -35,7 +35,7 @@ export default function ImportantItemsPage() {
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
       <PageHeader
         title="중요"
-        onBackClick={() => navigate(-1)}
+        onBack={() => navigate(-1)}
         scrollContainerRef={scrollRef}
       >
         <IconButton

@@ -1,3 +1,5 @@
+import { CircleX } from 'lucide-react';
+
 const CheckIcon = () => (
   <svg
     width="14"
@@ -36,6 +38,7 @@ function Input({
   placeholder,
   value,
   onChange,
+  onClear,
   name,
   message,
   rightElement,
@@ -52,32 +55,41 @@ function Input({
           {label}
         </label>
       )}
-
       <div className="flex gap-2 relative">
-        {leftIcon && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-            {leftIcon}
-          </div>
-        )}
-
-        <input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          className={`
-            w-full py-3 rounded-xl transition-all
-            bg-bg-card text-text-main placeholder:text-text-disabled
-            
-            border-2 border-border-default
-            focus:outline-none focus:border-primary-500
-
-            focus:shadow-[0_0_12px_rgba(234,190,47,0.25)]
-            ${leftIcon ? 'pl-11 pr-4' : 'px-4'}
-          `}
-          {...props}
-        />
+        <div className="relative flex-1">
+          {leftIcon && (
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+              {leftIcon}
+            </div>
+          )}
+          <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={`
+              w-full py-3 rounded-xl transition-all
+              bg-bg-card text-text-main placeholder:text-text-disabled
+              border-2 border-border-default
+              focus:outline-none focus:border-primary-500
+              focus:shadow-[0_0_12px_rgba(234,190,47,0.25)]
+              ${leftIcon ? 'pl-11' : 'px-4'}
+              ${onClear && value ? 'pr-11' : 'pr-4'}
+            `}
+            {...props}
+          />
+          {/* 삭제 버튼: 값과 onClear 함수가 있을 때만 렌더링 */}
+          {value && onClear && (
+            <button
+              type="button"
+              onClick={onClear}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-disabled hover:text-text-main transition-colors"
+            >
+              <CircleX className="w-5 h-5" />
+            </button>
+          )}
+        </div>
 
         {rightElement && <div className="flex shrink-0">{rightElement}</div>}
       </div>
