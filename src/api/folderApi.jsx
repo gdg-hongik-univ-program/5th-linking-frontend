@@ -9,7 +9,7 @@ export const createFolder = async (folderName, parentId = null) => {
   return response.data;
 };
 
-// 2. 폴더 목록 조회
+// 2. 폴더 다수 조회
 export const getFolders = async () => {
   const response = await axiosInstance.get('/folder');
   return response.data;
@@ -23,8 +23,35 @@ export const updateFolder = async (folderId, folderName) => {
   return response.data;
 };
 
-// 4. 폴더 삭제
-export const deleteFolder = async (folderId) => {
-  const response = await axiosInstance.delete(`/folder/${folderId}`);
+// 4. 폴더 다수 이동
+export const moveFolders = async (folderIds, targetParentId) => {
+  const response = await axiosInstance.patch('/folder/move', {
+    folderIds,
+    targetParentId,
+  });
+  return response.data;
+};
+
+// 5. 폴더 다수 삭제
+export const deleteFolders = async (folderIds) => {
+  const response = await axiosInstance.delete('/folder', {
+    data: { folderIds },
+  });
+  return response.data;
+};
+
+// 6. 폴더 다수 복원
+export const restoreFolders = async (folderIds) => {
+  const response = await axiosInstance.post('/folder/restore', {
+    folderIds,
+  });
+  return response.data;
+};
+
+// 7. 폴더 다수 영구 삭제
+export const deleteFoldersPermanently = async (folderIds) => {
+  const response = await axiosInstance.delete('/folder/trash', {
+    data: { folderIds },
+  });
   return response.data;
 };

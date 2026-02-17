@@ -23,13 +23,18 @@ const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 export default function App() {
   return (
     <div className="h-screen bg-neutral-950 grid place-items-center font-family-sans">
-      <div className="w-full max-w-[390px] h-full bg-bg-main shadow-2xl overflow-hidden relative border-x border-neutral-800">
+      <div className="w-full min-w-[390px] max-w-[390px] h-full bg-bg-main shadow-2xl overflow-hidden relative border-x border-neutral-800">
         <Suspense fallback={<LoadingOverlay />}>
           <Routes>
+            {/* 네비게이션 바 제외 페이지 */}
             <Route path="/" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/notification" element={<NotificationPage />} />
+            <Route path="/create" element={<ItemEditorPage />} />
+            <Route path="/edit/:itemId" element={<ItemEditorPage />} />
+            <Route path="/view/:itemId" element={<ItemViewerPage />} />
 
+            {/* 네비게이션 바 포함 페이지 */}
             <Route element={<Layout />}>
               <Route path="/home" element={<HomePage />} />
               <Route path="/upcoming" element={<UpcomingItemsPage />} />
@@ -40,9 +45,6 @@ export default function App() {
               <Route path="/storage" element={<StoragePage />} />
               <Route path="/storage/:folderId" element={<StoragePage />} />
               <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/create" element={<ItemEditorPage />} />
-              <Route path="/edit/:itemId" element={<ItemEditorPage />} />
-              <Route path="/view/:itemId" element={<ItemViewerPage />} />
             </Route>
 
             <Route path="*" element={<NotFoundPage />} />

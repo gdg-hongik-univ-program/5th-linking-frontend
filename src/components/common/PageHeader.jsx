@@ -7,7 +7,9 @@ import IconButton from './IconButton';
 const PageHeader = ({
   title,
   iconType = 'arrow',
+  isSelectMode = false,
   onBackClick,
+  disabled = false,
   children,
   className = '',
   scrollContainerRef,
@@ -16,8 +18,13 @@ const PageHeader = ({
   const [hidden, setHidden] = useState(false);
   const [isFixed, setIsFixed] = useState(false);
 
-  const handleBack = onBackClick || (() => navigate(-1));
   const IconComponent = iconType === 'close' ? X : ArrowLeft;
+
+  const handleBack = () => {
+    if (disabled) return;
+    if (onBackClick) onBackClick();
+    else navigate(-1);
+  };
 
   const { scrollY } = useScroll({
     container: scrollContainerRef,
@@ -46,6 +53,7 @@ const PageHeader = ({
       if (hidden) setHidden(false); // 숨겨져 있었다면 보여줌
     }
   });
+
   return (
     <>
       {isFixed && <div className="h-[92px] w-full shrink-0" />}
@@ -60,29 +68,30 @@ const PageHeader = ({
           ease: [0.23, 1, 0.32, 1],
         }}
         className={`
-   flex items-center justify-between px-3 pt-8 pb-3 z-50 
-    
-    ${
-      isFixed
-        ? `fixed top-0 left-1/2 -translate-x-1/2 shadow-sm bg-bg-main/80 backdrop-blur-md
-         w-[388px] min-w-[388px]` // 반응형 구현 시 하드코딩 제거
-        : 'relative bg-bg-main w-full'
-    }
-    ${className}
-  `}
+          flex items-center justify-between px-3 pt-8 pb-3 z-50
+          ${
+            isFixed
+              ? `fixed top-0 left-1/2 -translate-x-1/2 shadow-sm bg-bg-main/80 backdrop-blur-md
+                 w-[388px] min-w-[388px]` // 반응형 구현 시 하드코딩 제거
+              : 'relative bg-bg-main w-full'
+          }
+          ${className}
+        `}
       >
         {/* 1. 좌측 뒤로가기 또는 닫기 버튼 */}
-        <div className="flex-none flex justify-start items-center top-1/2 z-10 ">
+        <div className="flex-none flex justify-start items-center top-1/2 z-10">
           <IconButton
             icon={IconComponent}
             onClick={handleBack}
             aria-label={iconType === 'close' ? '닫기' : '뒤로가기'}
+            disabled={disabled}
+            className={disabled ? 'opacity-40 cursor-not-allowed' : ''}
           />
         </div>
 
         {/* 2. 중앙 페이지 제목 텍스트 */}
-        {title && (
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 mt-[10px] pointer-events-none">
+        {title && !isSelectMode && (
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 mt-[10px] max-w-[50%] pointer-events-none">
             <h1 className="text-lg font-bold text-text-main truncate text-center leading-none pb-[2px]">
               {title}
             </h1>

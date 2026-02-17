@@ -1,55 +1,67 @@
-import { Star, Link as LinkIcon } from 'lucide-react';
+import { Star, Link as LinkIcon, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { formatDate } from '../../utils/formatDate';
 import DDayBadge from './DDayBadge';
 
-// 날짜 포맷팅 함수
-const formatDate = (dateString) => {
-  if (!dateString) return '생성일 없음';
-  const date = new Date(dateString);
-  const now = new Date();
-  if (isNaN(date.getTime())) return '생성일 없음';
-
-  const isToday = date.toDateString() === now.toDateString();
-  const isThisYear = date.getFullYear() === now.getFullYear();
-
-  if (isToday) {
-    let hours = date.getHours();
-    const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? '오후' : '오전';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const strMinutes = minutes < 10 ? '0' + minutes : minutes;
-    return `${ampm} ${hours}:${strMinutes}`;
-  }
-
-  if (isThisYear) {
-    return `${date.getMonth() + 1}월 ${date.getDate()}일`;
-  }
-
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-};
-
-export default function ItemCard({ item }) {
+export default function ItemCard({
+  item,
+  isSelectMode = false,
+  isSelected = false,
+  onSelect,
+  onClick,
+}) {
   const { title, tags, importance, createdAt } = item;
+
+  const handleClick = () => {
+    if (isSelectMode && onSelect) {
+      onSelect(item.itemId);
+    } else if (onClick) {
+      onClick();
+    }
+  };
 
   return (
     <motion.div
       whileTap={{ scale: 0.98 }}
-      className="flex gap-3 py-1 cursor-pointer group select-none"
+      onClick={handleClick}
+      className={`flex gap-3 px-6 py-3 cursor-pointer group select-none transition-colors
+      ${isSelected ? 'bg-neutral-800' : 'bg-transparent-0'}
+    `}
     >
-      {/* 1. 좌측 썸네일 영역 */}
+      {/* 썸네일 */}
       <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
         <LinkIcon size={40} className="text-neutral-600" />
-        {/* 1-1. 중요 표시 */}
-        {importance && (
+
+        {/* 1-1. 선택 모드 체크박스 */}
+        {isSelectMode && (
+          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+            <div
+              className={`w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all ${
+                isSelected
+                  ? 'bg-primary border-primary'
+                  : 'bg-neutral-800/60 border-white'
+              }`}
+            >
+              {isSelected && (
+                <Check size={20} className="text-text-main" strokeWidth={3} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 1-2. 중요 표시 */}
+        {!isSelectMode && importance && (
           <div className="absolute top-1.5 right-1.5 drop-shadow-md">
             <Star size={20} fill="currentColor" className="text-primary-500" />
           </div>
         )}
-        {/* 1-2. D-Day 배지 */}
-        <div className="absolute bottom-1.5 right-1.5 drop-shadow-md">
-          <DDayBadge deadline={item.deadline} />
-        </div>
+
+        {/* 1-3. D-Day 배지 */}
+        {!isSelectMode && (
+          <div className="absolute bottom-1.5 right-1.5 drop-shadow-md">
+            <DDayBadge deadline={item.deadline} />
+          </div>
+        )}
       </div>
 
       {/* 2. 우측 정보 영역 */}
@@ -63,7 +75,7 @@ export default function ItemCard({ item }) {
         <div className="flex flex-col items-end gap-1 min-w-0">
           {/* 2-2-1. 태그 영역 (최대 1줄) */}
           {tags && tags.length > 0 && (
-            <div className="w-full flex flex-wrap justify-end gap-1 overflow-hidden max-h-[20px]">
+            <div className="w-full flex justify-end gap-1 overflow-hidden max-h-[20px]">
               {tags.map((tag, i) => (
                 <span
                   key={i}
@@ -76,7 +88,7 @@ export default function ItemCard({ item }) {
           )}
 
           {/* 2-2-2. 생성일 */}
-          <p className="text-[11px] text-text-sub opacity-80 shrink-0">
+          <p className="text-xs text-text-sub opacity-80 shrink-0">
             {formatDate(createdAt)}
           </p>
         </div>
