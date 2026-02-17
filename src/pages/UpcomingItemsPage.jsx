@@ -14,6 +14,7 @@ export default function UpcomingItemsPage() {
   const {
     items,
     isLoading,
+    navigate,
     openedItemId,
     setOpenedItemId,
     snackbar,
@@ -23,18 +24,15 @@ export default function UpcomingItemsPage() {
     handleGoToView,
   } = useItems('upcoming');
 
-  // 검색 필터
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return items;
-
     return items.filter((item) => (item.title ?? '').toLowerCase().includes(q));
   }, [items, search]);
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      {/* 헤더 */}
-      <PageHeader title="임박" onBack={() => navigate(-1)}>
+      <PageHeader title="임박" onBackClick={() => navigate(-1)}>
         <IconButton
           icon={MoreHorizontal}
           onClick={() => console.log('더보기 클릭')}
@@ -42,9 +40,7 @@ export default function UpcomingItemsPage() {
         />
       </PageHeader>
 
-      {/* 메인 */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* 서치 바 */}
         <div className="px-6 pt-6 shrink-0">
           <SearchBar
             value={search}
@@ -53,7 +49,6 @@ export default function UpcomingItemsPage() {
           />
         </div>
 
-        {/* 리스트 뷰 */}
         <div className="flex-1 min-h-0">
           <ListView
             data={filteredItems}
@@ -82,7 +77,6 @@ export default function UpcomingItemsPage() {
         </div>
       </main>
 
-      {/* 스낵바 */}
       <Snackbar
         isVisible={snackbar.isVisible}
         message={snackbar.message}

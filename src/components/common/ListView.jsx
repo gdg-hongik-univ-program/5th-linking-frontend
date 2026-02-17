@@ -19,6 +19,7 @@ export default function ListView({
   renderLeftAction,
   renderRightAction,
   emptyText = '목록이 비어있어요.',
+  scrollParentRef,
 }) {
   // 스크롤 시 스와이프 닫기
   const handleScroll = () => {
@@ -47,7 +48,7 @@ export default function ListView({
     const isSwipeDisabled = isSelectionMode || !swipeEnabled;
 
     return (
-      <div className="p-0">
+      <div className="p-0 px-4">
         <SwipeableWrapper
           key={`${type}-${id}`}
           itemId={id}
@@ -81,7 +82,8 @@ export default function ListView({
 
   return (
     <Virtuoso
-      style={{ height: '100%' }}
+      useWindowScroll={false}
+      customScrollParent={scrollParentRef?.current || undefined}
       data={isLoading ? [] : data}
       itemContent={renderRow}
       onScroll={handleScroll}

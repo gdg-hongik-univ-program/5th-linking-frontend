@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import PageHeader from '../components/common/PageHeader';
@@ -9,11 +9,13 @@ import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
 export default function ImportantItemsPage() {
+  const scrollRef = useRef(null);
   const [search, setSearch] = useState('');
 
   const {
     items,
     isLoading,
+    navigate,
     openedItemId,
     setOpenedItemId,
     snackbar,
@@ -23,18 +25,19 @@ export default function ImportantItemsPage() {
     handleGoToView,
   } = useItems('important');
 
-  // 검색 필터
   const filteredItems = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return items;
-
     return items.filter((item) => (item.title ?? '').toLowerCase().includes(q));
   }, [items, search]);
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      {/* 헤더 */}
-      <PageHeader title="중요" onBack={() => navigate(-1)}>
+      <PageHeader
+        title="중요"
+        onBackClick={() => navigate(-1)}
+        scrollContainerRef={scrollRef}
+      >
         <IconButton
           icon={MoreHorizontal}
           onClick={() => console.log('더보기 클릭')}
@@ -42,9 +45,7 @@ export default function ImportantItemsPage() {
         />
       </PageHeader>
 
-      {/* 메인 */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* 서치 바 */}
+      <main ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto">
         <div className="px-6 pt-6 shrink-0">
           <SearchBar
             value={search}
@@ -53,7 +54,6 @@ export default function ImportantItemsPage() {
           />
         </div>
 
-        {/* 리스트 뷰 */}
         <div className="flex-1 min-h-0">
           <ListView
             data={filteredItems}
@@ -82,7 +82,6 @@ export default function ImportantItemsPage() {
         </div>
       </main>
 
-      {/* 스낵바 */}
       <Snackbar
         isVisible={snackbar.isVisible}
         message={snackbar.message}

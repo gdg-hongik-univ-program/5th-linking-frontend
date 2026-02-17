@@ -10,7 +10,6 @@ import FolderPicker from '../components/common/FolderPicker';
 
 export default function ItemEditorPage() {
   const { itemId } = useParams();
-
   const [searchParams] = useSearchParams();
   const folderIdParam = searchParams.get('folderId');
 
@@ -34,15 +33,13 @@ export default function ItemEditorPage() {
   const [isImportant, setIsImportant] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
-  // 폴더 경로 표시
   const folderPathString = useMemo(() => {
     if (!formData.folderId) return '저장소 최상단';
     const pathArray = findFolderPath(folderTree, formData.folderId);
     if (pathArray) return pathArray.join('/');
-    return `폴더 표시하는 중...`;
+    return '폴더 표시하는 중...';
   }, [folderTree, formData.folderId]);
 
-  // 불러오기
   useEffect(() => {
     if (fetchedItem) {
       setFormData({
@@ -63,18 +60,16 @@ export default function ItemEditorPage() {
   }, [fetchedItem, folderIdParam]);
 
   useEffect(() => {
-    if (memoRef.current) {
-      memoRef.current.style.height = 'auto';
-      memoRef.current.style.height = memoRef.current.scrollHeight + 'px';
-    }
+    if (!memoRef.current) return;
+    memoRef.current.style.height = 'auto';
+    memoRef.current.style.height = `${memoRef.current.scrollHeight}px`;
   }, [formData.memo]);
 
   const handleSave = async () => {
     if (!formData.title.trim()) return alert('제목을 입력해주세요.');
+
     const targetFolderId = formData.folderId ? Number(formData.folderId) : null;
-    const finalDeadline = formData.deadline
-      ? formData.deadline.split('T')[0]
-      : null;
+    const finalDeadline = formData.deadline ? formData.deadline.split('T')[0] : null;
 
     const payload = {
       url: formData.url,
@@ -85,17 +80,16 @@ export default function ItemEditorPage() {
       deadline: finalDeadline,
       tags: formData.tags,
     };
+
     if (itemId) await handleUpdate(payload);
     else await handleCreate(payload);
   };
 
   const handleHiddenDateChange = (e) => {
-    if (e.target.value) {
-      setFormData((prev) => ({ ...prev, deadline: e.target.value }));
-    }
+    const next = e.target.value || '';
+    setFormData((prev) => ({ ...prev, deadline: next }));
   };
 
-  // 마감일 선택기 열기
   const handleCalendarClick = () => {
     try {
       hiddenDateRef.current?.showPicker();
@@ -104,7 +98,6 @@ export default function ItemEditorPage() {
     }
   };
 
-  // 마감일 한 번에 지우기
   const handleClearDate = (e) => {
     e.stopPropagation();
     setFormData((prev) => ({ ...prev, deadline: '' }));
@@ -115,15 +108,15 @@ export default function ItemEditorPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 중요도 토글
   const toggleImportant = () => setIsImportant((prev) => !prev);
 
-  // 태그 입력
   const handleTagKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
+
     if (e.key === 'Enter' || e.key === ',') {
       e.preventDefault();
       const newTag = tagInput.trim();
+
       if (formData.tags.length >= 10) {
         alert('태그는 최대 10개까지 추가할 수 있어요.');
         setTagInput('');
@@ -133,6 +126,7 @@ export default function ItemEditorPage() {
         alert('태그 하나엔 최대 35자까지 입력할 수 있어요.');
         return;
       }
+
       if (newTag && !formData.tags.includes(newTag)) {
         setFormData((prev) => ({
           ...prev,
@@ -145,7 +139,6 @@ export default function ItemEditorPage() {
     }
   };
 
-  // 태그 삭제
   const removeTag = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
@@ -153,12 +146,10 @@ export default function ItemEditorPage() {
     }));
   };
 
-  // 위치 선택기 열기
   const handleFolderSelect = (selectedId) => {
     setFormData((prev) => ({ ...prev, folderId: selectedId || '' }));
   };
 
-  // 날짜 포맷 표시
   const formattedDateString = useMemo(() => {
     if (!formData.deadline) return '';
     const date = new Date(formData.deadline);
@@ -189,8 +180,14 @@ export default function ItemEditorPage() {
                 className="flex-1 bg-transparent text-xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none leading-tight py-1"
               />
               <button
+                type="button"
                 onClick={toggleImportant}
-                className={`p-1 mt-1 rounded-full transition-colors ${isImportant ? 'text-primary-500' : 'text-text-disabled hover:text-text-sub'}`}
+                className={`p-1 mt-1 rounded-full transition-colors ${
+                  isImportant
+                    ? 'text-primary-500'
+                    : 'text-text-disabled hover:text-text-sub'
+                }`}
+                aria-label={isImportant ? '중요 해제' : '중요 표시'}
               >
                 <Star
                   size={24}
@@ -225,8 +222,11 @@ export default function ItemEditorPage() {
               </div>
               <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
                 <button
+                  type="button"
                   onClick={() => setIsPickerOpen(true)}
-                  className={`text-sm truncate text-right max-w-[200px] hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors ${!formData.folderId ? 'text-text-sub' : 'text-text-main'}`}
+                  className={`text-sm truncate text-right max-w-[200px] hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors ${
+                    !formData.folderId ? 'text-text-sub' : 'text-text-main'
+                  }`}
                 >
                   {folderPathString}
                 </button>
@@ -244,32 +244,35 @@ export default function ItemEditorPage() {
                 {formData.deadline ? (
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={handleCalendarClick}
                       className="text-sm text-text-main tabular-nums hover:text-primary-500 transition-colors py-1 px-2 -mr-2 rounded"
                     >
                       {formattedDateString}
                     </button>
                     <button
+                      type="button"
                       onClick={handleClearDate}
                       className="text-text-disabled hover:text-text-sub p-1 ml-1"
+                      aria-label="마감일 삭제"
                     >
                       <CircleX size={16} />
                     </button>
                   </div>
                 ) : (
                   <button
+                    type="button"
                     onClick={handleCalendarClick}
                     className="text-sm text-text-sub hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors text-right"
                   >
                     마감일 없음
                   </button>
                 )}
+
                 <input
                   ref={hiddenDateRef}
                   type="date"
-                  value={
-                    formData.deadline ? formData.deadline.split('T')[0] : ''
-                  }
+                  value={formData.deadline ? formData.deadline.split('T')[0] : ''}
                   onChange={handleHiddenDateChange}
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full pointer-events-none"
                   tabIndex={-1}
@@ -291,6 +294,7 @@ export default function ItemEditorPage() {
                   className="flex-1 bg-transparent text-sm text-text-main placeholder:text-text-disabled focus:outline-none"
                 />
               </div>
+
               {formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 pl-8">
                   {formData.tags.map((tag, idx) => (
@@ -303,6 +307,7 @@ export default function ItemEditorPage() {
                         type="button"
                         onClick={() => removeTag(tag)}
                         className="text-neutral-400 hover:text-white ml-0.5"
+                        aria-label={`태그 삭제: ${tag}`}
                       >
                         <X size={14} />
                       </button>

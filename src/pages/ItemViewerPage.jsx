@@ -280,7 +280,7 @@ export default function ItemViewerPage() {
                 className="flex items-center gap-3 p-3 rounded-xl bg-bg-nav border border-border-default active:bg-neutral-700 transition-colors cursor-pointer group"
                 onClick={() => {
                   setIsSheetOpen(false);
-                  navigate(`/viewer/${cItem.itemId}`);
+                  navigate(`/view/${cItem.itemId}`);
                 }}
               >
                 <div className="w-10 h-10 rounded-lg bg-bg-card flex items-center justify-center shrink-0">

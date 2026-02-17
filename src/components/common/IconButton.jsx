@@ -18,9 +18,11 @@ const IconButton = ({
         transition-all 
         duration-200
         flex items-center justify-center
-        disabled:opacity-50 disabled:cursor-not-allowed
-        hover:bg-bg-nav 
-        active:scale-95 
+        /* 활성화 상태일 때만 배경 hover와 active 효과 발생 */
+        enabled:hover:bg-bg-nav 
+        enabled:active:scale-95 
+        disabled:opacity-50 
+        disabled:cursor-not-allowed
         group
         ${className}
       `}
@@ -30,7 +32,8 @@ const IconButton = ({
         <Icon
           size={size}
           className={`transition-colors ${
-            color || 'text-text-main group-hover:text-primary-500'
+            /* color가 넘어오면 그걸 쓰고, 없으면 기본 hover 적용 */
+            color || 'text-text-main group-enabled:group-hover:text-primary-500'
           }`}
         />
       )}

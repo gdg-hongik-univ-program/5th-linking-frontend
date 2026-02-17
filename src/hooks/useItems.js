@@ -5,7 +5,6 @@ import { useItemCommon } from './useItemCommon';
 
 export const useItems = (folderId = null, filterType = null) => {
   const navigate = useNavigate();
-
   const location = useLocation();
 
   const {
@@ -30,23 +29,21 @@ export const useItems = (folderId = null, filterType = null) => {
     commonDeleteRef.current = commonDelete;
   }, [commonDelete]);
 
-  // 스낵바 보이기
   const showSnackbar = (message) => {
     setSnackbar({ isVisible: true, message });
   };
 
-  // 스낵바 가리기
   const hideSnackbar = () => {
     setSnackbar({ isVisible: false, message: '' });
   };
 
-  // 아이템 조회
   const fetchItems = useCallback(async () => {
     setIsLoading(true);
     try {
       let apiFolderId = folderId;
       let apiFilter = filterType;
 
+      // folderId 자리에 filter 문자열이 오는 경우 대응
       if (typeof folderId === 'string' && isNaN(Number(folderId))) {
         apiFolderId = null;
         apiFilter = folderId;
@@ -55,6 +52,7 @@ export const useItems = (folderId = null, filterType = null) => {
       const data = await getItems(apiFolderId, apiFilter);
       let result = Array.isArray(data) ? data : [];
 
+      // filter도 folderId도 없는 경우: root(미분류)만
       if (!apiFolderId && !apiFilter) {
         result = result.filter((item) => !item.folderId);
       }
@@ -76,81 +74,27 @@ export const useItems = (folderId = null, filterType = null) => {
   useEffect(() => {
     const handleGlobalClose = () => setOpenedItemId(null);
     window.addEventListener('scroll', handleGlobalClose, true);
-    return () => {
-      window.removeEventListener('scroll', handleGlobalClose, true);
-    };
+    return () => window.removeEventListener('scroll', handleGlobalClose, true);
   }, []);
 
-  // 언마운트 클린업
+  // 언마운트 시 대기중 삭제 즉시 실행
   useEffect(() => {
     return () => {
       if (deleteTimerRef.current && pendingDeleteRef.current) {
-        console.log('즉시 삭제');
         clearTimeout(deleteTimerRef.current);
-
         const { items: deletedItems } = pendingDeleteRef.current;
         const itemIds = deletedItems.map((item) => item.itemId);
-
         commonDeleteRef.current(itemIds);
       }
     };
   }, []);
 
-  // 아이템 삭제 클린업
   const clearDeleteState = () => {
     hideSnackbar();
     deleteTimerRef.current = null;
     pendingDeleteRef.current = null;
   };
 
-  // 아이템 이동
-  const handleMove = async (itemsOrItem, targetFolderId) => {
-    const itemIds = Array.isArray(itemsOrItem)
-      ? itemsOrItem.map((i) => i.itemId)
-      : [itemsOrItem.itemId];
-    const result = await commonMove(itemIds, targetFolderId);
-    if (result.success)
-      setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
-    else alert('링크를 옮기는 데에 실패했어요.');
-    return result;
-  };
-
-  // 아이템 삭제
-  const handleDelete = (itemsOrItem) => {
-    const itemsToDelete = Array.isArray(itemsOrItem)
-      ? itemsOrItem
-      : [itemsOrItem];
-
-    // 기존 타이머가 있을 시 즉시 삭제
-    if (deleteTimerRef.current) {
-      clearTimeout(deleteTimerRef.current);
-      executeActualDelete();
-    }
-
-    // 복구용 인덱스 저장
-    const itemsWithIndex = itemsToDelete.map((item) => ({
-      item,
-      index: items.findIndex((i) => i.itemId === item.itemId),
-    }));
-
-    pendingDeleteRef.current = { items: itemsToDelete, itemsWithIndex };
-
-    // UI 선 제거
-    const itemIdsToRemove = itemsToDelete.map((item) => item.itemId);
-    setItems((prev) => prev.filter((i) => !itemIdsToRemove.includes(i.itemId)));
-
-    // 스낵바 보이기
-    showSnackbar(
-      itemsToDelete.length === 1
-        ? '링크를 삭제했어요.'
-        : `${itemsToDelete.length}개의 링크를 삭제했어요.`,
-    );
-
-    // 3초 후 실제 삭제
-    deleteTimerRef.current = setTimeout(executeActualDelete, 3000);
-  };
-
-  // 아이템 실제 삭제
   const executeActualDelete = useCallback(async () => {
     if (!pendingDeleteRef.current) return;
 
@@ -175,7 +119,50 @@ export const useItems = (folderId = null, filterType = null) => {
     clearDeleteState();
   }, [commonDelete]);
 
-  // 아이템 삭제 취소
+  const handleMove = async (itemsOrItem, targetFolderId) => {
+    const itemIds = Array.isArray(itemsOrItem)
+      ? itemsOrItem.map((i) => i.itemId)
+      : [itemsOrItem.itemId];
+
+    const result = await commonMove(itemIds, targetFolderId);
+    if (result.success) {
+      setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
+    } else {
+      alert('링크를 옮기는 데에 실패했어요.');
+    }
+    return result;
+  };
+
+  const handleDelete = (itemsOrItem) => {
+    const itemsToDelete = Array.isArray(itemsOrItem) ? itemsOrItem : [itemsOrItem];
+
+    // 기존 타이머가 있을 시 즉시 삭제
+    if (deleteTimerRef.current) {
+      clearTimeout(deleteTimerRef.current);
+      executeActualDelete();
+    }
+
+    const itemsWithIndex = itemsToDelete.map((item) => ({
+      item,
+      index: items.findIndex((i) => i.itemId === item.itemId),
+    }));
+
+    pendingDeleteRef.current = { items: itemsToDelete, itemsWithIndex };
+
+    const itemIdsToRemove = itemsToDelete.map((item) => item.itemId);
+    setItems((prev) => prev.filter((i) => !itemIdsToRemove.includes(i.itemId)));
+
+    showSnackbar(
+      itemsToDelete.length === 1
+        ? '링크를 삭제했어요.'
+        : `${itemsToDelete.length}개의 링크를 삭제했어요.`,
+    );
+
+    deleteTimerRef.current = setTimeout(() => {
+      executeActualDelete();
+    }, 3000);
+  };
+
   const handleUndo = () => {
     if (!pendingDeleteRef.current) return;
 
@@ -195,19 +182,20 @@ export const useItems = (folderId = null, filterType = null) => {
     clearDeleteState();
   };
 
-  // 아이템 복원
   const handleRestore = async (itemsOrItem) => {
     const itemIds = Array.isArray(itemsOrItem)
       ? itemsOrItem.map((i) => i.itemId)
       : [itemsOrItem.itemId];
+
     const result = await commonRestore(itemIds);
-    if (result.success)
+    if (result.success) {
       setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
-    else alert('링크를 복원하는 데에 실패했어요.');
+    } else {
+      alert('링크를 복원하는 데에 실패했어요.');
+    }
     return result;
   };
 
-  // 아이템 영구 삭제
   const handleDeletePermanently = async (itemsOrItem) => {
     if (
       !window.confirm(
@@ -216,17 +204,20 @@ export const useItems = (folderId = null, filterType = null) => {
     ) {
       return { success: false };
     }
+
     const itemIds = Array.isArray(itemsOrItem)
       ? itemsOrItem.map((i) => i.itemId)
       : [itemsOrItem.itemId];
+
     const result = await commonDeletePermanently(itemIds);
-    if (result.success)
+    if (result.success) {
       setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
-    else alert('링크클 영구적으로 삭제하는 데에 실패했어요.');
+    } else {
+      alert('링크를 영구적으로 삭제하는 데에 실패했어요.');
+    }
     return result;
   };
 
-  // 휴지통 비우기
   const handleEmptyTrash = async () => {
     if (
       !window.confirm(
@@ -238,40 +229,35 @@ export const useItems = (folderId = null, filterType = null) => {
     try {
       await emptyTrash();
       setItems([]);
-    } catch {
+      return { success: true };
+    } catch (error) {
+      console.error('휴지통 비우기 실패:', error);
       alert('휴지통을 비우는 데에 실패했어요.');
+      return { success: false, error };
     }
   };
 
-  // 아이템 뷰어 페이지로 페이지 이동
   const handleGoToView = (itemId) => {
-    if (itemId) {
-      navigate(`/view/${itemId}`);
-    }
+    if (itemId) navigate(`/view/${itemId}`);
   };
 
-  // 아이템 수정 페이지로 페이지 이동
   const handleGoToEdit = (itemId) => {
-    if (itemId) {
-      commonEdit(itemId);
-    }
+    if (itemId) commonEdit(itemId);
   };
 
-  // 아이템 생성 페이지로 페이지 이동
-  // 아이템 생성 페이지로 페이지 이동
   const handleGoToCreate = () => {
     const targetFolderId =
       folderId && !isNaN(Number(folderId)) ? folderId : null;
-    if (targetFolderId) {
-      navigate(`/create?folderId=${targetFolderId}`);
-    } else {
-      navigate('/create');
-    }
+
+    if (targetFolderId) navigate(`/create?folderId=${targetFolderId}`);
+    else navigate('/create');
   };
 
   return {
     items,
     isLoading,
+    loading: isLoading,
+    navigate,
     openedItemId,
     setOpenedItemId,
     snackbar,
@@ -285,5 +271,7 @@ export const useItems = (folderId = null, filterType = null) => {
     handleGoToView,
     handleGoToEdit,
     handleGoToCreate,
+    handleEdit: (itemId) => navigate(`/edit/${itemId}`),
+    handleView: (itemId) => navigate(`/view/${itemId}`),
   };
 };

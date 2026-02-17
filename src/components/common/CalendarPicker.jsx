@@ -71,12 +71,12 @@ export default function CalendarPicker({
     <div className="w-full bg-bg-main flex flex-col px-4">
       {/* 헤더 영역 */}
       <div className="relative flex items-center justify-center py-4 px-2">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3">
           {/* 달력 모드일 때만 월 이동 화살표 노출 */}
           {!isMonthPickerOpen && (
             <button
               onClick={() => setViewDate(subMonths(viewDate, 1))}
-              className="text-text-sub p-1"
+              className="text-text-sub p-1 mx-1"
             >
               <ChevronLeft size={24} />
             </button>
@@ -90,7 +90,7 @@ export default function CalendarPicker({
             {/* 피커가 열려있으면 임시 날짜, 닫혀있으면 실제 날짜 표시 */}
             {format(isMonthPickerOpen ? tempViewDate : viewDate, 'yyyy년 M월')}
             <span
-              className={`text-[10px] text-text-sub ml-1 opacity-50 transition-transform duration-200 ${isMonthPickerOpen ? 'rotate-180' : ''}`}
+              className={`text-[10px] text-text-sub ml-0.5 opacity-50 transition-transform duration-200 ${isMonthPickerOpen ? 'rotate-180' : ''}`}
             >
               ▼
             </span>
@@ -108,7 +108,7 @@ export default function CalendarPicker({
 
         <button
           onClick={handleGoToday}
-          className="absolute right-2 text-[11px] font-bold text-primary-500 border border-primary-500 px-2 py-0.5 rounded-md active:scale-95"
+          className="absolute right-2 text-[11px] font-bold text-primary-500 border border-primary-500 px-1.5 py-0.5 rounded-md active:scale-95"
         >
           오늘
         </button>

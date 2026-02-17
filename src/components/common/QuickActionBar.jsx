@@ -15,7 +15,7 @@ export default function QuickActionBar() {
   const location = useLocation();
 
   return (
-    <div className="mx-auto w-[340px] h-[72px] px-[5px] py-[15px] bg-bg-card rounded-[10px] flex items-center shadow-lg font-family-sans">
+    <div className="mx-auto w-[340px] h-[72px] px-[5px] py-[15px] mt-3 bg-bg-card rounded-[10px] flex items-center shadow-lg font-family-sans">
       {actions.map((action, index) => {
         const Icon = action.icon;
         const isActive = location.pathname === action.path;

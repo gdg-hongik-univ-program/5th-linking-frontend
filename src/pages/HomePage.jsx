@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
@@ -11,8 +11,8 @@ import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
 export default function HomePage() {
+  const scrollRef = useRef(null);
   const navigate = useNavigate();
-
   const [search, setSearch] = useState('');
 
   const {
@@ -27,7 +27,10 @@ export default function HomePage() {
     handleGoToEdit,
   } = useItems('recent');
 
-  // 검색 필터
+  const handleScroll = () => {
+    if (openedItemId) setOpenedItemId(null);
+  };
+
   const filteredItems = useMemo(() => {
     if (!search) return items;
     return items.filter((item) => {
@@ -36,9 +39,8 @@ export default function HomePage() {
     });
   }, [items, search]);
 
-  // 리스트 헤더 렌더링
   const renderListHeader = (
-    <div className="px-6 pb-4 flex flex-col">
+    <div className="px-6 pb-1 flex flex-col">
       <div className="flex justify-center">
         <QuickActionBar />
       </div>
@@ -48,23 +50,27 @@ export default function HomePage() {
   );
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden h-full">
-      <TabHeader title="홈">
-        <IconButton
-          icon={Bell}
-          onClick={() => navigate('/notification')}
-          aria-label="알림함"
-        />
-      </TabHeader>
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
+      <main
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide"
+      >
+        <div className="relative w-full">
+          <TabHeader title="홈">
+            <IconButton
+              icon={Bell}
+              onClick={() => navigate('/notification')}
+              aria-label="알림함"
+            />
+          </TabHeader>
+        </div>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="px-6 pt-6 shrink-0 bg-bg-main z-10">
+        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
           <SearchBar
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-
         <div className="flex-1 min-h-0">
           <ListView
             data={filteredItems}
@@ -73,6 +79,7 @@ export default function HomePage() {
             ListHeaderComponent={renderListHeader}
             openedId={openedItemId}
             setOpenedId={setOpenedItemId}
+            scrollParentRef={scrollRef}
             isSelectionMode={false}
             selectedIds={{ folders: [], items: [] }}
             onToggleSelection={() => {}}

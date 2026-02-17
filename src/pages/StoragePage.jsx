@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   MoreHorizontal,
@@ -24,7 +24,7 @@ import InputModal from '../components/common/InputModal';
 
 export default function StoragePage() {
   const { folderId } = useParams();
-
+  const scrollRef = useRef(null);
   const navigate = useNavigate();
 
   const {
@@ -348,41 +348,44 @@ export default function StoragePage() {
   };
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans overflow-hidden h-full">
-      {/* 헤더 */}
-      {folderId ? (
-        <PageHeader title={currentFolderName} onBack={() => navigate(-1)}>
-          <IconButton
-            icon={MoreHorizontal}
-            onClick={handleOpenMenu}
-            aria-label="더보기"
-          />
-        </PageHeader>
-      ) : (
-        <TabHeader title="저장소">
-          <IconButton
-            icon={MoreHorizontal}
-            onClick={handleOpenMenu}
-            aria-label="더보기"
-          />
-        </TabHeader>
-      )}
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
+      <main
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide"
+      >
+        <div className="relative w-full shrink-0">
+          {folderId ? (
+            <PageHeader
+              title={currentFolderName}
+              onBackClick={() => navigate(-1)}
+            >
+              <IconButton
+                icon={MoreHorizontal}
+                onClick={handleOpenMenu}
+                aria-label="더보기"
+              />
+            </PageHeader>
+          ) : (
+            <TabHeader title="저장소">
+              <IconButton
+                icon={MoreHorizontal}
+                onClick={handleOpenMenu}
+                aria-label="더보기"
+              />
+            </TabHeader>
+          )}
+        </div>
 
-      {/* 메인 */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* 상단 */}
-        <div className="px-6 pt-6 flex-shrink-0">
-          {/* 서치 바 */}
+        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
           <SearchBar
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="폴더 또는 링크 검색"
-            mb={isSelectionMode ? 'mb-2' : 'mb-6'}
+            mb={isSelectionMode ? 'mb-2' : 'mb-0'} // 여백 최적화
           />
 
-          {/* 셀렉션 헤더 */}
           {isSelectionMode && (
-            <div className="mb-3">
+            <div className="pb-1">
               <SelectionHeader
                 selectedCount={totalSelectedCount}
                 isAllSelected={isAllSelected}
@@ -395,14 +398,14 @@ export default function StoragePage() {
           )}
         </div>
 
-        {/* 리스트 뷰 */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 pt-3">
           <ListView
             data={combinedList}
             isLoading={isLoading}
             searchQuery={searchQuery}
             openedId={openedSwipeId}
             setOpenedId={setOpenedSwipeId}
+            scrollParentRef={scrollRef}
             isSelectionMode={isSelectionMode}
             selectedIds={selectedIds}
             onToggleSelection={handleToggleSelection}
