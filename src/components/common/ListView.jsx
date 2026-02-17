@@ -1,5 +1,5 @@
 import { Virtuoso } from 'react-virtuoso';
-import ItemCard from './ItemCard';
+import ItemCard from './itemCard';
 import FolderCard from './FolderCard';
 import SwipeableWrapper from './SwipeableWrapper';
 import LoadingSpinner from './LoadingSpinner';
