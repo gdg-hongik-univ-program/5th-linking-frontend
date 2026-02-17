@@ -13,20 +13,31 @@ const BUTTON_CASE = {
   },
 };
 
-export default function SwipeActionButton({ type, onClick, x, direction }) {
+export default function SwipeActionButton({
+  type,
+  onClick,
+  x,
+  direction,
+  triggerThreshold = 280,
+}) {
   const CASE = BUTTON_CASE[type];
   const Icon = CASE.icon;
 
-  const width = useTransform(
-    x,
-    direction === 'left' ? [0, 280] : [0, -280],
-    [0, 280],
-  );
+  const inputRange =
+    direction === 'left'
+      ? [0, 80, triggerThreshold]
+      : [0, -80, -triggerThreshold];
+
+  const width = useTransform(x, inputRange, [0, 80, triggerThreshold]);
+
+  const opacity = useTransform(x, inputRange, [0, 1, 1]);
+
+  const scale = useTransform(x, inputRange, [0.25, 1, 1.3]);
 
   return (
     <motion.div
       style={{ width }}
-      className="h-full flex items-center justify-center overflow-hidden"
+      className="h-full flex items-center justify-center overflow-hidden px-2"
     >
       <button
         onClick={(e) => {
@@ -39,9 +50,12 @@ export default function SwipeActionButton({ type, onClick, x, direction }) {
           ${direction === 'left' ? 'ml-0' : 'mr-0'}
         `}
       >
-        <div className={`shrink-0 flex items-center justify-center w-[44px]`}>
+        <motion.div
+          style={{ scale, opacity }}
+          className="shrink-0 flex flex-col items-center justify-center w-[44px]"
+        >
           <Icon size={24} strokeWidth={2.5} />
-        </div>
+        </motion.div>
       </button>
     </motion.div>
   );

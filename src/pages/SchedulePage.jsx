@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Bell } from 'lucide-react';
@@ -10,6 +10,7 @@ import ListView from '../components/common/ListView';
 
 export default function SchedulePage() {
   const navigate = useNavigate();
+  const scrollRef = useRef(null);
 
   const [today, setToday] = useState(new Date());
   const [viewDate, setViewDate] = useState(new Date());
@@ -124,15 +125,17 @@ export default function SchedulePage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <TabHeader title="일정">
-        <IconButton
-          icon={Bell}
-          onClick={() => navigate('/notification')}
-          aria-label="알림함"
-        />
-      </TabHeader>
+      <main ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto">
+        <div className="relative w-full">
+          <TabHeader title="일정">
+            <IconButton
+              icon={Bell}
+              onClick={() => navigate('/notification')}
+              aria-label="알림함"
+            />
+          </TabHeader>
+        </div>
 
-      <main className="flex-1 h-full overflow-hidden">
         <ListView
           data={eventList}
           isLoading={loading}
@@ -141,6 +144,7 @@ export default function SchedulePage() {
           setOpenedId={setOpenedSwipeId}
           isSelectionMode={false}
           selectedIds={{ folders: [], items: [] }}
+          scrollParentRef={scrollRef}
           onToggleSelection={() => {}}
           onNavigate={(entry) => handleGoToView(entry.itemId)}
           swipeEnabled={false}
