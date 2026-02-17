@@ -6,7 +6,7 @@ const PageHeader = ({
   title,
   iconType = 'arrow',
   isSelectMode = false,
-  onBackClick,
+  onBack,
   disabled = false,
   children,
   className = '',
@@ -18,8 +18,8 @@ const PageHeader = ({
   const handleClick = () => {
     if (disabled) return;
 
-    if (onBackClick) {
-      onBackClick();
+    if (onBack) {
+      onBack();
     } else {
       navigate(-1);
     }

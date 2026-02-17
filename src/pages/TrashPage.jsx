@@ -32,7 +32,7 @@ export default function TrashPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <PageHeader title="휴지통" onBackClick={() => navigate(-1)}>
+      <PageHeader title="휴지통" onBack={() => navigate(-1)}>
         <IconButton
           icon={MoreHorizontal}
           onClick={() => console.log('더보기 클릭')}
@@ -61,7 +61,10 @@ export default function TrashPage() {
             onToggleSelection={() => {}}
             onNavigate={(entry) => handleGoToView(entry.itemId)}
             renderLeftAction={(item) => (
-              <SwipeActionButton type="restore" onClick={() => handleRestore(item)} />
+              <SwipeActionButton
+                type="restore"
+                onClick={() => handleRestore(item)}
+              />
             )}
             renderRightAction={(item) => (
               <SwipeActionButton
