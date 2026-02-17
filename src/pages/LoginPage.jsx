@@ -1,33 +1,28 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import Input from '../components/common/Input';
-import { useAuth } from '../context/AuthProvider';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading, loginSuccess } = useAuth();
-
-  const from = location.state?.from?.pathname || '/';
+  const { from, isInitialized } = useAuthRedirect();
+  const loginSuccess = useAuthStore((state) => state.loginSuccess);
 
   const [formData, setFormData] = useState({
     loginId: location.state?.loginId || '',
     password: '',
   });
 
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate, from]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const handleLogin = async (e) => {
@@ -52,7 +47,7 @@ function LoginPage() {
     }
   };
 
-  if (isLoading) return null;
+  if (!isInitialized) return <LoadingOverlay />;
 
   return (
     <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main">
@@ -65,7 +60,7 @@ function LoginPage() {
           className="block"
         />
         <h1 className="text-4xl font-bold text-text-primary mb-2 font-logo tracking-tight">
-          Linking
+          LINKING
         </h1>
       </div>
 
@@ -76,7 +71,7 @@ function LoginPage() {
           value={formData.loginId}
           onChange={handleChange}
           placeholder="아이디를 입력해주세요"
-          onClear={() => setFormData({ ...formData, loginId: '' })} // 지난번에 만든 삭제 기능 활용!
+          onClear={() => setFormData((prev) => ({ ...prev, loginId: '' }))}
         />
 
         <Input
@@ -85,7 +80,7 @@ function LoginPage() {
           value={formData.password}
           onChange={handleChange}
           placeholder="비밀번호를 입력해주세요"
-          onClear={() => setFormData({ ...formData, password: '' })}
+          onClear={() => setFormData((prev) => ({ ...prev, password: '' }))}
         />
 
         <button

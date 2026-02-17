@@ -1,43 +1,20 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import Input from '../components/common/Input';
 import { VALIDATION } from '../constants/validation';
 import PageHeader from '../components/common/PageHeader';
 import { UserRoundPen, X } from 'lucide-react';
-import { useAuth } from '../context/AuthProvider';
-
-const PROFILE_ASSETS = [
-  { id: 'GDG_LOGO', path: '/src/assets/gdg_logo.svg' },
-  { id: 'HOME', path: '/src/assets/home.svg' },
-  { id: 'SCHEDULE', path: '/src/assets/schedule.svg' },
-  { id: 'STORAGE', path: '/src/assets/storage.svg' },
-  { id: 'MIFFY', path: '/src/assets/miffyprofile.jpeg' },
-  { id: 'GDG_FE', path: '/src/assets/gdgFe.png' },
-  { id: 'GDG_MEM', path: '/src/assets/gdgMem.png' },
-];
+import { PROFILE_ASSETS, getProfilePath } from '../constants/assets';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const { isInitialized } = useAuthRedirect();
+
   const [step, setStep] = useState(1);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const location = useLocation();
-  const { isAuthenticated, isLoading } = useAuth();
-
-  const from = location.state?.from?.pathname || '/';
-
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      navigate(from, { replace: true });
-    }
-  }, [isAuthenticated, isLoading, navigate, from]);
-
-  const getProfilePath = (id) =>
-    PROFILE_ASSETS.find((a) => a.id === id)?.path || PROFILE_ASSETS[0].path;
-
-  const handleSelectProfileImage = (id) => {
-    setFormData((prev) => ({ ...prev, imageCode: id }));
-  };
 
   const [formData, setFormData] = useState({
     loginId: '',
@@ -56,9 +33,14 @@ const SignupPage = () => {
     nickName: '',
   });
 
+  // 폼 데이터 초기화 로직
   const handleClear = (name) => {
-    if (name === 'confirmPassword') setConfirmPassword('');
-    else setFormData((prev) => ({ ...prev, [name]: '' }));
+    if (name === 'confirmPassword') {
+      setConfirmPassword('');
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: '' }));
+    }
+
     setStatusMessages((prev) => ({ ...prev, [name]: '' }));
     if (name === 'loginId') setIsIdAvailable(false);
   };
@@ -140,11 +122,13 @@ const SignupPage = () => {
     }
   };
 
+  if (!isInitialized) return <LoadingOverlay />;
+
   return (
     <div className="min-h-screen flex flex-col bg-bg-main relative">
       <PageHeader
         title="회원가입"
-        onBackClick={() => (step === 2 ? setStep(1) : navigate(-1))}
+        onBack={() => (step === 2 ? setStep(1) : navigate(-1))}
       />
 
       {/* Progress Bar */}
@@ -172,7 +156,6 @@ const SignupPage = () => {
       <div className="flex-1 px-6 flex flex-col">
         {step === 1 ? (
           <div className="flex flex-col pt-8 animate-in fade-in duration-300">
-            {/* Input 필드들은 기존 유지 */}
             <div className="min-h-[85px]">
               <Input
                 name="loginId"
@@ -234,7 +217,6 @@ const SignupPage = () => {
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center pb-20 animate-in fade-in">
-            {/* [수정] getProfilePath에 imageCode(ID)를 전달 */}
             <div
               onClick={() => setIsPopupOpen(true)}
               className="group relative w-40 h-40 bg-neutral-800 rounded-full flex items-center justify-center mb-10 border-2 border-primary-500 overflow-hidden cursor-pointer shadow-[0_0_12px_rgba(234,190,47,0.25)] transition-all"
@@ -248,7 +230,6 @@ const SignupPage = () => {
                 <UserRoundPen size={36} className="text-white" />
               </div>
             </div>
-
             <div className="w-full max-w-[400px]">
               <Input
                 name="nickName"
@@ -279,22 +260,16 @@ const SignupPage = () => {
                 <X size={24} />
               </button>
             </div>
-
             <div className="flex-1 min-h-0 bg-bg-main overflow-y-auto p-6 custom-scrollbar">
               <div className="grid grid-cols-3 gap-5 place-items-center">
-                {/* [수정] asset 객체에서 ID와 Path를 명확히 사용 */}
                 {PROFILE_ASSETS.map((asset) => (
                   <button
                     key={asset.id}
                     onClick={() => {
-                      handleSelectProfileImage(asset.id);
+                      setFormData((prev) => ({ ...prev, imageCode: asset.id }));
                       setIsPopupOpen(false);
                     }}
-                    className={`relative w-18 h-18 rounded-full overflow-hidden border-2 transition-all ${
-                      formData.imageCode === asset.id
-                        ? 'border-primary-500 bg-primary-500/10'
-                        : 'border-neutral-800 hover:border-neutral-700'
-                    }`}
+                    className={`relative w-18 h-18 rounded-full overflow-hidden border-2 transition-all ${formData.imageCode === asset.id ? 'border-primary-500 bg-primary-500/10' : 'border-neutral-800 hover:border-neutral-700'}`}
                   >
                     <img
                       src={asset.path}
