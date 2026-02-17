@@ -6,7 +6,7 @@ export default function SearchBar({
   onChange,
   placeholder = '링크 또는 폴더 검색',
   className = '',
-  mb = 'mb-6', // 기본값 유지
+  mb = 'mb-2',
 }) {
   return (
     <div className={`w-full ${mb} ${className}`}>

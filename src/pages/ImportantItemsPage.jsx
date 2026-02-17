@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { MoreHorizontal } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import PageHeader from '../components/common/PageHeader';
@@ -9,6 +9,7 @@ import SwipeActionButton from '../components/common/SwipeActionButton';
 import Snackbar from '../components/common/Snackbar';
 
 export default function ImportantItemsPage() {
+  const scrollRef = useRef(null);
   const [search, setSearch] = useState('');
 
   const {
@@ -32,7 +33,11 @@ export default function ImportantItemsPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <PageHeader title="중요" onBackClick={() => navigate(-1)}>
+      <PageHeader
+        title="중요"
+        onBackClick={() => navigate(-1)}
+        scrollContainerRef={scrollRef}
+      >
         <IconButton
           icon={MoreHorizontal}
           onClick={() => console.log('더보기 클릭')}
@@ -40,7 +45,7 @@ export default function ImportantItemsPage() {
         />
       </PageHeader>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto">
         <div className="px-6 pt-6 shrink-0">
           <SearchBar
             value={search}

@@ -6,7 +6,7 @@ const TabHeader = ({
 }) => {
   return (
     <header
-      className={`relative flex items-center justify-between px-3 pt-8 pb-3 z-10 shrink-0 bg-bg-main ${className}`}
+      className={`relative flex items-center justify-between px-3 pt-8 pb-3 shrink-0 bg-bg-main ${className}`}
     >
       {/* 1. 좌측 탭 제목 */}
       {!isSelectMode ? (

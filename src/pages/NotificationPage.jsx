@@ -127,7 +127,7 @@ export default function NotificationPage() {
         </div>
 
         {/* 리스트 및 상태 영역 */}
-        <div div className="flex flex-col divide-y divide-neutral-800">
+        <div className="flex flex-col divide-y divide-neutral-800">
           {loading ? (
             <LoadingOverlay />
           ) : notifications.length === 0 ? (
