@@ -8,7 +8,13 @@ function NavigationBar() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isActive = (path) => location.pathname === path;
+  const isActive = (path) => {
+    if (path === '/home') {
+      return location.pathname === '/home' || location.pathname === '/';
+    }
+    return location.pathname === path;
+  };
+
   const linkStyle = 'flex flex-col items-center gap-1 w-12 p-2 min-h-[48px]';
   const iconStyle = (path) =>
     `w-6 h-6 fill-current ${isActive(path) ? 'text-text-main' : 'text-text-disabled'}`;

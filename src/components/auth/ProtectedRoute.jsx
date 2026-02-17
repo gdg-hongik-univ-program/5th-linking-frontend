@@ -1,17 +1,16 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthProvider';
+import { useAuthStore } from '../../store/useAuthStore';
 import LoadingOverlay from '../common/LoadingOverlay';
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isInitialized } = useAuthStore();
   const location = useLocation();
 
-  if (isLoading) return <LoadingOverlay />;
+  if (!isInitialized) return <LoadingOverlay />;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
-
   return children;
 };
 
