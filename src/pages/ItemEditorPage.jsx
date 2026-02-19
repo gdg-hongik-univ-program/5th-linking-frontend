@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Star, Save, Hourglass, CircleX, Folder, Hash, X } from 'lucide-react';
-import { useItem } from '../hooks/useItem';
 import { useFolders } from '../hooks/useFolders';
+import { useItem } from '../hooks/useItem';
 import { findFolderPath } from '../utils/findFolderPath';
-import PageHeader from '../components/common/PageHeader';
-import IconButton from '../components/common/IconButton';
 import FolderPicker from '../components/common/FolderPicker';
+import IconButton from '../components/common/IconButton';
+import PageHeader from '../components/common/PageHeader';
 
 export default function ItemEditorPage() {
   const { itemId } = useParams();
@@ -14,11 +14,14 @@ export default function ItemEditorPage() {
   const folderIdParam = searchParams.get('folderId');
 
   const { item: fetchedItem, handleCreate, handleUpdate } = useItem(itemId);
-  const { folders: folderTree } = useFolders();
+  const { folders: folderTree, refetch: refetchFolders } = useFolders();
 
   const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
   const memoRef = useRef(null);
+
+  const titleRef = useRef(null);
+  const urlRef = useRef(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -33,9 +36,23 @@ export default function ItemEditorPage() {
   const [isImportant, setIsImportant] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
 
+  useEffect(() => {
+    if (!isPickerOpen) {
+      refetchFolders();
+    }
+  }, [isPickerOpen, refetchFolders]);
+
   const folderPathString = useMemo(() => {
     if (!formData.folderId) return '저장소 최상단';
-    const pathArray = findFolderPath(folderTree, formData.folderId);
+
+    // 현재 타입 그대로 탐색 시도
+    let pathArray = findFolderPath(folderTree, formData.folderId);
+
+    // 숫자로 변환하여 재탐색
+    if (!pathArray && !isNaN(Number(formData.folderId))) {
+      pathArray = findFolderPath(folderTree, Number(formData.folderId));
+    }
+
     if (pathArray) return pathArray.join('/');
     return '폴더 표시하는 중...';
   }, [folderTree, formData.folderId]);
@@ -66,10 +83,12 @@ export default function ItemEditorPage() {
   }, [formData.memo]);
 
   const handleSave = async () => {
-    if (!formData.title.trim()) return alert('제목을 입력해주세요.');
+    if (!formData.title.trim()) return alert('제목 입력');
 
     const targetFolderId = formData.folderId ? Number(formData.folderId) : null;
-    const finalDeadline = formData.deadline ? formData.deadline.split('T')[0] : null;
+    const finalDeadline = formData.deadline
+      ? formData.deadline.split('T')[0]
+      : null;
 
     const payload = {
       url: formData.url,
@@ -103,6 +122,21 @@ export default function ItemEditorPage() {
     setFormData((prev) => ({ ...prev, deadline: '' }));
   };
 
+  const handleClearTitle = () => {
+    setFormData((prev) => ({ ...prev, title: '' }));
+    titleRef.current?.focus();
+  };
+
+  const handleClearUrl = () => {
+    setFormData((prev) => ({ ...prev, url: '' }));
+    urlRef.current?.focus();
+  };
+
+  const handleClearTagInput = () => {
+    setTagInput('');
+    tagInputRef.current?.focus();
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -130,7 +164,7 @@ export default function ItemEditorPage() {
       if (newTag && !formData.tags.includes(newTag)) {
         setFormData((prev) => ({
           ...prev,
-          tags: [...prev.tags, newTag].sort(),
+          tags: [...prev.tags, newTag].sort((a, b) => a.localeCompare(b, 'ko')),
         }));
         setTagInput('');
       }
@@ -148,6 +182,7 @@ export default function ItemEditorPage() {
 
   const handleFolderSelect = (selectedId) => {
     setFormData((prev) => ({ ...prev, folderId: selectedId || '' }));
+    setIsPickerOpen(false);
   };
 
   const formattedDateString = useMemo(() => {
@@ -167,54 +202,67 @@ export default function ItemEditorPage() {
 
       <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
         <div className="flex-1 flex flex-col px-5 py-4 gap-4 min-h-full">
-          {/* 제목 */}
           <div className="flex flex-col gap-1 shrink-0">
-            <div className="flex items-start gap-2">
+            <div className="flex items-center gap-2">
               <input
+                ref={titleRef}
                 type="text"
                 name="title"
-                placeholder="제목을 입력하세요"
+                placeholder="제목 입력"
                 value={formData.title || ''}
                 onChange={handleChange}
                 maxLength={70}
-                className="flex-1 bg-transparent text-xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none leading-tight py-1"
+                className="flex-1 bg-transparent text-xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none h-10"
               />
+              {formData.title && (
+                <button
+                  type="button"
+                  onClick={handleClearTitle}
+                  className="text-text-disabled p-1 shrink-0"
+                >
+                  <CircleX size={20} />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={toggleImportant}
-                className={`p-1 mt-1 rounded-full transition-colors ${
-                  isImportant
-                    ? 'text-primary-500'
-                    : 'text-text-disabled hover:text-text-sub'
+                className={`p-1 rounded-full transition-colors shrink-0 ${
+                  isImportant ? 'text-primary-500' : 'text-text-disabled'
                 }`}
-                aria-label={isImportant ? '중요 해제' : '중요 표시'}
               >
                 <Star
                   size={24}
                   fill={isImportant ? 'currentColor' : 'none'}
-                  strokeWidth={isImportant ? 0 : 2}
+                  strokeWidth={2}
                 />
               </button>
             </div>
 
-            {/* URL */}
             <div className="flex items-center gap-2 text-text-sub">
               <input
+                ref={urlRef}
                 type="text"
                 name="url"
                 placeholder="URL 입력"
                 value={formData.url || ''}
                 onChange={handleChange}
-                className="flex-1 bg-transparent text-sm text-text-sub placeholder:text-text-disabled focus:outline-none focus:text-text-main transition-colors"
+                className="flex-1 bg-transparent text-sm text-text-sub placeholder:text-text-disabled focus:outline-none h-8"
               />
+              {formData.url && (
+                <button
+                  type="button"
+                  onClick={handleClearUrl}
+                  className="text-text-disabled p-1 shrink-0"
+                >
+                  <CircleX size={16} />
+                </button>
+              )}
             </div>
           </div>
 
           <hr className="border-neutral-800 shrink-0" />
 
-          {/* 세부 사항 설정 */}
           <div className="flex flex-col gap-0 shrink-0">
-            {/* 위치 */}
             <div className="flex items-center justify-between py-2.5 -mx-2 px-2">
               <div className="flex items-center gap-3 text-text-sub">
                 <Folder size={20} />
@@ -224,7 +272,7 @@ export default function ItemEditorPage() {
                 <button
                   type="button"
                   onClick={() => setIsPickerOpen(true)}
-                  className={`text-sm truncate text-right max-w-[200px] hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors ${
+                  className={`text-sm truncate text-right max-w-[200px] py-1 px-2 -mr-2 rounded transition-colors ${
                     !formData.folderId ? 'text-text-sub' : 'text-text-main'
                   }`}
                 >
@@ -233,28 +281,25 @@ export default function ItemEditorPage() {
               </div>
             </div>
 
-            {/* 마감일 */}
             <div className="flex items-center justify-between py-2.5 -mx-2 px-2">
               <div className="flex items-center gap-3 text-text-sub shrink-0">
                 <Hourglass size={20} />
                 <span className="text-sm font-medium">마감일</span>
               </div>
-
               <div className="flex items-center justify-end relative">
                 {formData.deadline ? (
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={handleCalendarClick}
-                      className="text-sm text-text-main tabular-nums hover:text-primary-500 transition-colors py-1 px-2 -mr-2 rounded"
+                      className="text-sm text-text-main tabular-nums py-1 px-2 -mr-2 rounded"
                     >
                       {formattedDateString}
                     </button>
                     <button
                       type="button"
                       onClick={handleClearDate}
-                      className="text-text-disabled hover:text-text-sub p-1 ml-1"
-                      aria-label="마감일 삭제"
+                      className="text-text-disabled p-1 ml-1"
                     >
                       <CircleX size={16} />
                     </button>
@@ -263,24 +308,24 @@ export default function ItemEditorPage() {
                   <button
                     type="button"
                     onClick={handleCalendarClick}
-                    className="text-sm text-text-sub hover:text-text-main py-1 px-2 -mr-2 rounded transition-colors text-right"
+                    className="text-sm text-text-sub py-1 px-2 -mr-2 rounded text-right"
                   >
                     마감일 없음
                   </button>
                 )}
-
                 <input
                   ref={hiddenDateRef}
                   type="date"
-                  value={formData.deadline ? formData.deadline.split('T')[0] : ''}
+                  value={
+                    formData.deadline ? formData.deadline.split('T')[0] : ''
+                  }
                   onChange={handleHiddenDateChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full pointer-events-none"
+                  className="absolute inset-0 opacity-0 pointer-events-none"
                   tabIndex={-1}
                 />
               </div>
             </div>
 
-            {/* 태그 */}
             <div className="flex flex-col py-2.5 -mx-2 px-2 gap-2">
               <div className="flex items-center gap-3 text-text-sub">
                 <Hash size={20} />
@@ -291,10 +336,18 @@ export default function ItemEditorPage() {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
-                  className="flex-1 bg-transparent text-sm text-text-main placeholder:text-text-disabled focus:outline-none"
+                  className="flex-1 bg-transparent text-sm text-text-main placeholder:text-text-disabled focus:outline-none h-8"
                 />
+                {tagInput && (
+                  <button
+                    type="button"
+                    onClick={handleClearTagInput}
+                    className="text-text-disabled p-1 shrink-0"
+                  >
+                    <CircleX size={16} />
+                  </button>
+                )}
               </div>
-
               {formData.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 pl-8">
                   {formData.tags.map((tag, idx) => (
@@ -306,8 +359,7 @@ export default function ItemEditorPage() {
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
-                        className="text-neutral-400 hover:text-white ml-0.5"
-                        aria-label={`태그 삭제: ${tag}`}
+                        className="text-neutral-400 ml-0.5"
                       >
                         <X size={14} />
                       </button>
@@ -320,7 +372,6 @@ export default function ItemEditorPage() {
 
           <hr className="border-neutral-800 shrink-0" />
 
-          {/* 메모 */}
           <div className="flex-1 flex flex-col min-h-[300px]">
             <textarea
               ref={memoRef}
@@ -338,7 +389,7 @@ export default function ItemEditorPage() {
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleFolderSelect}
-        title="저장 위치 선택"
+        title="저장할 위치 선택"
       />
     </div>
   );

@@ -37,7 +37,7 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
             style={menuStyle}
-            className="z-50 bg-neutral-800 rounded-xl w-56 shadow-2xl border border-neutral-700 flex flex-col max-h-[80vh] origin-top-right"
+            className="z-50 bg-neutral-800 rounded-xl w-60 shadow-2xl border border-neutral-700 flex flex-col max-h-[80vh] origin-top-right"
           >
             <div className="overflow-y-auto overflow-x-hidden">
               {sections.map((section, sectionIndex) => (
@@ -80,7 +80,7 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
                           </div>
                         )}
                         <span
-                          className={`flex-1 text-sm leading-5 ${
+                          className={`flex-1 text-sm leading-5 whitespace-nowrap ${
                             item.disabled
                               ? 'text-neutral-600'
                               : 'text-text-main'
@@ -89,7 +89,7 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
                           {item.label}
                         </span>
                         {item.badge && (
-                          <span className="text-xs bg-primary text-text-sub px-2 py-1 rounded-full font-medium flex-shrink-0 leading-none">
+                          <span className="text-xs bg-primary text-text-sub px-2 py-1 rounded-full font-medium flex-shrink-0 leading-none whitespace-nowrap ml-2">
                             {item.badge}
                           </span>
                         )}
