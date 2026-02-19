@@ -2,17 +2,19 @@ import { useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
-import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import QuickActionBar from '../components/common/QuickActionBar';
 import ListView from '../components/common/ListView';
-import SwipeActionButton from '../components/common/SwipeActionButton';
+import QuickActionBar from '../components/common/QuickActionBar';
 import Snackbar from '../components/common/Snackbar';
+import SwipeActionButton from '../components/common/SwipeActionButton';
+import TabHeader from '../components/common/TabHeader';
 
 export default function HomePage() {
-  const scrollRef = useRef(null);
   const navigate = useNavigate();
+
+  const scrollRef = useRef(null);
+
   const [search, setSearch] = useState('');
 
   const {
@@ -26,10 +28,6 @@ export default function HomePage() {
     handleGoToView,
     handleGoToEdit,
   } = useItems('recent');
-
-  const handleScroll = () => {
-    if (openedItemId) setOpenedItemId(null);
-  };
 
   const filteredItems = useMemo(() => {
     if (!search) return items;

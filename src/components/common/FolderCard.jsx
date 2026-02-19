@@ -49,19 +49,18 @@ export default function FolderCard({
         )}
       </div>
 
-      {/* 2. 우측 정보 영역 */}
+      {/* 정보 영역 */}
       <div className="flex flex-col justify-between flex-1 py-1 min-w-0">
-        {/* 2-1. 상단 폴더 이름 (최대 2줄) */}
+        {/* 폴더 이름 */}
         <h3 className="text-sm font-medium text-text-main leading-snug line-clamp-2">
           {folderName}
         </h3>
 
-        {/* 2-2. 하단 세부 사항 영역 */}
         <div className="flex flex-col items-end gap-1 min-w-0">
-          {/* 2-2-1. 하위 아이템 및 폴더 개수 */}
+          {/* 하위 항목 개수 */}
           <p className="text-xs text-text-sub font-medium">{totalCount}개</p>
 
-          {/* 2-2-2. 생성일 */}
+          {/* 생성일 */}
           <p className="text-xs text-text-sub opacity-80 shrink-0">
             {formatDate(createdAt)}
           </p>
