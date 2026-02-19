@@ -2,9 +2,23 @@ import { useNavigate } from 'react-router-dom';
 import { Settings } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
+import { useAuthStore } from '../store/useAuthStore';
+import axiosInstance from '../api/axiosInstance';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const { user, logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post('/user/sign-out');
+    } catch (error) {
+      console.error('서버 로그아웃 실패:', error);
+    } finally {
+      logout();
+      navigate('/login', { replace: true });
+    }
+  };
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full">
@@ -20,6 +34,12 @@ export default function ProfilePage() {
         <p className="text-text-sub text-lg font-medium">
           프로필 페이지 구현 중입니다.
         </p>
+        <button
+          onClick={handleLogout}
+          className="w-full py-3 rounded-full border border-red-500 text-red-500 font-bold hover:bg-red-500 hover:text-white transition-all"
+        >
+          로그아웃
+        </button>
       </main>
     </div>
   );

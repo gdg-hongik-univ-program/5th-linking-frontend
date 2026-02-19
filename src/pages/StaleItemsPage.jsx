@@ -145,8 +145,8 @@ export default function StaleItemsPage() {
   }, [sortOption, showImportantOnly]);
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col h-full overflow-hidden font-family-sans">
-      <PageHeader title="정리" onBackClick={() => navigate(-1)}>
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
+      <PageHeader title="정리" onBack={() => navigate(-1)}>
         <IconButton
           icon={MoreHorizontal}
           onClick={(e) => setMenuAnchor(e.currentTarget)}

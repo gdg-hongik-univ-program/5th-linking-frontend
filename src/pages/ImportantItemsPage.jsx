@@ -124,8 +124,12 @@ export default function ImportantItemsPage() {
   }, [sortOption]);
 
   return (
-    <div className="flex-1 bg-bg-main text-text-main flex flex-col h-full overflow-hidden font-family-sans">
-      <PageHeader title="중요" onBackClick={() => navigate(-1)}>
+    <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
+      <PageHeader
+        title="중요"
+        onBack={() => navigate(-1)}
+        scrollContainerRef={scrollRef}
+      >
         <IconButton
           icon={MoreHorizontal}
           onClick={(e) => setMenuAnchor(e.currentTarget)}

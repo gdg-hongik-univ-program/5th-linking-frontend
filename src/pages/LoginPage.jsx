@@ -1,22 +1,28 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import axiosInstance from '../api/axiosInstance';
 import Input from '../components/common/Input';
+import { useAuthStore } from '../store/useAuthStore';
+import { useAuthRedirect } from '../hooks/useAuthRedirect';
+import LoadingOverlay from '../components/common/LoadingOverlay';
 
 function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { from, isInitialized } = useAuthRedirect();
+  const loginSuccess = useAuthStore((state) => state.loginSuccess);
 
   const [formData, setFormData] = useState({
-    loginId: '',
+    loginId: location.state?.loginId || '',
     password: '',
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: value,
-    });
+    }));
   };
 
   const handleLogin = async (e) => {
@@ -29,9 +35,10 @@ function LoginPage() {
 
     try {
       const response = await axiosInstance.post('/user/sign-in', formData);
-      console.log('로그인 성공', response.data);
+      loginSuccess(response.data);
+
       alert('로그인에 성공했습니다!');
-      navigate('/home');
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
       const errorMessage =
@@ -39,6 +46,8 @@ function LoginPage() {
       alert(errorMessage);
     }
   };
+
+  if (!isInitialized) return <LoadingOverlay />;
 
   return (
     <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main">
@@ -51,7 +60,7 @@ function LoginPage() {
           className="block"
         />
         <h1 className="text-4xl font-bold text-text-primary mb-2 font-logo tracking-tight">
-          Linking
+          LINKING
         </h1>
       </div>
 
@@ -62,6 +71,7 @@ function LoginPage() {
           value={formData.loginId}
           onChange={handleChange}
           placeholder="아이디를 입력해주세요"
+          onClear={() => setFormData((prev) => ({ ...prev, loginId: '' }))}
         />
 
         <Input
@@ -70,6 +80,7 @@ function LoginPage() {
           value={formData.password}
           onChange={handleChange}
           placeholder="비밀번호를 입력해주세요"
+          onClear={() => setFormData((prev) => ({ ...prev, password: '' }))}
         />
 
         <button

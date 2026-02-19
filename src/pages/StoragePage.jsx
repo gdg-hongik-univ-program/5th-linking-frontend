@@ -418,10 +418,7 @@ export default function StoragePage() {
       >
         <div className="relative w-full shrink-0">
           {folderId ? (
-            <PageHeader
-              title={currentFolderName}
-              onBackClick={() => navigate(-1)}
-            >
+            <PageHeader title={currentFolderName} onBack={() => navigate(-1)}>
               <IconButton
                 icon={MoreHorizontal}
                 onClick={handleOpenMenu}

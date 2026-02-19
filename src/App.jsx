@@ -1,7 +1,10 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import LoadingOverlay from './components/common/LoadingOverlay';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import axiosInstance from './api/axiosInstance';
+import { useAuthStore } from './store/useAuthStore';
 
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const SignupPage = React.lazy(() => import('./pages/SignupPage'));
@@ -21,33 +24,67 @@ const NotificationPage = React.lazy(() => import('./pages/NotificationPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
 
 export default function App() {
+  const { loginSuccess, logout } = useAuthStore();
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const response = await axiosInstance.get('/user/me');
+        loginSuccess(response.data);
+      } catch (error) {
+        logout();
+      }
+    };
+    initAuth();
+  }, [loginSuccess, logout]);
+
   return (
     <div className="h-screen bg-neutral-950 grid place-items-center font-family-sans">
       <div className="w-full min-w-[390px] max-w-[390px] h-full bg-bg-main shadow-2xl overflow-hidden relative border-x border-neutral-800">
         <Suspense fallback={<LoadingOverlay />}>
           <Routes>
-            {/* 네비게이션 바 제외 페이지 */}
-            <Route path="/" element={<LoginPage />} />
+            {/* 공개 페이지 */}
+            <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-            <Route path="/notification" element={<NotificationPage />} />
-            <Route path="/create" element={<ItemEditorPage />} />
-            <Route path="/edit/:itemId" element={<ItemEditorPage />} />
-            <Route path="/view/:itemId" element={<ItemViewerPage />} />
 
-            {/* 네비게이션 바 포함 페이지 */}
-            <Route element={<Layout />}>
-              <Route path="/home" element={<HomePage />} />
-              <Route path="/upcoming" element={<UpcomingItemsPage />} />
-              <Route path="/important" element={<ImportantItemsPage />} />
-              <Route path="/stale" element={<StaleItemsPage />} />
-              <Route path="/trash" element={<TrashPage />} />
-              <Route path="/schedule" element={<SchedulePage />} />
-              <Route path="/storage" element={<StoragePage />} />
-              <Route path="/storage/:folderId" element={<StoragePage />} />
-              <Route path="/profile" element={<ProfilePage />} />
-            </Route>
+            {/* 보호된 페이지 */}
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Routes>
+                    <Route
+                      path="/notification"
+                      element={<NotificationPage />}
+                    />
+                    <Route path="/create" element={<ItemEditorPage />} />
+                    <Route path="/edit/:itemId" element={<ItemEditorPage />} />
+                    <Route path="/view/:itemId" element={<ItemViewerPage />} />
 
-            <Route path="*" element={<NotFoundPage />} />
+                    <Route element={<Layout />}>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/home" element={<HomePage />} />
+                      <Route path="/upcoming" element={<UpcomingItemsPage />} />
+                      <Route
+                        path="/important"
+                        element={<ImportantItemsPage />}
+                      />
+                      <Route path="/stale" element={<StaleItemsPage />} />
+                      <Route path="/trash" element={<TrashPage />} />
+                      <Route path="/schedule" element={<SchedulePage />} />
+                      <Route path="/storage" element={<StoragePage />} />
+                      <Route
+                        path="/storage/:folderId"
+                        element={<StoragePage />}
+                      />
+                      <Route path="/profile" element={<ProfilePage />} />
+                    </Route>
+
+                    <Route path="*" element={<NotFoundPage />} />
+                  </Routes>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </Suspense>
       </div>

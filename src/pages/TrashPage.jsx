@@ -287,7 +287,7 @@ export default function TrashPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <PageHeader title="휴지통" onBackClick={() => navigate(-1)}>
+      <PageHeader title="휴지통" onBack={() => navigate(-1)}>
         <IconButton
           icon={MoreHorizontal}
           onClick={(e) => setMenuAnchor(e.currentTarget)}
@@ -296,71 +296,41 @@ export default function TrashPage() {
         />
       </PageHeader>
 
-      <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
-        <SearchBar
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="삭제된 항목 검색"
-          mb={isSelectionMode ? 'mb-2' : 'mb-0'}
-        />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="px-6 pt-6 shrink-0">
+          <SearchBar
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="삭제된 항목 검색"
+          />
+        </div>
 
-        {isSelectionMode && (
-          <div className="pb-1">
-            <SelectionHeader
-              mode="trash"
-              selectedCount={totalSelectedCount}
-              isAllSelected={isAllSelected}
-              onToggleAll={handleToggleAll}
-              onClose={() => setIsSelectionMode(false)}
-              onMove={handleRestoreSelected}
-              onDelete={handleDeleteSelectedPermanently}
-            />
-          </div>
-        )}
-      </div>
-
-      <main
-        ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide pt-3"
-      >
-        <ListView
-          data={combinedList}
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          openedId={openedSwipeId}
-          setOpenedId={setOpenedSwipeId}
-          scrollParentRef={scrollRef}
-          isSelectionMode={isSelectionMode}
-          selectedIds={selectedIds}
-          onToggleSelection={handleToggleSelection}
-          onNavigate={handleNavigate}
-          renderLeftAction={(entry, dragX) => (
-            <SwipeActionButton
-              type="restore"
-              x={dragX}
-              direction="left"
-              onClick={() => {
-                if (entry.itemId) handleRestoreItemAction(entry);
-                else handleRestoreFolderAction(entry);
-                setOpenedSwipeId(null);
-              }}
-            />
-          )}
-          renderRightAction={(entry, dragX) => (
-            <SwipeActionButton
-              type="permanent_delete"
-              x={dragX}
-              direction="right"
-              onClick={() => {
-                if (!window.confirm('이 항목을 영구적으로 삭제할까요?')) return;
-                if (entry.itemId) handleDeleteItemPermAction(entry);
-                else handleDeleteFolderPermAction(entry);
-                setOpenedSwipeId(null);
-              }}
-            />
-          )}
-          emptyText="휴지통이 비어있어요."
-        />
+        <div className="flex-1 min-h-0">
+          <ListView
+            data={filteredItems}
+            isLoading={isLoading}
+            searchQuery={search}
+            openedId={openedItemId}
+            setOpenedId={setOpenedItemId}
+            isSelectionMode={false}
+            selectedIds={{ folders: [], items: [] }}
+            onToggleSelection={() => {}}
+            onNavigate={(entry) => handleGoToView(entry.itemId)}
+            renderLeftAction={(item) => (
+              <SwipeActionButton
+                type="restore"
+                onClick={() => handleRestore(item)}
+              />
+            )}
+            renderRightAction={(item) => (
+              <SwipeActionButton
+                type="delete"
+                onClick={() => handleDeletePermanently(item)}
+              />
+            )}
+            emptyText="휴지통이 비어있어요."
+          />
+        </div>
       </main>
 
       <ActionSheet
