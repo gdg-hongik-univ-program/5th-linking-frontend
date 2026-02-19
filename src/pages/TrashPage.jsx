@@ -114,11 +114,11 @@ export default function TrashPage() {
   const filteredFolders = useMemo(() => {
     let result = folders;
     const q = searchQuery.trim().toLowerCase();
-    if (q)
+    if (q) {
       result = result.filter((f) => f.folderName.toLowerCase().includes(q));
-    if (showImportantOnly) result = result.filter((f) => f.importance);
+    }
     return result;
-  }, [folders, searchQuery, showImportantOnly]);
+  }, [folders, searchQuery]);
 
   // 필터링된 아이템
   const filteredItems = useMemo(() => {
@@ -296,41 +296,93 @@ export default function TrashPage() {
         />
       </PageHeader>
 
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="px-6 pt-6 shrink-0">
-          <SearchBar
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="삭제된 항목 검색"
-          />
-        </div>
+      <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
+        <SearchBar
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="삭제된 항목 검색"
+          mb={isSelectionMode ? 'mb-2' : 'mb-0'}
+        />
 
-        <div className="flex-1 min-h-0">
-          <ListView
-            data={filteredItems}
-            isLoading={isLoading}
-            searchQuery={search}
-            openedId={openedItemId}
-            setOpenedId={setOpenedItemId}
-            isSelectionMode={false}
-            selectedIds={{ folders: [], items: [] }}
-            onToggleSelection={() => {}}
-            onNavigate={(entry) => handleGoToView(entry.itemId)}
-            renderLeftAction={(item) => (
-              <SwipeActionButton
-                type="restore"
-                onClick={() => handleRestore(item)}
-              />
-            )}
-            renderRightAction={(item) => (
-              <SwipeActionButton
-                type="delete"
-                onClick={() => handleDeletePermanently(item)}
-              />
-            )}
-            emptyText="휴지통이 비어있어요."
-          />
-        </div>
+        {isSelectionMode && (
+          <div className="pb-1">
+            <SelectionHeader
+              selectedCount={totalSelectedCount}
+              isAllSelected={isAllSelected}
+              onToggleAll={handleToggleAll}
+              onClose={() => {
+                setIsSelectionMode(false);
+                setSelectedIds({ folders: [], items: [] });
+              }}
+            >
+              <div className="flex gap-4">
+                <button
+                  onClick={handleRestoreSelected}
+                  disabled={totalSelectedCount === 0}
+                  className="text-blue-500 font-medium"
+                >
+                  복원
+                </button>
+                <button
+                  onClick={handleDeleteSelectedPermanently}
+                  disabled={totalSelectedCount === 0}
+                  className="text-red-500 font-medium"
+                >
+                  영구 삭제
+                </button>
+              </div>
+            </SelectionHeader>
+          </div>
+        )}
+      </div>
+
+      <main
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide pt-3"
+      >
+        <ListView
+          data={combinedList}
+          isLoading={isLoading}
+          searchQuery={searchQuery}
+          openedId={openedSwipeId}
+          setOpenedId={setOpenedSwipeId}
+          scrollParentRef={scrollRef}
+          isSelectionMode={isSelectionMode}
+          selectedIds={selectedIds}
+          onToggleSelection={handleToggleSelection}
+          onNavigate={handleNavigate}
+          renderLeftAction={(entry, dragX) => (
+            <SwipeActionButton
+              type="restore"
+              x={dragX}
+              direction="left"
+              onClick={async () => {
+                if (entry.folderId) {
+                  await handleRestoreFolderAction([entry]);
+                } else {
+                  await handleRestoreItemAction([entry]);
+                }
+                setOpenedSwipeId(null);
+              }}
+            />
+          )}
+          renderRightAction={(entry, dragX) => (
+            <SwipeActionButton
+              type="delete"
+              x={dragX}
+              direction="right"
+              onClick={async () => {
+                if (entry.folderId) {
+                  await handleDeleteFolderPermAction([entry]);
+                } else {
+                  await handleDeleteItemPermAction([entry]);
+                }
+                setOpenedSwipeId(null);
+              }}
+            />
+          )}
+          emptyText="휴지통이 비어있어요."
+        />
       </main>
 
       <ActionSheet
