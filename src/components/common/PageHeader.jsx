@@ -10,6 +10,7 @@ const PageHeader = ({
   disabled = false,
   children,
   className = '',
+  collapseBottomGap = false,
 }) => {
   const navigate = useNavigate();
 
@@ -29,7 +30,7 @@ const PageHeader = ({
 
   return (
     <header
-      className={`relative flex items-center justify-between px-3 pt-8 pb-3 z-10 shrink-0 bg-bg-main ${className}`}
+      className={`relative flex items-center justify-between px-3 pt-8 pb-3 z-10 shrink-0 bg-bg-main ${collapseBottomGap ? '-mb-3' : ''} ${className}`}
     >
       <div className="flex-none flex justify-start items-center">
         <IconButton

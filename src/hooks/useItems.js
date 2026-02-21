@@ -4,7 +4,12 @@ import { getItems, emptyTrash } from '../api/itemApi';
 import { useItemCommon } from './useItemCommon';
 import { useModalStore } from '../store/useModalStore';
 
-export const useItems = (folderId = null, filterType = null) => {
+export const useItems = (
+  folderId = null,
+  filterType = null,
+  keyword = null,
+  options = {},
+) => {
   const navigate = useNavigate();
 
   const location = useLocation();
@@ -19,6 +24,7 @@ export const useItems = (folderId = null, filterType = null) => {
     handleGoToEdit: commonEdit,
   } = useItemCommon();
 
+  const enabled = options.enabled ?? true;
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [openedItemId, setOpenedItemId] = useState(null);
@@ -45,16 +51,17 @@ export const useItems = (folderId = null, filterType = null) => {
     try {
       let apiFolderId = folderId;
       let apiFilter = filterType;
+      let apiKeyword = keyword;
 
       if (typeof folderId === 'string' && isNaN(Number(folderId))) {
         apiFolderId = null;
         apiFilter = folderId;
       }
 
-      const data = await getItems(apiFolderId, apiFilter);
+      const data = await getItems(apiFolderId, apiFilter, apiKeyword);
       let result = Array.isArray(data) ? data : [];
 
-      if (!apiFolderId && !apiFilter) {
+      if (!apiFolderId && !apiFilter && !apiKeyword) {
         result = result.filter((item) => !item.folderId);
       }
 
@@ -65,11 +72,12 @@ export const useItems = (folderId = null, filterType = null) => {
     } finally {
       setIsLoading(false);
     }
-  }, [folderId, filterType]);
+  }, [folderId, filterType, keyword]);
 
   useEffect(() => {
+    if (!enabled) return;
     fetchItems();
-  }, [fetchItems, location.key]);
+  }, [fetchItems, location.key, enabled]);
 
   // 스크롤 시 아이템 스와이프 닫기
   useEffect(() => {

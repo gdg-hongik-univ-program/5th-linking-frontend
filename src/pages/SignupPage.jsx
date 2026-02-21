@@ -172,7 +172,7 @@ const SignupPage = () => {
           return (
             <div
               key={i}
-              className={`h-[2px] flex-1 rounded-full transition-all duration-300 ${isDone ? 'bg-white' : 'bg-neutral-800'}`}
+              className={`h-[2px] flex-1 rounded-full transition-all duration-300 ${isDone ? 'bg-text-main' : 'bg-neutral-800'}`}
             />
           );
         })}
@@ -193,7 +193,7 @@ const SignupPage = () => {
                   <button
                     type="button"
                     onClick={handleCheckDuplicate}
-                    className={`px-4 w-24 h-12 rounded-[99px] font-bold text-sm transition-all ${isIdAvailable ? 'bg-text-disabled text-bg-main' : 'bg-primary-500 text-neutral-950'}`}
+                    className={`px-4 w-24 h-12 rounded-xl font-bold text-sm transition-all ${isIdAvailable ? 'bg-text-disabled text-bg-main' : 'bg-primary-500 text-bg-main'}`}
                   >
                     {isIdAvailable ? '확인됨' : '중복확인'}
                   </button>
@@ -244,7 +244,7 @@ const SignupPage = () => {
           <div className="flex-1 flex flex-col items-center justify-center pb-20 animate-in fade-in">
             <div
               onClick={() => setIsPopupOpen(true)}
-              className="group relative w-40 h-40 bg-neutral-800 rounded-full flex items-center justify-center mb-10 border-2 border-primary-500 overflow-hidden cursor-pointer shadow-[0_0_12px_rgba(234,190,47,0.25)] transition-all"
+              className="group relative w-40 h-40 bg-neutral-800 rounded-full flex items-center justify-center mb-10 border-2 border-primary-500 overflow-hidden cursor-pointer shadow-lg transition-all"
             >
               <img
                 src={getProfilePath(formData.imageCode)}
@@ -272,8 +272,8 @@ const SignupPage = () => {
       {/* 프로필 선택 팝업 */}
       {isPopupOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-bg-main w-[90%] max-w-[360px] mx-auto rounded-xl shadow-2xl overflow-hidden flex flex-col h-[65vh] max-h-[600px] border border-neutral-800 animate-scale-in">
-            <div className="px-4 h-14 border-b border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-900/50 relative text-center">
+          <div className="bg-bg-main w-[90%] max-w-[360px] mx-auto rounded-2xl shadow-lg overflow-hidden flex flex-col h-[65vh] max-h-[600px] border border-text-main/10 animate-scale-in">
+            <div className="px-4 h-14 border-b border-text-main/10 flex items-center justify-between shrink-0 bg-neutral-900/50 relative text-center">
               <div className="min-w-[40px]" />
               <h2 className="text-base font-bold text-text-main">
                 프로필 선택
@@ -294,7 +294,7 @@ const SignupPage = () => {
                       setFormData((prev) => ({ ...prev, imageCode: asset.id }));
                       setIsPopupOpen(false);
                     }}
-                    className={`relative w-18 h-18 rounded-full overflow-hidden border-2 transition-all ${formData.imageCode === asset.id ? 'border-primary-500 bg-primary-500/10' : 'border-neutral-800 hover:border-neutral-700'}`}
+                    className={`relative w-18 h-18 rounded-full overflow-hidden border-2 transition-all ${formData.imageCode === asset.id ? 'border-primary-500 bg-primary-500/10' : 'border-text-main/10 hover:border-neutral-600'}`}
                   >
                     <img
                       src={asset.path}
@@ -314,7 +314,7 @@ const SignupPage = () => {
           type="button"
           onClick={step === 1 ? () => setStep(2) : handleSignup}
           disabled={step === 1 ? !isStep1Valid : !isStep2Valid}
-          className={`font-bold w-full h-12 rounded-[99px] transition-all duration-300 ${(step === 1 ? isStep1Valid : isStep2Valid) ? 'bg-primary-500 text-neutral-950 shadow-lg cursor-pointer' : 'bg-text-disabled text-text-sub opacity-50'}`}
+          className={`font-bold w-full h-12 rounded-xl transition-all duration-300 ${(step === 1 ? isStep1Valid : isStep2Valid) ? 'bg-primary-500 text-bg-main shadow-lg cursor-pointer hover:bg-primary-500/90' : 'bg-text-disabled text-text-sub opacity-50'}`}
         >
           {step === 1 ? '다음' : '회원가입'}
         </button>

@@ -13,15 +13,22 @@ export const getItem = async (itemId) => {
 };
 
 // 3. 아이템 다수 조회
-export const getItems = async (folderId = null, filter = null) => {
+export const getItems = async (
+  folderId = null,
+  filter = null,
+  keyword = null,
+) => {
   // 폴더별 조회
   if (folderId) {
     const response = await axiosInstance.get(`/item/folder/${folderId}`);
     return response.data;
   }
-  // 필터별 조회 (recent, upcoming, important, stale, trash)
+  // 필터 및 검색 조회
   else {
-    const params = filter ? { filter } : {};
+    const params = {};
+    if (filter) params.filter = filter;
+    if (keyword) params.keyword = keyword;
+
     const response = await axiosInstance.get('/item', { params });
     return response.data;
   }

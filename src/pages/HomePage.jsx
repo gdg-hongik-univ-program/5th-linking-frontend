@@ -30,7 +30,7 @@ export default function HomePage() {
   } = useItems('recent');
 
   const renderListHeader = (
-    <div className="px-6 pb-1 flex flex-col">
+    <div className="px-6 flex flex-col">
       <div className="flex justify-center">
         <QuickActionBar />
       </div>
@@ -46,7 +46,7 @@ export default function HomePage() {
         className="flex-1 flex flex-col overflow-y-auto scrollbar-hide"
       >
         <div className="relative w-full">
-          <TabHeader title="홈">
+          <TabHeader title="홈" collapseBottomGap>
             <IconButton
               icon={Bell}
               onClick={() => navigate('/notification')}
@@ -55,12 +55,26 @@ export default function HomePage() {
           </TabHeader>
         </div>
 
-        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
-          <SearchBar
-            value={search}
-            placeholder="내 모든 링크 통합 검색"
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-4">
+          <div className="relative">
+            <SearchBar
+              value={search}
+              placeholder="내 모든 링크 통합 검색"
+              onChange={(e) => setSearch(e.target.value)}
+              mb="mb-0"
+            />
+
+            <button
+              type="button"
+              aria-label="검색 페이지로 이동"
+              className="absolute inset-0 z-10 bg-transparent"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                navigate('/search');
+              }}
+              onClick={() => navigate('/search')}
+            />
+          </div>
         </div>
         <div className="flex-1 min-h-0">
           <ListView

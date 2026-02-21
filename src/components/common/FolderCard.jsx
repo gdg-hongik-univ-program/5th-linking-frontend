@@ -23,13 +23,13 @@ export default function FolderCard({
     <motion.div
       whileTap={{ scale: 0.98 }}
       onClick={handleClick}
-      className={`flex gap-2 px-2 py-3 cursor-pointer group select-none transition-colors ${
+      className={`flex gap-3 px-2 py-3 cursor-pointer group select-none transition-colors ${
         isSelected ? 'bg-neutral-800' : 'bg-transparent px-0'
       }`}
     >
       {/* 썸네일 */}
-      <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
-        <Folder size={40} className="text-yellow-500 fill-yellow-500" />
+      <div className="relative w-24 h-24 bg-neutral-800 border-y border-text-main/10 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
+        <Folder size={60} className="text-primary-500 fill-primary-500" />
 
         {/* 선택 모드 체크박스 */}
         {isSelectMode && (

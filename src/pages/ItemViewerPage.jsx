@@ -136,7 +136,7 @@ export default function ItemViewerPage() {
   const videoId = getYoutubeId(item.url);
 
   return (
-    <div className="h-full flex flex-col font-family-sans bg-bg-main text-text-main relative overflow-hidden">
+    <div className="h-full flex flex-col font-family-sans bg-bg-main text-text-main overflow-y-auto scrollbar-hide">
       <PageHeader onBack={() => navigate(-1)}>
         <IconButton
           icon={PenLine}
@@ -150,22 +150,40 @@ export default function ItemViewerPage() {
         />
       </PageHeader>
 
-      <main className="flex-1 flex flex-col pt-2 overflow-y-auto pb-20 scrollbar-hide">
+      <main className="flex-1 flex flex-col pt-2 pb-20">
         {/* 비디오 */}
-        <div className="w-full aspect-video bg-black shrink-0 relative">
-          {videoId ? (
-            <iframe
-              className="w-full h-full"
-              src={`https://www.youtube.com/embed/${videoId}`}
-              allowFullScreen
-              title="video"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-bg-nav text-text-sub text-sm">
-              동영상 없음
-            </div>
-          )}
-        </div>
+        {(videoId || item.imageUrl) && (
+          <div className="w-full aspect-video bg-black shrink-0 relative overflow-hidden">
+            {videoId ? (
+              <iframe
+                className="w-full h-full"
+                src={`https://www.youtube.com/embed/${videoId}`}
+                allowFullScreen
+                title="video"
+              />
+            ) : item.imageUrl ? (
+              <>
+                <img
+                  className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60"
+                  src={item.imageUrl}
+                  alt=""
+                  aria-hidden="true"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <img
+                    className="max-w-full max-h-full object-contain"
+                    src={item.imageUrl}
+                    alt=""
+                  />
+                </div>
+              </>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-bg-nav text-text-sub text-sm">
+                썸네일 없음
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="px-6 py-5 flex flex-col gap-5">
           {/* 디데이 및 태그 */}

@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Link as LinkIcon, Check } from 'lucide-react';
 import { formatDate } from '../../utils/formatDate';
@@ -10,8 +11,21 @@ export default function ItemCard({
   onSelect,
   onClick,
 }) {
-  // imageUrl 구조 분해 할당 추가
   const { title, tags, importance, createdAt, imageUrl } = item;
+
+  const thumbRef = useRef(null);
+  const [isSmallThumb, setIsSmallThumb] = useState(false);
+
+  const handleThumbLoad = (e) => {
+    const img = e.currentTarget;
+    const rect = thumbRef.current?.getBoundingClientRect?.();
+    const containerW = rect?.width || 96;
+    const containerH = rect?.height || 96;
+
+    setIsSmallThumb(
+      img.naturalWidth < containerW && img.naturalHeight < containerH,
+    );
+  };
 
   const handleClick = () => {
     if (isSelectMode && onSelect) {
@@ -30,16 +44,38 @@ export default function ItemCard({
     `}
     >
       {/* 썸네일 */}
-      <div className="relative w-24 h-24 bg-bg-main rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
-        {/* imageUrl 유무에 따른 조건부 렌더링 추가 */}
+      <div
+        ref={thumbRef}
+        className="relative w-24 h-24 bg-neutral-800 border-y border-text-main/10 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center"
+      >
         {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={title}
-            className="w-full h-full object-cover"
-          />
+          isSmallThumb ? (
+            <>
+              <img
+                src={imageUrl}
+                alt={title}
+                className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60"
+                aria-hidden="true"
+              />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <img
+                  src={imageUrl}
+                  alt={title}
+                  className="max-w-full max-h-full object-contain"
+                  onLoad={handleThumbLoad}
+                />
+              </div>
+            </>
+          ) : (
+            <img
+              src={imageUrl}
+              alt={title}
+              className="w-full h-full object-cover"
+              onLoad={handleThumbLoad}
+            />
+          )
         ) : (
-          <LinkIcon size={40} className="text-neutral-600" />
+          <LinkIcon size={60} className="text-neutral-400" />
         )}
 
         {/* 선택 모드 체크박스 */}
