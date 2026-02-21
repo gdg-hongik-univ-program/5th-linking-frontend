@@ -192,7 +192,7 @@ export default function ItemViewerPage() {
 
           {/* 제목 및 상세정보 토글 */}
           <div>
-            <h1 className="text-xl font-bold leading-tight mb-2 break-words">
+            <h1 className="text-2xl font-bold leading-tight mb-2 break-words">
               {item.title || '제목 없음'}
             </h1>
 

@@ -74,6 +74,8 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
                               className={
                                 item.disabled
                                   ? 'text-neutral-600'
+                                  : item.isDanger
+                                  ? 'text-error-500'
                                   : 'text-text-main'
                               }
                             />
@@ -83,6 +85,8 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
                           className={`flex-1 text-sm leading-5 whitespace-nowrap ${
                             item.disabled
                               ? 'text-neutral-600'
+                              : item.isDanger
+                              ? 'text-error-500 font-semibold'
                               : 'text-text-main'
                           }`}
                         >
