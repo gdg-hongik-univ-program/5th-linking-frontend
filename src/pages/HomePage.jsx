@@ -83,7 +83,7 @@ export default function HomePage() {
             searchQuery={search}
             ListHeaderComponent={renderListHeader}
             ListFooterComponent={
-              isLoading ? null : (
+              isLoading || !items?.length ? null : (
                 <div className="px-6 py-2 flex items-center justify-center text-center min-h-[8vh]">
                   <p className="text-xs text-text-sub">
                     최근 생성한 링크는 8개까지만 보여요.

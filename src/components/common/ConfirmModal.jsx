@@ -39,10 +39,10 @@ export default function ConfirmModal({
           <button
             type="button"
             onClick={() => onConfirm?.()}
-            className={`flex-1 py-3 text-text-main text-sm font-bold rounded-xl transition-colors ${
+            className={`flex-1 py-3 text-sm font-bold rounded-xl transition-colors ${
               isDanger
-                ? 'bg-error-500 hover:bg-error-600'
-                : 'bg-primary-500 hover:bg-primary-500/90'
+                ? 'bg-error-500 hover:bg-error-600 text-text-main'
+                : 'bg-primary-500 hover:bg-primary-500/90 text-bg-main'
             }`}
           >
             {confirmText}

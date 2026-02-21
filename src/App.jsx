@@ -9,6 +9,7 @@ import Layout from './components/layout/Layout';
 
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const SignupPage = React.lazy(() => import('./pages/SignupPage'));
+const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 const HomePage = React.lazy(() => import('./pages/HomePage'));
 const SchedulePage = React.lazy(() => import('./pages/SchedulePage'));
 const StoragePage = React.lazy(() => import('./pages/StoragePage'));
@@ -51,7 +52,7 @@ export default function App() {
             {/* 공개 페이지 */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
-
+            <Route path="/onboarding" element={<OnboardingPage />} />
             {/* 보호된 페이지 */}
             <Route
               path="/*"

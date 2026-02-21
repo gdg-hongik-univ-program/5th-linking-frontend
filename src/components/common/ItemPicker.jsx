@@ -351,7 +351,7 @@ export default function ItemPicker({
                             {formatDate(data.createdAt)}
                           </span>
                         </div>
-                        <div className="p-1.5 rounded-lg bg-neutral-800 text-text-sub group-hover:bg-primary-500 group-hover:text-white transition-all active:scale-90">
+                        <div className="p-1.5 rounded-lg bg-neutral-800 text-text-sub group-hover:bg-primary-500 group-hover:text-bg-main transition-all active:scale-90">
                           <Plus size={16} strokeWidth={3} />
                         </div>
                       </button>

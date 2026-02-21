@@ -236,7 +236,7 @@ export default function ProfilePage() {
 
               <div className="flex items-baseline gap-2">
                 <h2 className="text-xl font-semibold truncate">
-                  {profile?.nickname || '로딩 중...'}
+                  {profile?.nickname || '불러오는 중...'}
                 </h2>
                 {profile && (
                   <span className="text-xs rounded-full border border-primary-500/60 px-2 py-[2px] text-primary-300 bg-primary-500/5">
@@ -337,7 +337,7 @@ export default function ProfilePage() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold">링크 그래프</h3>
             <span className="text-[11px] text-text-sub/70 mt-0.5">
-              확대해 연결 링크들을 탐색해보세요
+              확대해 연결 링크들을 탐색해보세요.
             </span>
           </div>
 
@@ -411,7 +411,7 @@ export default function ProfilePage() {
 
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.fillStyle = isImportant ? '#EABE2F' : '#ffffff';
+                    ctx.fillStyle = isImportant ? '#EABE2F' : '#f5f5f5s';
 
                     ctx.fillText(
                       label,
@@ -426,8 +426,8 @@ export default function ProfilePage() {
                 <Network size={24} />
                 <p className="text-sm text-text-sub/70">
                   {hasGraph
-                    ? '그래프 로딩 중...'
-                    : '연결된 링크 데이터가 없습니다.'}
+                    ? '그래프 불러오는 중...'
+                    : '연결된 링크 데이터가 없어요.'}
                 </p>
               </div>
             )}
