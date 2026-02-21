@@ -1,17 +1,24 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { Star, Save, Hourglass, CircleX, Folder, Hash, X } from 'lucide-react';
 import { useFolders } from '../hooks/useFolders';
 import { useItem } from '../hooks/useItem';
 import { findFolderPath } from '../utils/findFolderPath';
+import { useModalStore } from '../store/useModalStore';
 import FolderPicker from '../components/common/FolderPicker';
 import IconButton from '../components/common/IconButton';
 import PageHeader from '../components/common/PageHeader';
 
 export default function ItemEditorPage() {
   const { itemId } = useParams();
+
   const [searchParams] = useSearchParams();
+
   const folderIdParam = searchParams.get('folderId');
+
+  const navigate = useNavigate();
+
+  const { openAlert, openConfirm } = useModalStore();
 
   const { item: fetchedItem, handleCreate, handleUpdate } = useItem(itemId);
   const { folders: folderTree, refetch: refetchFolders } = useFolders();
@@ -19,7 +26,6 @@ export default function ItemEditorPage() {
   const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
   const memoRef = useRef(null);
-
   const titleRef = useRef(null);
   const urlRef = useRef(null);
 
@@ -35,6 +41,7 @@ export default function ItemEditorPage() {
   const [tagInput, setTagInput] = useState('');
   const [isImportant, setIsImportant] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
     if (!isPickerOpen) {
@@ -54,7 +61,7 @@ export default function ItemEditorPage() {
     }
 
     if (pathArray) return pathArray.join('/');
-    return '폴더 표시하는 중...';
+    return '폴더 표시하는 중';
   }, [folderTree, formData.folderId]);
 
   useEffect(() => {
@@ -68,6 +75,7 @@ export default function ItemEditorPage() {
         folderId: fetchedItem.folderId || '',
       });
       setIsImportant(fetchedItem.importance || false);
+      setIsDirty(false);
     } else if (folderIdParam) {
       setFormData((prev) => {
         if (String(prev.folderId) === String(folderIdParam)) return prev;
@@ -82,8 +90,30 @@ export default function ItemEditorPage() {
     memoRef.current.style.height = `${memoRef.current.scrollHeight}px`;
   }, [formData.memo]);
 
+  const handleBack = () => {
+    if (isDirty) {
+      openConfirm({
+        title: '링크 작성 취소',
+        message: '나가면 작성 중인 내용이 저장되지 않아요. 정말 나가시겠어요?',
+        confirmText: '나가기',
+        isDanger: true,
+        onConfirm: () => navigate(-1),
+      });
+    } else {
+      navigate(-1);
+    }
+  };
+
   const handleSave = async () => {
-    if (!formData.title.trim()) return alert('제목 입력');
+    if (!formData.title.trim()) {
+      openAlert({
+        title: '링크 제목 입력',
+        message: '링크의 제목을 입력해 주세요.',
+        isDanger: true,
+      });
+      titleRef.current?.focus();
+      return;
+    }
 
     const targetFolderId = formData.folderId ? Number(formData.folderId) : null;
     const finalDeadline = formData.deadline
@@ -100,6 +130,8 @@ export default function ItemEditorPage() {
       tags: formData.tags,
     };
 
+    setIsDirty(false);
+
     if (itemId) await handleUpdate(payload);
     else await handleCreate(payload);
   };
@@ -107,6 +139,7 @@ export default function ItemEditorPage() {
   const handleHiddenDateChange = (e) => {
     const next = e.target.value || '';
     setFormData((prev) => ({ ...prev, deadline: next }));
+    setIsDirty(true);
   };
 
   const handleCalendarClick = () => {
@@ -120,15 +153,18 @@ export default function ItemEditorPage() {
   const handleClearDate = (e) => {
     e.stopPropagation();
     setFormData((prev) => ({ ...prev, deadline: '' }));
+    setIsDirty(true);
   };
 
   const handleClearTitle = () => {
     setFormData((prev) => ({ ...prev, title: '' }));
+    setIsDirty(true);
     titleRef.current?.focus();
   };
 
   const handleClearUrl = () => {
     setFormData((prev) => ({ ...prev, url: '' }));
+    setIsDirty(true);
     urlRef.current?.focus();
   };
 
@@ -139,10 +175,42 @@ export default function ItemEditorPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (name === 'title' && value.length > 70) {
+      openAlert({
+        title: '제목 입력 제한',
+        message: '제목은 최대 70자까지만 입력할 수 있어요.',
+        isDanger: true,
+      });
+      return;
+    }
+
+    if (name === 'url' && value.length > 2048) {
+      openAlert({
+        title: 'URL 입력 제한',
+        message: 'URL은 최대 2048자까지만 입력할 수 있어요.',
+        isDanger: true,
+      });
+      return;
+    }
+
+    if (name === 'memo' && value.length > 1000) {
+      openAlert({
+        title: '메모 입력 제한',
+        message: '메모는 최대 1000자까지만 입력할 수 있어요.',
+        isDanger: true,
+      });
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setIsDirty(true);
   };
 
-  const toggleImportant = () => setIsImportant((prev) => !prev);
+  const toggleImportant = () => {
+    setIsImportant((prev) => !prev);
+    setIsDirty(true);
+  };
 
   const handleTagKeyDown = (e) => {
     if (e.nativeEvent.isComposing) return;
@@ -152,12 +220,20 @@ export default function ItemEditorPage() {
       const newTag = tagInput.trim();
 
       if (formData.tags.length >= 10) {
-        alert('태그는 최대 10개까지 추가할 수 있어요.');
+        openAlert({
+          title: '태그 개수 제한',
+          message: '태그는 최대 10개까지만 추가할 수 있어요.',
+          isDanger: true,
+        });
         setTagInput('');
         return;
       }
       if (newTag.length > 35) {
-        alert('태그 하나엔 최대 35자까지 입력할 수 있어요.');
+        openAlert({
+          title: '태그 입력 제한',
+          message: '태그 하나엔 최대 35자까지만 입력할 수 있어요.',
+          isDanger: true,
+        });
         return;
       }
 
@@ -167,9 +243,11 @@ export default function ItemEditorPage() {
           tags: [...prev.tags, newTag].sort((a, b) => a.localeCompare(b, 'ko')),
         }));
         setTagInput('');
+        setIsDirty(true);
       }
     } else if (e.key === 'Backspace' && !tagInput && formData.tags.length > 0) {
       setFormData((prev) => ({ ...prev, tags: prev.tags.slice(0, -1) }));
+      setIsDirty(true);
     }
   };
 
@@ -178,11 +256,13 @@ export default function ItemEditorPage() {
       ...prev,
       tags: prev.tags.filter((t) => t !== tagToRemove),
     }));
+    setIsDirty(true);
   };
 
   const handleFolderSelect = (selectedId) => {
     setFormData((prev) => ({ ...prev, folderId: selectedId || '' }));
     setIsPickerOpen(false);
+    setIsDirty(true);
   };
 
   const formattedDateString = useMemo(() => {
@@ -196,13 +276,13 @@ export default function ItemEditorPage() {
 
   return (
     <div className="h-full flex flex-col font-family-sans bg-bg-main">
-      <PageHeader>
+      <PageHeader onBack={handleBack}>
         <IconButton icon={Save} onClick={handleSave} aria-label="저장하기" />
       </PageHeader>
 
       <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
         <div className="flex-1 flex flex-col px-5 py-4 gap-4 min-h-full">
-          <div className="flex flex-col gap-1 shrink-0">
+          <div className="flex flex-col gap-1 shrink-0 min-w-0">
             <div className="flex items-center gap-2">
               <input
                 ref={titleRef}
@@ -212,7 +292,7 @@ export default function ItemEditorPage() {
                 value={formData.title || ''}
                 onChange={handleChange}
                 maxLength={70}
-                className="flex-1 bg-transparent text-xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none h-10"
+                className="flex-1 min-w-0 bg-transparent text-xl font-bold text-text-main placeholder:text-text-disabled focus:outline-none h-10"
               />
               {formData.title && (
                 <button
@@ -246,7 +326,7 @@ export default function ItemEditorPage() {
                 placeholder="URL 입력"
                 value={formData.url || ''}
                 onChange={handleChange}
-                className="flex-1 bg-transparent text-sm text-text-sub placeholder:text-text-disabled focus:outline-none h-8"
+                className="flex-1 min-w-0 bg-transparent text-sm text-text-sub placeholder:text-text-disabled focus:outline-none h-8"
               />
               {formData.url && (
                 <button
@@ -336,7 +416,7 @@ export default function ItemEditorPage() {
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={handleTagKeyDown}
-                  className="flex-1 bg-transparent text-sm text-text-main placeholder:text-text-disabled focus:outline-none h-8"
+                  className="flex-1 min-w-0 bg-transparent text-sm text-text-main placeholder:text-text-disabled focus:outline-none h-8"
                 />
                 {tagInput && (
                   <button

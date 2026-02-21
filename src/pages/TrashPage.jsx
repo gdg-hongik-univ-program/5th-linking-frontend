@@ -5,6 +5,7 @@ import { useItems } from '../hooks/useItems';
 import { useFolders } from '../hooks/useFolders';
 import { buildMenu } from '../utils/buildMenu';
 import { sortData } from '../utils/sortData';
+import { useModalStore } from '../store/useModalStore';
 import ActionSheet from '../components/common/ActionSheet';
 import IconButton from '../components/common/IconButton';
 import ListView from '../components/common/ListView';
@@ -17,6 +18,8 @@ export default function TrashPage() {
   const navigate = useNavigate();
 
   const scrollRef = useRef(null);
+
+  const { openConfirm, openAlert } = useModalStore();
 
   const {
     items: mixedData,
@@ -31,7 +34,6 @@ export default function TrashPage() {
   const {
     handleRestore: restoreFolder,
     handleDeletePermanently: deleteFolderPerm,
-    handleEmptyTrash: emptyFolderTrash,
   } = useFolders();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -202,56 +204,83 @@ export default function TrashPage() {
   // 선택된 항목 영구 삭제
   const handleDeleteSelectedPermanently = async () => {
     if (totalSelectedCount === 0) return;
-    if (
-      !window.confirm(
-        '선택한 항목들을 영구적으로 삭제할까요? 이 작업은 되돌릴 수 없어요.',
-      )
-    )
-      return;
 
-    const { folders: folderIds, items: itemIds } = selectedIds;
-    const foldersToDelete = folders.filter((f) =>
-      folderIds.includes(f.folderId),
-    );
-    const itemsToDelete = items.filter((i) => itemIds.includes(i.itemId));
+    openConfirm({
+      title: '선택 항목 영구 삭제',
+      message:
+        '선택한 항목을 영구적으로 삭제할까요? 이 작업은 되돌릴 수 없어요.',
+      confirmText: '영구 삭제',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          const { folders: folderIds, items: itemIds } = selectedIds;
+          const foldersToDelete = folders.filter((f) =>
+            folderIds.includes(f.folderId),
+          );
+          const itemsToDelete = items.filter((i) => itemIds.includes(i.itemId));
 
-    const promises = [];
-    if (foldersToDelete.length > 0)
-      promises.push(handleDeleteFolderPermAction(foldersToDelete));
-    if (itemsToDelete.length > 0)
-      promises.push(handleDeleteItemPermAction(itemsToDelete));
+          const promises = [];
+          if (foldersToDelete.length > 0)
+            promises.push(handleDeleteFolderPermAction(foldersToDelete));
+          if (itemsToDelete.length > 0)
+            promises.push(handleDeleteItemPermAction(itemsToDelete));
 
-    await Promise.all(promises);
-    setIsSelectionMode(false);
-    setSelectedIds({ folders: [], items: [] });
+          await Promise.all(promises);
+          setIsSelectionMode(false);
+          setSelectedIds({ folders: [], items: [] });
+        } catch (error) {
+          openAlert({
+            title: '영구 삭제 실패',
+            message:
+              '선택한 항목을 영구 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+            isDanger: true,
+          });
+        }
+      },
+    });
   };
 
   // 휴지통 비우기
   const handleEmptyTrashAction = async () => {
-    if (
-      !window.confirm(
-        '휴지통에 있는 모든 항목을 비울까요? 한 번 영구적으로 삭제하면 되돌릴 수 없어요.',
-      )
-    )
-      return;
-
-    try {
-      await Promise.all([emptyItemTrash(), emptyFolderTrash()]);
-      refetchAll();
-      setMenuAnchor(null);
-    } catch (error) {
-      alert('휴지통을 비우는 데 실패했습니다.');
-    }
+    openConfirm({
+      title: '휴지통 비우기',
+      message:
+        '휴지통에 있는 모든 항목을 비울까요? 이 작업은 되돌릴 수 없어요.',
+      confirmText: '비우기',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          await emptyItemTrash();
+          refetchAll();
+          setMenuAnchor(null);
+        } catch (error) {
+          openAlert({
+            title: '오류',
+            message:
+              '휴지통을 비우는 중 오류가 발생했어요. 다시 시도해 주세요.',
+            isDanger: true,
+          });
+        }
+      },
+    });
   };
 
   // 항목 클릭
   const handleNavigate = (entry) => {
     if (entry.itemId) {
-      handleGoToView(entry.itemId);
+      openAlert({
+        title: '링크 열기 불가',
+        message:
+          '휴지통에 있는 링크는 열 수 없어요. 내용을 확인하려면 먼저 복원해주세요.',
+        confirmText: '확인',
+      });
     } else {
-      alert(
-        '휴지통에 있는 폴더는 열 수 없어요. 내용을 확인하려면 복원해주세요.',
-      );
+      openAlert({
+        title: '폴더 열기 불가',
+        message:
+          '휴지통에 있는 폴더는 열 수 없어요. 내용을 확인하려면 먼저 복원해주세요.',
+        confirmText: '확인',
+      });
     }
   };
 
@@ -314,24 +343,10 @@ export default function TrashPage() {
                 setIsSelectionMode(false);
                 setSelectedIds({ folders: [], items: [] });
               }}
-            >
-              <div className="flex gap-4">
-                <button
-                  onClick={handleRestoreSelected}
-                  disabled={totalSelectedCount === 0}
-                  className="text-blue-500 font-medium"
-                >
-                  복원
-                </button>
-                <button
-                  onClick={handleDeleteSelectedPermanently}
-                  disabled={totalSelectedCount === 0}
-                  className="text-red-500 font-medium"
-                >
-                  영구 삭제
-                </button>
-              </div>
-            </SelectionHeader>
+              mode="trash"
+              onMove={handleRestoreSelected}
+              onDelete={handleDeleteSelectedPermanently}
+            />
           </div>
         )}
       </div>
@@ -371,13 +386,33 @@ export default function TrashPage() {
               type="delete"
               x={dragX}
               direction="right"
-              onClick={async () => {
-                if (entry.folderId) {
-                  await handleDeleteFolderPermAction([entry]);
-                } else {
-                  await handleDeleteItemPermAction([entry]);
-                }
+              onClick={() => {
                 setOpenedSwipeId(null);
+                const rawName = entry.title || entry.folderName || '이름 없음';
+                const entryName =
+                  rawName.length > 15 ? `${rawName.slice(0, 15)}...` : rawName;
+
+                openConfirm({
+                  title: '영구 삭제',
+                  message: `'${entryName}' 항목을 영구적으로 삭제할까요? 이 작업은 되돌릴 수 없어요.`,
+                  confirmText: '영구 삭제',
+                  isDanger: true,
+                  onConfirm: async () => {
+                    try {
+                      if (entry.folderId) {
+                        await handleDeleteFolderPermAction([entry]);
+                      } else {
+                        await handleDeleteItemPermAction([entry]);
+                      }
+                    } catch (error) {
+                      openAlert({
+                        title: '삭제 실패',
+                        message: `'${entryName}' 항목을 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.`,
+                        isDanger: true,
+                      });
+                    }
+                  },
+                });
               }}
             />
           )}

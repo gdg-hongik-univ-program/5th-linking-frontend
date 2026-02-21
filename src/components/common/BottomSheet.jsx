@@ -14,22 +14,23 @@ import { buildMenu } from '../../utils/buildMenu';
 // 연결된 아이템 리스트
 const ListItem = ({ item, onRemove, onClick }) => {
   return (
-    <div
-      onClick={onClick}
-      className="flex items-center justify-between py-3 px-8 border-b border-neutral-800/50 hover:bg-neutral-800/30 active:bg-neutral-800 transition-colors cursor-pointer group"
-    >
-      <div className="flex-1 min-w-0 pr-3">
+    <div className="flex items-center justify-between px-8 hover:bg-neutral-800/30 active:bg-neutral-800 transition-colors group">
+      <div
+        onClick={onClick}
+        className="flex-1 min-w-0 pr-3 py-3 cursor-pointer"
+      >
         <span className="text-sm text-text-main truncate select-none block">
           {item.title || '제목 없음'}
         </span>
       </div>
 
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
-          onRemove(item.itemId);
+          onRemove(item, e);
         }}
-        className="p-2 text-text-sub hover:text-error-500 hover:bg-error-500/10 rounded-full transition-colors shrink-0"
+        className="p-2 text-text-sub hover:text-error-500 hover:bg-error-500/10 rounded-full transition-colors shrink-0 z-10"
         aria-label="연결 해제"
       >
         <Unlink size={18} />
@@ -102,6 +103,7 @@ export default function BottomSheet({
   };
 
   const handleItemClick = (itemId) => {
+    if (confirm?.isOpen) return;
     onClose();
     navigate(`/view/${itemId}`);
   };
@@ -118,13 +120,13 @@ export default function BottomSheet({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 z-[1000] backdrop-blur-sm"
+              className="fixed inset-0 bg-black/50 z-[1000]"
               onClick={onClose}
             />
 
             {/* 바텀 시트 */}
             <motion.div
-              className="fixed left-1/2 bottom-0 z-[1010] bg-bg-main rounded-t-[2rem] shadow-2xl flex flex-col border-t border-neutral-800 overflow-hidden w-full max-w-[390px]"
+              className="fixed left-1/2 bottom-0 z-[1010] bg-bg-main rounded-t-[2rem] shadow-lg flex flex-col border-t border-text-main/10 overflow-hidden w-full max-w-[390px]"
               style={{ x: '-50%' }}
               initial={{ y: '100%', x: '-50%' }}
               animate={{ y: 0, x: '-50%', height: isExpanded ? '90%' : '60%' }}
@@ -153,7 +155,7 @@ export default function BottomSheet({
                 <div className="relative flex items-center justify-center py-1">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-text-main">
-                      연결된 아이템
+                      연결된 링크
                     </span>
                     <span className="text-xs font-bold text-primary-500 mt-1">
                       {items.length}개
@@ -180,16 +182,20 @@ export default function BottomSheet({
                     />
                     <input
                       type="text"
-                      placeholder="목록에서 검색..."
+                      placeholder="연결된 링크 검색"
                       value={localSearch}
                       onChange={(e) => setLocalSearch(e.target.value)}
-                      className="w-full bg-neutral-800 border border-neutral-700 rounded-xl py-2.5 pl-10 pr-10 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:border-primary-500"
+                      className="w-full bg-neutral-800 border border-text-main/5 rounded-xl py-2.5 pl-10 pr-10 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:border-primary-500"
                       onPointerDown={handleContentPointerDown}
                     />
                     {localSearch && (
                       <button
+                        type="button"
+                        tabIndex={-1}
+                        onMouseDown={(e) => e.preventDefault()}
                         onClick={() => setLocalSearch('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-text-disabled hover:text-text-main"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-text-main transition-colors p-1 rounded-full"
+                        aria-label="검색어 지우기"
                       >
                         <CircleX size={16} />
                       </button>
@@ -201,7 +207,7 @@ export default function BottomSheet({
                       e.stopPropagation();
                       setIsPickerOpen(true);
                     }}
-                    className="w-[42px] h-[42px] flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white rounded-xl shadow-lg shadow-primary-500/20 transition-colors shrink-0"
+                    className="w-[42px] h-[42px] flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white rounded-xl transition-colors shrink-0"
                   >
                     <Plus size={20} strokeWidth={3} />
                   </button>
@@ -222,7 +228,7 @@ export default function BottomSheet({
                     <span className="text-sm">
                       {localSearch
                         ? '검색 결과가 없어요.'
-                        : '연결된 아이템이 없습니다.'}
+                        : '연결된 링크가 없습니다.'}
                     </span>
                   </div>
                 ) : (
@@ -250,7 +256,7 @@ export default function BottomSheet({
         isOpen={isPickerOpen}
         onClose={() => setIsPickerOpen(false)}
         onSelect={handlePickerSelect}
-        title="연결할 아이템 선택"
+        title="연결할 링크 선택"
       />
 
       <div className="relative z-[1100]">

@@ -11,12 +11,14 @@ import {
   Search,
   Database,
   MoreHorizontal,
+  CircleX,
 } from 'lucide-react';
 import { useFolders } from '../../hooks/useFolders';
 import { buildMenu } from '../../utils/buildMenu';
 import { findFolderNode } from '../../utils/findFolderNode';
 import { formatDate } from '../../utils/formatDate';
 import { sortData } from '../../utils/sortData';
+import { useModalStore } from '../../store/useModalStore';
 import ActionSheet from './ActionSheet';
 import InputModal from './InputModal';
 import LoadingSpinner from './LoadingSpinner';
@@ -40,6 +42,8 @@ export default function FolderPicker({
   const currentFolder = history[history.length - 1];
   const isRoot = history.length === 1;
   const isSearching = searchQuery.trim().length > 0;
+
+  const { openAlert } = useModalStore();
 
   // 배경 제어
   useEffect(() => {
@@ -138,7 +142,12 @@ export default function FolderPicker({
       if (refetch) await refetch();
       setIsCreateModalOpen(false);
     } catch (error) {
-      alert('폴더 생성 실패');
+      openAlert({
+        title: '폴더 생성 실패',
+        message: '폴더를 생성하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+        isDanger: true,
+        confirmText: '확인',
+      });
     }
   };
 
@@ -172,7 +181,7 @@ export default function FolderPicker({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
+          className="absolute inset-0 bg-black/50 pointer-events-auto"
           onClick={onClose}
         />
 
@@ -181,11 +190,11 @@ export default function FolderPicker({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-bg-main w-full max-w-[340px] rounded-xl shadow-2xl overflow-hidden flex flex-col h-[75vh] max-h-[600px] border border-neutral-800 pointer-events-auto"
+          className="relative bg-bg-main w-full max-w-[340px] rounded-2xl shadow-lg overflow-hidden flex flex-col h-[75vh] max-h-[600px] border border-text-main/10 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
-          <div className="px-4 h-14 border-b border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-900/50 relative">
+          <div className="px-4 h-14 border-b border-text-main/10 flex items-center justify-between shrink-0 bg-bg-main relative">
             <div className="flex items-center justify-start min-w-[40px]">
               <button
                 onClick={onClose}
@@ -216,7 +225,7 @@ export default function FolderPicker({
           </div>
 
           {/* 서치 바 */}
-          <div className="px-4 py-2 bg-bg-main border-b border-neutral-800/50">
+          <div className="px-4 py-2 bg-bg-main border-b border-text-main/10">
             <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-text-disabled"
@@ -224,11 +233,23 @@ export default function FolderPicker({
               />
               <input
                 type="text"
-                placeholder="폴더 이름 검색..."
+                placeholder="폴더 이름 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-neutral-800/50 rounded-lg py-2.5 pl-9 pr-3 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all"
+                className="w-full bg-neutral-800 border border-text-main/5 rounded-lg py-2.5 pl-9 pr-10 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-text-main transition-colors p-1 rounded-full"
+                  aria-label="검색어 지우기"
+                >
+                  <CircleX size={16} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -237,7 +258,7 @@ export default function FolderPicker({
             {!isRoot && !isSearching && (
               <button
                 onClick={handleBack}
-                className="flex items-center gap-3 px-5 py-3 w-full text-left hover:bg-neutral-800 active:bg-neutral-700 transition-colors border-b border-neutral-800/50 shrink-0"
+                className="flex items-center gap-3 px-5 py-3 w-full text-left hover:bg-neutral-800 active:bg-neutral-700 transition-colors border-b border-text-main/10 shrink-0"
               >
                 <CornerLeftUp className="text-primary-500" size={20} />
                 <div className="text-primary-500 text-sm font-semibold truncate">
@@ -290,7 +311,7 @@ export default function FolderPicker({
           </div>
 
           {/* 푸터 (저장 버튼 유지) */}
-          <div className="p-4 border-t border-neutral-800 bg-bg-main shrink-0">
+          <div className="p-4 border-t border-text-main/10 bg-bg-main shrink-0">
             <button
               onClick={() => {
                 onSelect(currentFolder.id);

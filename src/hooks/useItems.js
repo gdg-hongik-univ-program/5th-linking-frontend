@@ -2,10 +2,14 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getItems, emptyTrash } from '../api/itemApi';
 import { useItemCommon } from './useItemCommon';
+import { useModalStore } from '../store/useModalStore';
 
 export const useItems = (folderId = null, filterType = null) => {
   const navigate = useNavigate();
+
   const location = useLocation();
+
+  const { openAlert } = useModalStore();
 
   const {
     handleMove: commonMove,
@@ -99,29 +103,39 @@ export const useItems = (folderId = null, filterType = null) => {
   }, [commonDelete]);
 
   // 아이템 실제 삭제
-  const executeActualDelete = useCallback(async () => {
-    if (!pendingDeleteRef.current) return;
+  const executeActualDelete = useCallback(
+    async (options = { showError: true }) => {
+      if (!pendingDeleteRef.current) return;
 
-    const { items: deletedItems, itemsWithIndex } = pendingDeleteRef.current;
-    const itemIds = deletedItems.map((item) => item.itemId);
+      const { items: deletedItems, itemsWithIndex } = pendingDeleteRef.current;
+      const itemIds = deletedItems.map((item) => item.itemId);
 
-    const result = await commonDelete(itemIds);
+      const result = await commonDelete(itemIds);
 
-    if (!result.success) {
-      alert('링크를 삭제하는 데에 실패했어요.');
-      setItems((prev) => {
-        const newList = [...prev];
-        itemsWithIndex
-          .sort((a, b) => a.index - b.index)
-          .forEach(({ item, index }) => {
-            newList.splice(index, 0, item);
+      if (!result.success) {
+        if (options.showError) {
+          openAlert({
+            title: '링크 삭제 실패',
+            message:
+              '링크를 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+            isDanger: true,
           });
-        return newList;
-      });
-    }
+        }
+        setItems((prev) => {
+          const newList = [...prev];
+          itemsWithIndex
+            .sort((a, b) => a.index - b.index)
+            .forEach(({ item, index }) => {
+              newList.splice(index, 0, item);
+            });
+          return newList;
+        });
+      }
 
-    clearDeleteState();
-  }, [commonDelete]);
+      clearDeleteState();
+    },
+    [commonDelete, openAlert],
+  );
 
   // 아이템 실제 삭제 클린업
   useEffect(() => {
@@ -129,7 +143,11 @@ export const useItems = (folderId = null, filterType = null) => {
   }, [executeActualDelete]);
 
   // 아이템 이동
-  const handleMove = async (itemsOrItem, targetFolderId) => {
+  const handleMove = async (
+    itemsOrItem,
+    targetFolderId,
+    options = { showError: true },
+  ) => {
     const itemIds = Array.isArray(itemsOrItem)
       ? itemsOrItem.map((i) => i.itemId)
       : [itemsOrItem.itemId];
@@ -138,7 +156,13 @@ export const useItems = (folderId = null, filterType = null) => {
     if (result.success) {
       setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
     } else {
-      alert('링크를 옮기는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 이동 실패',
+          message: '링크를 이동하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
     }
     return result;
   };
@@ -198,7 +222,7 @@ export const useItems = (folderId = null, filterType = null) => {
   };
 
   // 아이템 복원
-  const handleRestore = async (itemsOrItem) => {
+  const handleRestore = async (itemsOrItem, options = { showError: true }) => {
     const itemIds = Array.isArray(itemsOrItem)
       ? itemsOrItem.map((i) => i.itemId)
       : [itemsOrItem.itemId];
@@ -207,31 +231,55 @@ export const useItems = (folderId = null, filterType = null) => {
     if (result.success) {
       setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
     } else {
-      alert('링크를 복원하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 복원 실패',
+          message: '링크를 복원하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
     }
     return result;
   };
 
   // 아이템 영구 삭제
-  const handleDeletePermanently = async (itemsOrItem) => {
+  const handleDeletePermanently = async (
+    itemsOrItem,
+    options = { showError: true },
+  ) => {
     const itemIds = Array.isArray(itemsOrItem)
       ? itemsOrItem.map((i) => i.itemId)
       : [itemsOrItem.itemId];
     const result = await commonDeletePermanently(itemIds);
-    if (result.success)
+    if (result.success) {
       setItems((prev) => prev.filter((i) => !itemIds.includes(i.itemId)));
-    else alert('링크를 영구적으로 삭제하는 데에 실패했어요.');
+    } else {
+      if (options.showError) {
+        openAlert({
+          title: '링크 영구 삭제 실패',
+          message:
+            '링크를 영구 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
+    }
     return result;
   };
 
   // 아이템 휴지통 비우기
-  const handleEmptyTrash = async () => {
+  const handleEmptyTrash = async (options = { showError: true }) => {
     try {
       await emptyTrash();
       setItems([]);
       return { success: true };
     } catch (error) {
-      alert('링크 휴지통을 비우는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '휴지통 비우기 실패',
+          message: '휴지통을 비우는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };

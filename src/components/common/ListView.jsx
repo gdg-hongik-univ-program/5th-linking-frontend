@@ -9,6 +9,7 @@ export default function ListView({
   isLoading,
   searchQuery,
   ListHeaderComponent = null,
+  ListFooterComponent = null,
   openedId,
   setOpenedId,
   isSelectionMode,
@@ -93,13 +94,18 @@ export default function ListView({
         EmptyPlaceholder: () => (
           <div className="flex flex-col items-center justify-center py-20 text-text-sub text-sm">
             {isLoading ? (
-              <LoadingSpinner size="lg" color="text-primary-main" />
+              <LoadingSpinner size="lg" color="text-primary-500" />
             ) : (
               <span>{searchQuery ? '검색 결과가 없어요.' : emptyText}</span>
             )}
           </div>
         ),
-        Footer: () => <div className="h-6" />,
+        Footer: () =>
+          ListFooterComponent ? (
+            <div>{ListFooterComponent}</div>
+          ) : (
+            <div className="h-6" />
+          ),
       }}
     />
   );

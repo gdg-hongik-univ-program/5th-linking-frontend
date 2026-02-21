@@ -37,13 +37,13 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
             exit={{ opacity: 0, scale: 0.95, y: -10 }}
             transition={{ duration: 0.15 }}
             style={menuStyle}
-            className="z-50 bg-neutral-800 rounded-xl w-60 shadow-2xl border border-neutral-700 flex flex-col max-h-[80vh] origin-top-right"
+            className="z-50 bg-bg-nav rounded-2xl w-60 shadow-lg border border-text-main/10 flex flex-col max-h-[80vh] origin-top-right overflow-hidden"
           >
             <div className="overflow-y-auto overflow-x-hidden">
               {sections.map((section, sectionIndex) => (
                 <div key={sectionIndex}>
                   {section.header && (
-                    <div className="px-4 py-2 text-xs text-neutral-400 font-medium sticky top-0 bg-neutral-800 z-10">
+                    <div className="px-4 py-2 text-xs text-neutral-400 font-medium sticky top-0 bg-bg-nav z-10">
                       {section.header}
                     </div>
                   )}
@@ -97,7 +97,7 @@ export default function ActionSheet({ isOpen, onClose, sections, anchorEl }) {
                     );
                   })}
                   {sectionIndex < sections.length - 1 && (
-                    <div className="h-px bg-neutral-700 my-2" />
+                    <div className="h-px bg-neutral-700" />
                   )}
                 </div>
               ))}

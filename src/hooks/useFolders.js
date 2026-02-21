@@ -8,14 +8,16 @@ import {
   restoreFolders,
   deleteFolders,
   deleteFoldersPermanently,
-  emptyFolderTrash,
 } from '../api/folderApi';
 import { removeFoldersFromTree } from '../utils/removeFoldersFromTree';
+import { useModalStore } from '../store/useModalStore';
 
 export const useFolders = () => {
   const location = useLocation();
 
   const { folderId } = useParams();
+
+  const { openAlert } = useModalStore();
 
   const [folders, setFolders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,20 +83,30 @@ export const useFolders = () => {
   };
 
   // 폴더 실제 삭제
-  const executeActualDelete = useCallback(async () => {
-    if (!pendingDeleteRef.current) return;
-    const { folders: deletedFolders } = pendingDeleteRef.current;
-    const folderIds = deletedFolders.map((folder) => folder.folderId);
+  const executeActualDelete = useCallback(
+    async (options = { showError: true }) => {
+      if (!pendingDeleteRef.current) return;
+      const { folders: deletedFolders } = pendingDeleteRef.current;
+      const folderIds = deletedFolders.map((folder) => folder.folderId);
 
-    try {
-      await deleteFolders(folderIds);
-    } catch (error) {
-      console.error('폴더 삭제 실패:', error);
-      alert('폴더를 삭제하는 데에 실패했어요.');
-      fetchFolders();
-    }
-    clearDeleteState();
-  }, [fetchFolders]);
+      try {
+        await deleteFolders(folderIds);
+      } catch (error) {
+        console.error('폴더 삭제 실패:', error);
+        if (options.showError) {
+          openAlert({
+            title: '폴더 삭제 실패',
+            message:
+              '폴더를 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+            isDanger: true,
+          });
+        }
+        fetchFolders();
+      }
+      clearDeleteState();
+    },
+    [fetchFolders, openAlert],
+  );
 
   // 폴더 실제 삭제 클린업
   useEffect(() => {
@@ -102,7 +114,11 @@ export const useFolders = () => {
   }, [executeActualDelete]);
 
   // 폴더 생성
-  const handleCreate = async (folderName, parentId = null) => {
+  const handleCreate = async (
+    folderName,
+    parentId = null,
+    options = { showError: true },
+  ) => {
     const targetParentId = parentId ?? (folderId ? Number(folderId) : null);
     try {
       const newFolder = await createFolder(folderName, targetParentId);
@@ -110,26 +126,47 @@ export const useFolders = () => {
       return { success: true, folder: newFolder };
     } catch (error) {
       console.error('폴더 생성 실패:', error);
-      alert('폴더를 생성하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '폴더 생성 실패',
+          message: '폴더를 생성하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
 
   // 폴더 이름 수정
-  const handleUpdate = async (folderId, folderName) => {
+  const handleUpdate = async (
+    folderId,
+    folderName,
+    options = { showError: true },
+  ) => {
     try {
       await updateFolder(folderId, folderName);
       await fetchFolders();
       return { success: true };
     } catch (error) {
-      console.error('폴더 수정 실패:', error);
-      alert('폴더를 수정하는 데에 실패했어요.');
+      console.error('폴더 이름 변경 실패:', error);
+      if (options.showError) {
+        openAlert({
+          title: '폴더 이름 변경 실패',
+          message:
+            '폴더 이름을 변경하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
 
   // 폴더 이동
-  const handleMove = async (foldersOrFolder, targetParentId) => {
+  const handleMove = async (
+    foldersOrFolder,
+    targetParentId,
+    options = { showError: true },
+  ) => {
     const foldersToMove = Array.isArray(foldersOrFolder)
       ? foldersOrFolder
       : [foldersOrFolder];
@@ -141,7 +178,13 @@ export const useFolders = () => {
       return { success: true };
     } catch (error) {
       console.error('폴더 이동 실패:', error);
-      alert('폴더를 옮기는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '폴더 이동 실패',
+          message: '폴더를 이동하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
@@ -185,7 +228,10 @@ export const useFolders = () => {
   };
 
   // 폴더 복원
-  const handleRestore = async (foldersOrFolder) => {
+  const handleRestore = async (
+    foldersOrFolder,
+    options = { showError: true },
+  ) => {
     const foldersToRestore = Array.isArray(foldersOrFolder)
       ? foldersOrFolder
       : [foldersOrFolder];
@@ -194,14 +240,25 @@ export const useFolders = () => {
     try {
       await restoreFolders(folderIds);
       setFolders((prev) => removeFoldersFromTree(prev, folderIds));
+      return { success: true };
     } catch (error) {
       console.error('폴더 복원 실패:', error);
-      alert('폴더를 복원하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '폴더 복원 실패',
+          message: '폴더를 복원하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
+      return { success: false, error };
     }
   };
 
   // 폴더 영구 삭제
-  const handleDeletePermanently = async (foldersOrFolder) => {
+  const handleDeletePermanently = async (
+    foldersOrFolder,
+    options = { showError: true },
+  ) => {
     const foldersToDelete = Array.isArray(foldersOrFolder)
       ? foldersOrFolder
       : [foldersOrFolder];
@@ -211,19 +268,15 @@ export const useFolders = () => {
       setFolders((prev) => removeFoldersFromTree(prev, folderIds));
       return { success: true };
     } catch (error) {
-      alert('폴더를 영구 삭제하는 데에 실패했어요.');
-      return { success: false, error };
-    }
-  };
-
-  // 폴더 휴지통 비우기
-  const handleEmptyTrash = async () => {
-    try {
-      await emptyFolderTrash();
-      setFolders([]);
-      return { success: true };
-    } catch (error) {
-      alert('폴더 휴지통을 비우는 데에 실패했어요.');
+      console.error('폴더 영구 삭제 실패:', error);
+      if (options.showError) {
+        openAlert({
+          title: '폴더 영구 삭제 실패',
+          message:
+            '폴더를 영구 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
@@ -242,6 +295,5 @@ export const useFolders = () => {
     handleUndo,
     handleRestore,
     handleDeletePermanently,
-    handleEmptyTrash,
   };
 };
