@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { differenceInCalendarDays, format } from 'date-fns';
 import {
   PenLine,
   MoreHorizontal,
@@ -7,18 +8,22 @@ import {
   ExternalLink,
   Link as LinkIcon,
   Share2,
-  Unlink,
+  FolderInput,
+  WandSparkles,
+  Trash2,
 } from 'lucide-react';
-import { differenceInCalendarDays, format } from 'date-fns';
-import { useItem } from '../hooks/useItem';
 import { useFolders } from '../hooks/useFolders';
+import { useItem } from '../hooks/useItem';
 import { findFolderPath } from '../utils/findFolderPath';
 import { formatDate } from '../utils/formatDate';
 import { getYoutubeId } from '../utils/getYoutubeId';
+import { useModalStore } from '../store/useModalStore';
+import ActionSheet from '../components/common/ActionSheet';
+import BottomSheet from '../components/common/BottomSheet';
+import FolderPicker from '../components/common/FolderPicker';
+import IconButton from '../components/common/IconButton';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import PageHeader from '../components/common/PageHeader';
-import IconButton from '../components/common/IconButton';
-import BottomSheet from '../components/common/BottomSheet';
 import Snackbar from '../components/common/Snackbar';
 
 export default function ItemViewerPage() {
@@ -26,53 +31,99 @@ export default function ItemViewerPage() {
 
   const { itemId } = useParams();
 
+  const { openAlert } = useModalStore();
+
   const {
     item,
-    connectedItems,
     isLoading,
-    isLoadingConnectedItems,
     snackbar,
     handleToggleImportance,
-    handleConnect,
-    handleDisconnect,
     handleUndo,
     handleGoToEdit,
     handleVisit,
     handleShare,
+    connectedItems,
+    isLoadingConnections,
+    handleConnect,
+    handleDisconnect,
+    handleMove,
+    handleDelete,
   } = useItem(itemId);
 
   const { folders: folderTree } = useFolders();
+
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDetailExpanded, setIsDetailExpanded] = useState(false);
 
-  // 폴더 경로 표시
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
   const folderPathDisplay = useMemo(() => {
     if (!item?.folderId) return '저장소 최상단';
     const pathArray = findFolderPath(folderTree, item.folderId);
     return pathArray ? pathArray.join('/') : '알 수 없는 폴더';
   }, [folderTree, item?.folderId]);
 
-  // 디데이 표시
   const dDayDisplay = useMemo(() => {
     if (!item?.deadline) return null;
     const diff = differenceInCalendarDays(new Date(item.deadline), new Date());
-
     let status = 'normal';
     if (diff < 0) status = 'past';
     else if (diff <= 7) status = 'upcoming';
-
     const label =
       diff === 0 ? 'D-DAY' : `D${diff > 0 ? '-' : '+'}${Math.abs(diff)}`;
-
     return { diff, label, status };
   }, [item?.deadline]);
 
-  // 디데이 배지 스타일
   const dDayStyles = {
     upcoming: 'bg-error-500 text-text-main',
     normal: 'bg-error-50 text-text-error',
     past: 'bg-neutral-500 text-text-main opacity-60',
   };
+
+  const handleFolderSelect = async (selectedId) => {
+    setIsPickerOpen(false);
+    await handleMove(selectedId);
+  };
+
+  const actionSheetSections = [
+    {
+      items: [
+        {
+          id: 'move',
+          label: '이동',
+          icon: FolderInput,
+          onClick: () => {
+            setMenuAnchor(null);
+            setIsPickerOpen(true);
+          },
+        },
+        {
+          id: 'ai-summary',
+          label: 'AI 요약',
+          badge: 'BETA',
+          icon: WandSparkles,
+          onClick: () => {
+            setMenuAnchor(null);
+            openAlert({
+              title: 'AI 요약',
+              message:
+                'AI 요약 기능은 아직 준비 중이에요. 곧 만나볼 수 있어요.',
+            });
+          },
+        },
+        {
+          id: 'delete',
+          label: '삭제',
+          icon: Trash2,
+          onClick: () => {
+            setMenuAnchor(null);
+            handleDelete();
+          },
+        },
+      ],
+    },
+  ];
 
   if (isLoading || !item) {
     return (
@@ -92,7 +143,11 @@ export default function ItemViewerPage() {
           onClick={handleGoToEdit}
           aria-label="수정하기"
         />
-        <IconButton icon={MoreHorizontal} aria-label="더보기" />
+        <IconButton
+          icon={MoreHorizontal}
+          onClick={(e) => setMenuAnchor(e.currentTarget)}
+          aria-label="더보기"
+        />
       </PageHeader>
 
       <main className="flex-1 flex flex-col pt-2 overflow-y-auto pb-20 scrollbar-hide">
@@ -114,25 +169,28 @@ export default function ItemViewerPage() {
 
         <div className="px-6 py-5 flex flex-col gap-5">
           {/* 디데이 및 태그 */}
-          <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-            {dDayDisplay && dDayDisplay.diff >= -30 && (
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-bold ${dDayStyles[dDayDisplay.status]}`}
-              >
-                {dDayDisplay.label}
-              </span>
-            )}
-            {item.tags?.map((tag, i) => (
-              <span
-                key={i}
-                className="px-3 py-1 bg-neutral-700 rounded-full text-xs text-text-sub"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
+          {((dDayDisplay && dDayDisplay.diff >= -30) ||
+            (item.tags && item.tags.length > 0)) && (
+            <div className="flex gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
+              {dDayDisplay && dDayDisplay.diff >= -30 && (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-bold ${dDayStyles[dDayDisplay.status]}`}
+                >
+                  {dDayDisplay.label}
+                </span>
+              )}
+              {item.tags?.map((tag, i) => (
+                <span
+                  key={i}
+                  className="px-3 py-1 bg-neutral-700 rounded-full text-xs text-text-sub"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
 
-          {/* 제목 및 상세 정보 */}
+          {/* 제목 및 상세정보 토글 */}
           <div>
             <h1 className="text-xl font-bold leading-tight mb-2 break-words">
               {item.title || '제목 없음'}
@@ -140,7 +198,6 @@ export default function ItemViewerPage() {
 
             <div className="text-sm text-text-sub">
               {!isDetailExpanded ? (
-                // 축소 상태
                 <div className="flex items-center gap-2">
                   <span className="text-xs">{formatDate(item.createdAt)}</span>
                   <span className="text-neutral-700 text-[10px]">|</span>
@@ -152,72 +209,47 @@ export default function ItemViewerPage() {
                   </button>
                 </div>
               ) : (
-                // 확장 상태
-                <div className="flex flex-col gap-2 mt-2 bg-bg-nav/50 p-4 rounded-xl animate-in fade-in slide-in-from-top-1 duration-200 border border-border-default">
-                  {/* 생성일 */}
+                <div className="flex flex-col gap-3 mt-3 bg-neutral-800/40 p-5 rounded-2xl animate-in fade-in zoom-in-95 duration-200 border border-text-main/10 shadow-sm">
                   {item.createdAt && (
-                    <div className="flex gap-3">
-                      <span className="min-w-[50px] text-text-sub text-xs">
-                        생성일
-                      </span>
-                      <span className="text-text-main text-xs">
-                        {format(new Date(item.createdAt), 'yyyy년 MM월 dd일')}
-                      </span>
-                    </div>
+                    <InfoRow
+                      label="생성일"
+                      value={format(
+                        new Date(item.createdAt),
+                        'yyyy년 MM월 dd일',
+                      )}
+                    />
                   )}
-
-                  {/* 수정일 */}
                   {item.updatedAt && (
-                    <div className="flex gap-3">
-                      <span className="min-w-[50px] text-text-sub text-xs">
-                        수정일
-                      </span>
-                      <span className="text-text-main text-xs">
-                        {format(new Date(item.updatedAt), 'yyyy년 MM월 dd일')}
-                      </span>
-                    </div>
+                    <InfoRow
+                      label="수정일"
+                      value={format(
+                        new Date(item.updatedAt),
+                        'yyyy년 MM월 dd일',
+                      )}
+                    />
                   )}
-
-                  {/* 마감일 */}
                   {item.deadline && (
-                    <div className="flex gap-3">
-                      <span className="min-w-[50px] text-text-sub text-xs">
-                        마감일
-                      </span>
-                      <span className="text-text-main text-xs">
-                        {format(new Date(item.deadline), 'yyyy년 MM월 dd일')}
-                      </span>
-                    </div>
+                    <InfoRow
+                      label="마감일"
+                      value={format(
+                        new Date(item.deadline),
+                        'yyyy년 MM월 dd일',
+                      )}
+                    />
                   )}
-
-                  {/* URL */}
                   {item.url && (
-                    <div className="flex gap-3">
-                      <span className="min-w-[50px] text-text-sub text-xs">
-                        URL
-                      </span>
-                      <span className="text-text-main text-xs truncate break-all line-clamp-1">
-                        {item.url}
-                      </span>
-                    </div>
+                    <InfoRow label="URL" value={item.url} truncate />
                   )}
+                  <InfoRow label="위치" value={folderPathDisplay} />
 
-                  {/* 위치 */}
-                  <div className="flex gap-3">
-                    <span className="min-w-[50px] text-text-sub text-xs">
-                      위치
-                    </span>
-                    <span className="text-text-main text-xs">
-                      {folderPathDisplay}
-                    </span>
+                  <div className="flex justify-end mt-1">
+                    <button
+                      className="text-[11px] underline text-text-disabled hover:text-text-sub transition-colors py-1 px-1"
+                      onClick={() => setIsDetailExpanded(false)}
+                    >
+                      줄이기
+                    </button>
                   </div>
-
-                  <button
-                    className="text-xs underline self-end mt-1 text-text-sub"
-                    onClick={() => setIsDetailExpanded(false)}
-                  >
-                    줄이기
-                  </button>
                 </div>
               )}
             </div>
@@ -243,15 +275,15 @@ export default function ItemViewerPage() {
               label="연결"
               onClick={() => setIsSheetOpen(true)}
             />
+
             <ActionItem icon={Share2} label="공유" onClick={handleShare} />
           </div>
 
           <hr className="border-border-default" />
 
+          {/* 메모 */}
           <div className="text-base leading-relaxed whitespace-pre-wrap pb-10 min-h-[100px]">
-            {item.memo ? (
-              item.memo
-            ) : (
+            {item.memo || (
               <span className="text-text-sub opacity-50">
                 메모 내용이 없어요.
               </span>
@@ -262,54 +294,27 @@ export default function ItemViewerPage() {
 
       {/* 바텀 시트 */}
       <BottomSheet
-        title="연결된 링크"
-        count={connectedItems ? `${connectedItems.length}개` : '0개'}
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        onConnectById={handleConnect}
-      >
-        {isLoadingConnectedItems ? (
-          <div className="py-10 text-center text-text-sub flex flex-col items-center gap-2">
-            <LoadingSpinner size="md" color="text-text-sub" />
-          </div>
-        ) : connectedItems && connectedItems.length > 0 ? (
-          <div className="flex flex-col gap-3 pb-6">
-            {connectedItems.map((cItem) => (
-              <div
-                key={cItem.itemId}
-                className="flex items-center gap-3 p-3 rounded-xl bg-bg-nav border border-border-default active:bg-neutral-700 transition-colors cursor-pointer group"
-                onClick={() => {
-                  setIsSheetOpen(false);
-                  navigate(`/view/${cItem.itemId}`);
-                }}
-              >
-                <div className="w-10 h-10 rounded-lg bg-bg-card flex items-center justify-center shrink-0">
-                  <LinkIcon size={18} className="text-text-sub" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium text-text-main truncate">
-                    {cItem.title || '제목 없음'}
-                  </div>
-                  <div className="text-xs text-text-sub truncate">
-                    {cItem.url || 'URL 없음'}
-                  </div>
-                </div>
-                <button
-                  onClick={(e) => handleDisconnect(cItem.itemId, e)}
-                  className="p-2 rounded-full hover:bg-neutral-600 text-text-sub hover:text-error-500 transition-colors"
-                >
-                  <Unlink size={16} />
-                </button>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="h-full flex flex-col items-center justify-center text-text-sub gap-2 py-10">
-            <LinkIcon size={40} className="opacity-20 mb-2" />
-            <p className="text-sm">연결된 링크가 없어요.</p>
-          </div>
-        )}
-      </BottomSheet>
+        items={connectedItems}
+        isLoading={isLoadingConnections}
+        onConnect={handleConnect}
+        onDisconnect={handleDisconnect}
+      />
+
+      <ActionSheet
+        isOpen={Boolean(menuAnchor)}
+        onClose={() => setMenuAnchor(null)}
+        sections={actionSheetSections}
+        anchorEl={menuAnchor}
+      />
+
+      <FolderPicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={handleFolderSelect}
+        title="이동할 폴더 선택"
+      />
 
       <Snackbar
         isVisible={snackbar.isVisible}
@@ -338,5 +343,18 @@ function ActionItem({
       </div>
       <span className="text-xs font-medium">{label}</span>
     </button>
+  );
+}
+
+function InfoRow({ label, value, truncate }) {
+  return (
+    <div className="flex gap-3">
+      <span className="min-w-[50px] text-text-sub text-xs">{label}</span>
+      <span
+        className={`text-text-main text-xs ${truncate ? 'truncate break-all line-clamp-1' : ''}`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }

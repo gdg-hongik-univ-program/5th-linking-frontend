@@ -1,18 +1,20 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
-import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import SearchBar from '../components/common/SearchBar';
-import QuickActionBar from '../components/common/QuickActionBar';
 import ListView from '../components/common/ListView';
-import SwipeActionButton from '../components/common/SwipeActionButton';
+import QuickActionBar from '../components/common/QuickActionBar';
 import Snackbar from '../components/common/Snackbar';
+import SwipeActionButton from '../components/common/SwipeActionButton';
+import TabHeader from '../components/common/TabHeader';
 
 export default function HomePage() {
-  const scrollRef = useRef(null);
   const navigate = useNavigate();
+
+  const scrollRef = useRef(null);
+
   const [search, setSearch] = useState('');
 
   const {
@@ -26,18 +28,6 @@ export default function HomePage() {
     handleGoToView,
     handleGoToEdit,
   } = useItems('recent');
-
-  const handleScroll = () => {
-    if (openedItemId) setOpenedItemId(null);
-  };
-
-  const filteredItems = useMemo(() => {
-    if (!search) return items;
-    return items.filter((item) => {
-      const title = item.itemName || item.title || '';
-      return title.toLowerCase().includes(search.toLowerCase());
-    });
-  }, [items, search]);
 
   const renderListHeader = (
     <div className="px-6 pb-1 flex flex-col">
@@ -68,15 +58,25 @@ export default function HomePage() {
         <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
           <SearchBar
             value={search}
+            placeholder="내 모든 링크 통합 검색"
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex-1 min-h-0">
           <ListView
-            data={filteredItems}
+            data={items}
             isLoading={isLoading}
             searchQuery={search}
             ListHeaderComponent={renderListHeader}
+            ListFooterComponent={
+              isLoading ? null : (
+                <div className="px-6 py-2 flex items-center justify-center text-center min-h-[8vh]">
+                  <p className="text-xs text-text-sub">
+                    최근 생성한 링크는 8개까지만 보여요.
+                  </p>
+                </div>
+              )
+            }
             openedId={openedItemId}
             setOpenedId={setOpenedItemId}
             scrollParentRef={scrollRef}

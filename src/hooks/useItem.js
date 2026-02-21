@@ -10,9 +10,12 @@ import {
   disconnectItem,
 } from '../api/itemApi';
 import { useItemCommon } from './useItemCommon';
+import { useModalStore } from '../store/useModalStore';
 
 export const useItem = (itemId) => {
   const navigate = useNavigate();
+
+  const { openAlert, openConfirm } = useModalStore();
 
   const {
     handleMove: commonMove,
@@ -94,19 +97,25 @@ export const useItem = (itemId) => {
   }, [itemId]);
 
   // 아이템 생성
-  const handleCreate = async (payload) => {
+  const handleCreate = async (payload, options = { showError: true }) => {
     try {
       const newItem = await createItem(payload);
-      navigate(`/view/${newItem.itemId}`);
+      navigate(`/view/${newItem.itemId}`, { replace: true });
       return { success: true, item: newItem };
     } catch (error) {
-      alert('링크를 생성하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 생성 실패',
+          message: '링크를 생성하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
 
   // 아이템 수정
-  const handleUpdate = async (payload) => {
+  const handleUpdate = async (payload, options = { showError: true }) => {
     if (!itemId) return;
 
     try {
@@ -116,36 +125,55 @@ export const useItem = (itemId) => {
       });
 
       setItem((prev) => ({ ...prev, ...updatedData }));
-      navigate(`/view/${itemId}`);
+      navigate(`/view/${itemId}`, { replace: true });
 
       return { success: true, item: updatedData };
     } catch (error) {
       console.error('아이템 수정 실패:', error);
-      alert('링크를 수정하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 수정 실패',
+          message: '링크를 수정하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
 
   // 아이템 중요도 토글
-  const handleToggleImportance = async () => {
+  const handleToggleImportance = async (options = { showError: true }) => {
     if (!item) return;
     try {
       const newImportance = !item.importance;
       await updateItemImportance(item.itemId, newImportance);
       setItem((prev) => ({ ...prev, importance: newImportance }));
     } catch (error) {
-      alert('링크의 중요도를 변경하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 중요도 변경 실패',
+          message:
+            '링크의 중요도를 변경하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
     }
   };
 
   // 아이템 이동
-  const handleMove = async (targetFolderId) => {
+  const handleMove = async (targetFolderId, options = { showError: true }) => {
     const result = await commonMove(itemId, targetFolderId);
     if (result.success) {
       setItem((prev) => ({ ...prev, folderId: targetFolderId }));
       return { success: true };
     } else {
-      alert('링크를 옮기는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 이동 실패',
+          message: '링크를 이동하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false };
     }
   };
@@ -176,18 +204,28 @@ export const useItem = (itemId) => {
   };
 
   // 아이템 실제 삭제
-  const executeActualDelete = useCallback(async () => {
-    if (!pendingDeleteRef.current) return;
+  const executeActualDelete = useCallback(
+    async (options = { showError: true }) => {
+      if (!pendingDeleteRef.current) return;
 
-    const result = await commonDelete(itemId);
+      const result = await commonDelete(itemId);
 
-    if (result.success) {
-      navigate(-1);
-    } else {
-      alert('링크를 삭제하는 데에 실패했어요.');
-      clearDeleteState();
-    }
-  }, [itemId, commonDelete, navigate]);
+      if (result.success) {
+        navigate(-1);
+      } else {
+        if (options.showError) {
+          openAlert({
+            title: '링크 삭제 실패',
+            message:
+              '링크를 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+            isDanger: true,
+          });
+        }
+        clearDeleteState();
+      }
+    },
+    [itemId, commonDelete, navigate, openAlert],
+  );
 
   // 아이템 삭제 취소
   const handleUndo = () => {
@@ -198,17 +236,34 @@ export const useItem = (itemId) => {
   };
 
   // 아이템 복원
-  const handleRestore = async () => {
+  const handleRestore = async (options = { showError: true }) => {
     const result = await commonRestore(itemId);
     if (result.success) navigate('/home');
-    else alert('링크를 복원하는 데에 실패했어요.');
+    else {
+      if (options.showError) {
+        openAlert({
+          title: '링크 복원 실패',
+          message: '링크를 복원하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
+    }
   };
 
   // 아이템 영구 삭제
-  const handleDeletePermanently = async () => {
+  const handleDeletePermanently = async (options = { showError: true }) => {
     const result = await commonDeletePermanently(itemId);
     if (result.success) navigate('/trash');
-    else alert('링크클 영구적으로 삭제하는 데에 실패했어요');
+    else {
+      if (options.showError) {
+        openAlert({
+          title: '링크 영구 삭제 실패',
+          message:
+            '링크를 영구 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
+    }
   };
 
   // 아이템 에디터로 페이지 이동
@@ -226,39 +281,80 @@ export const useItem = (itemId) => {
   // 아이템 공유
   const handleShare = () => {
     if (!item) return;
+
+    if (!item.url || item.url.trim() === '') {
+      return;
+    }
+
     if (navigator.share) {
       navigator.share({ title: item.title, url: item.url });
     } else {
       navigator.clipboard.writeText(item.url);
-      alert('링크의 URL이 복사되었어요.');
+      showSnackbar('원본의 URL이 복사되었어요.');
     }
   };
 
   // 아이템 연결
-  const handleConnect = async (targetLinkItemId) => {
+  const handleConnect = async (targetItem, options = { showError: true }) => {
     try {
-      await connectItem(itemId, targetLinkItemId);
+      const linkItemId = Number(
+        typeof targetItem === 'object' ? targetItem.itemId : targetItem,
+      );
+      const currentItemId = Number(itemId);
+
+      await connectItem(currentItemId, linkItemId);
+
       await fetchConnectedItems();
       return { success: true };
     } catch (error) {
-      alert('이 링크를 연결하는 데에 실패했어요.');
+      if (options.showError) {
+        openAlert({
+          title: '링크 연결 실패',
+          message: '링크를 연결하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+          isDanger: true,
+        });
+      }
       return { success: false, error };
     }
   };
 
   // 아이템 연결 해제
-  const handleDisconnect = async (targetId, e) => {
+  const handleDisconnect = async (
+    targetItem,
+    e,
+    options = { showError: true },
+  ) => {
     if (e) e.stopPropagation();
-    if (!window.confirm('이 링크와의 연결을 해제할까요?')) return;
 
-    try {
-      await disconnectItem(itemId, targetId);
-      setConnectedItems((prev) => prev.filter((i) => i.itemId !== targetId));
-      return { success: true };
-    } catch (error) {
-      alert('이 링크를 연결 해제하는 데에 실패했어요.');
-      return { success: false };
-    }
+    const linkItemId = Number(
+      typeof targetItem === 'object' ? targetItem.itemId : targetItem,
+    );
+    const currentItemId = Number(itemId);
+
+    openConfirm({
+      title: '링크 연결 해제',
+      message: '이 링크와의 연결을 해제할까요?',
+      confirmText: '해제',
+      isDanger: true,
+      onConfirm: async () => {
+        try {
+          await disconnectItem(currentItemId, linkItemId);
+
+          setConnectedItems((prev) =>
+            prev.filter((i) => i.itemId !== linkItemId),
+          );
+        } catch (error) {
+          if (options.showError) {
+            openAlert({
+              title: '링크 연결 해제 실패',
+              message:
+                '링크 연결을 해제하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+              isDanger: true,
+            });
+          }
+        }
+      },
+    });
   };
 
   return {

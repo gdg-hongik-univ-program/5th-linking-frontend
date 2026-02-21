@@ -1,6 +1,8 @@
 import {
-  CircleX,
+  X,
   FolderInput,
+  RotateCcw,
+  ArchiveRestore,
   Trash2,
   CheckSquare,
   Square,
@@ -11,24 +13,43 @@ export default function SelectionHeader({
   selectedCount = 0,
   isAllSelected = false,
   onClose,
-  onMove,
-  onDelete,
   onToggleAll,
+  onMove,
+  onExtend,
+  onDelete,
+  mode = 'default',
 }) {
   const toggleLabel = isAllSelected ? '전체 선택 해제' : '전체 선택';
   const isActionDisabled = selectedCount === 0;
-
   const disabledClass =
     'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-inherit';
 
+  const deleteLabel = mode === 'trash' ? '영구 삭제' : '삭제';
+
+  let ActionIcon = null;
+  let actionLabel = '';
+  let onActionClick = undefined;
+
+  if (mode === 'storage') {
+    ActionIcon = FolderInput;
+    actionLabel = '선택 항목 이동';
+    onActionClick = onMove;
+  } else if (mode === 'stale') {
+    ActionIcon = ArchiveRestore;
+    actionLabel = '선택 항목 보관';
+    onActionClick = onExtend;
+  } else if (mode === 'trash') {
+    ActionIcon = RotateCcw;
+    actionLabel = '선택 항목 복원';
+    onActionClick = onMove;
+  }
   return (
     <div className="pb-1 border-neutral-800 animate-fade-in-down">
-      {/* 상단 */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center">
-        {/* 선택 모드 종료 버튼 */}
+        {/* 닫기 버튼 */}
         <div className="justify-self-start">
           <IconButton
-            icon={CircleX}
+            icon={X}
             onClick={onClose}
             aria-label="선택 모드 종료"
             size={18}
@@ -36,25 +57,30 @@ export default function SelectionHeader({
           />
         </div>
 
-        {/* 선택된 개수 */}
+        {/* 선택 개수 */}
         <span className="justify-self-center text-text-main font-medium text-sm">
           {selectedCount}개 선택됨
         </span>
 
-        {/* 액션 버튼 모음 */}
-        <div className="justify-self-end flex items-center">
-          <IconButton
-            icon={FolderInput}
-            onClick={isActionDisabled ? undefined : onMove}
-            aria-label="선택 항목 이동"
-            size={18}
-            disabled={isActionDisabled}
-            className={isActionDisabled ? disabledClass : undefined}
-          />
+        {/* 액션 버튼 영역 */}
+        <div className="justify-self-end flex items-center gap-1">
+          {/* 이동/보관/복원 버튼 */}
+          {ActionIcon && (
+            <IconButton
+              icon={ActionIcon}
+              onClick={isActionDisabled ? undefined : onActionClick}
+              aria-label={actionLabel}
+              size={18}
+              disabled={isActionDisabled}
+              className={isActionDisabled ? disabledClass : undefined}
+            />
+          )}
+
+          {/* 삭제 버튼 */}
           <IconButton
             icon={Trash2}
             onClick={isActionDisabled ? undefined : onDelete}
-            aria-label="선택 항목 삭제"
+            aria-label={deleteLabel}
             size={18}
             disabled={isActionDisabled}
             className={
@@ -66,7 +92,7 @@ export default function SelectionHeader({
         </div>
       </div>
 
-      {/* 하단 */}
+      {/* 전체 선택 토글 */}
       <div className="mt-1 flex justify-center">
         <button
           type="button"

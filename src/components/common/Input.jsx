@@ -51,14 +51,14 @@ function Input({
   return (
     <div className="flex flex-col gap-1 w-full">
       {label && (
-        <label className="text-sm font-medium text-foreground ml-1">
+        <label className="text-sm font-medium text-text-main ml-1">
           {label}
         </label>
       )}
       <div className="flex gap-2 relative">
         <div className="relative flex-1">
           {leftIcon && (
-            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-text-disabled pointer-events-none">
               {leftIcon}
             </div>
           )}
@@ -70,23 +70,24 @@ function Input({
             placeholder={placeholder}
             className={`
               w-full py-3 rounded-xl transition-all
-              bg-bg-card text-text-main placeholder:text-text-disabled
-              border-2 border-border-default
-              focus:outline-none focus:border-primary-500
-              focus:shadow-[0_0_12px_rgba(234,190,47,0.25)]
+              bg-neutral-800 text-text-main placeholder:text-text-disabled
+              border border-text-main/5
+              focus:outline-none focus:ring-1 focus:ring-primary-500
               ${leftIcon ? 'pl-11' : 'px-4'}
               ${onClear && value ? 'pr-11' : 'pr-4'}
             `}
             {...props}
           />
-          {/* 삭제 버튼: 값과 onClear 함수가 있을 때만 렌더링 */}
           {value && onClear && (
             <button
               type="button"
+              tabIndex={-1}
+              onMouseDown={(e) => e.preventDefault()}
               onClick={onClear}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-text-disabled hover:text-text-main transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-text-main transition-colors p-1 rounded-full"
+              aria-label="입력값 지우기"
             >
-              <CircleX className="w-5 h-5" />
+              <CircleX size={18} />
             </button>
           )}
         </div>

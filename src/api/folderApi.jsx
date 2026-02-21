@@ -24,10 +24,10 @@ export const updateFolder = async (folderId, folderName) => {
 };
 
 // 4. 폴더 다수 이동
-export const moveFolders = async (folderIds, targetParentId) => {
+export const moveFolders = async (folderIds, parentId) => {
   const response = await axiosInstance.patch('/folder/move', {
     folderIds,
-    targetParentId,
+    parentId,
   });
   return response.data;
 };
@@ -51,7 +51,9 @@ export const restoreFolders = async (folderIds) => {
 // 7. 폴더 다수 영구 삭제
 export const deleteFoldersPermanently = async (folderIds) => {
   const response = await axiosInstance.delete('/folder/trash', {
-    data: { folderIds },
+    data: {
+      folderIds: folderIds,
+    },
   });
   return response.data;
 };

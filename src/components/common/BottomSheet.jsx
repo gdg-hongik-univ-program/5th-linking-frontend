@@ -1,143 +1,273 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import { useNavigate } from 'react-router-dom';
+import { Virtuoso } from 'react-virtuoso';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus } from 'lucide-react';
+import { CircleX, Search, Plus, MoreHorizontal, Unlink } from 'lucide-react';
+import ActionSheet from './ActionSheet';
+import IconButton from '../common/IconButton';
+import ItemPicker from './ItemPicker';
+import LoadingSpinner from './LoadingSpinner';
+import { sortData } from '../../utils/sortData';
+import { buildMenu } from '../../utils/buildMenu';
 
-const BottomSheet = ({
-  title = '연결된 아이템',
-  children,
-  isOpen,
-  onClose,
-  onConnectById,
-}) => {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [directId, setDirectId] = useState('');
-
-  // 연결 버튼 클릭 시 기본 높이로 초기화
-  useEffect(() => {
-    if (isOpen) {
-      setIsExpanded(false);
-    } else {
-      setDirectId('');
-    }
-  }, [isOpen]);
-
-  const springTransition = {
-    type: 'spring',
-    stiffness: 300,
-    damping: 30,
-  };
-
-  const onDragEnd = (event, info) => {
-    const offset = info.offset.y;
-    const velocity = info.velocity.y;
-    // 위로 드래그 시 확장
-    if (offset < -50 || velocity < -300) {
-      setIsExpanded(true);
-    }
-    // 아래로 드래그 시 축소 또는 닫기
-    else if (offset > 50 || velocity > 300) {
-      // 확장 상태에서 아래로 드래그 시 축소
-      if (isExpanded) {
-        setIsExpanded(false);
-      }
-      // 축소 상태에서 아래로 드래그 시 닫기
-      else {
-        onClose();
-      }
-    }
-  };
-
-  const handleDirectConnect = () => {
-    if (directId.trim() && onConnectById) {
-      onConnectById(directId);
-      setDirectId('');
-    }
-  };
-
+// 연결된 아이템 리스트
+const ListItem = ({ item, onRemove, onClick }) => {
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* 배경 오버레이 */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 z-40"
-            onClick={onClose}
-          />
+    <div className="flex items-center justify-between px-8 hover:bg-neutral-800/30 active:bg-neutral-800 transition-colors group">
+      <div
+        onClick={onClick}
+        className="flex-1 min-w-0 pr-3 py-3 cursor-pointer"
+      >
+        <span className="text-sm text-text-main truncate select-none block">
+          {item.title || '제목 없음'}
+        </span>
+      </div>
 
-          {/* 바텀 시트 */}
-          <motion.div
-            className="absolute left-0 right-0 bottom-0 z-50 bg-bg-nav rounded-t-[2rem] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] flex flex-col border-t border-border-default overflow-hidden font-family-sans"
-            initial={{ y: '100%' }}
-            animate={{
-              y: 0,
-              height: isExpanded ? '90%' : '60%',
-            }}
-            exit={{ y: '100%' }}
-            transition={springTransition}
-            drag="y"
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={0.2}
-            dragMomentum={false}
-            onDragEnd={onDragEnd}
-          >
-            {/* 핸들바 및 헤더 영역 */}
-            <div
-              className="w-full flex flex-col items-center pt-3 pb-2 cursor-grab active:cursor-grabbing shrink-0 bg-bg-nav z-10"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
-              <div className="w-12 h-1 bg-neutral-600 rounded-full mb-3" />
-              <div className="w-full flex justify-center items-center pb-2">
-                <span className="text-base font-semibold text-text-main tracking-tight">
-                  {title}
-                </span>
-              </div>
-            </div>
-
-            {/* (임시) ID 연결 영역 */}
-            {onConnectById && (
-              <div className="px-4 pb-4 shrink-0 bg-bg-nav pt-2">
-                <div className="flex items-center gap-2 bg-neutral-800 p-1.5 rounded-xl border border-border-default">
-                  <input
-                    type="number"
-                    placeholder="ID로 직접 연결"
-                    value={directId}
-                    onChange={(e) => setDirectId(e.target.value)}
-                    className="flex-1 bg-transparent px-3 py-2 text-sm text-text-main placeholder:text-text-sub focus:outline-none"
-                    onPointerDown={(e) => e.stopPropagation()}
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDirectConnect();
-                    }}
-                    disabled={!directId}
-                    className="p-2 bg-primary-500 text-text-main rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    <Plus
-                      size={18}
-                      strokeWidth={3}
-                      className="text-neutral-900"
-                    />{' '}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* 연결된 아이템 목록 영역 */}
-            <div
-              className="flex-1 overflow-y-auto px-2 pb-6 scrollbar-hide bg-bg-nav"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              {children}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRemove(item, e);
+        }}
+        className="p-2 text-text-sub hover:text-error-500 hover:bg-error-500/10 rounded-full transition-colors shrink-0 z-10"
+        aria-label="연결 해제"
+      >
+        <Unlink size={18} />
+      </button>
+    </div>
   );
 };
 
-export default BottomSheet;
+export default function BottomSheet({
+  isOpen,
+  onClose,
+  items = [],
+  isLoading = false,
+  onConnect,
+  onDisconnect,
+}) {
+  const navigate = useNavigate();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [localSearch, setLocalSearch] = useState('');
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+
+  const [menuAnchor, setMenuAnchor] = useState(null);
+  const [sortOption, setSortOption] = useState({ type: 'name', order: 'asc' });
+
+  // 배경 클릭 방지
+  useEffect(() => {
+    if (isOpen && !isPickerOpen) {
+      const root = document.getElementById('root');
+      if (root) root.setAttribute('inert', 'true');
+    } else if (!isOpen) {
+      const root = document.getElementById('root');
+      if (root) root.removeAttribute('inert');
+    }
+  }, [isOpen, isPickerOpen]);
+
+  const handleContentPointerDown = (e) => {
+    if (menuAnchor) setMenuAnchor(null);
+    e.stopPropagation();
+  };
+
+  const handleHeaderPointerDown = (e) => {
+    if (menuAnchor) {
+      setMenuAnchor(null);
+      e.stopPropagation();
+    }
+  };
+
+  const processedItems = useMemo(() => {
+    let result = items;
+    if (localSearch.trim()) {
+      result = result.filter((item) =>
+        (item.title || '').toLowerCase().includes(localSearch.toLowerCase()),
+      );
+    }
+    return sortData(result, sortOption.type, sortOption.order);
+  }, [items, localSearch, sortOption]);
+
+  const actionSheetSections = useMemo(() => {
+    return buildMenu({
+      actions: [],
+      sortOption,
+      setSortOption,
+      sortKeys: ['name'],
+      filterKeys: [],
+    });
+  }, [sortOption]);
+
+  const handlePickerSelect = (selectedItem) => {
+    onConnect(selectedItem);
+  };
+
+  const handleItemClick = (itemId) => {
+    if (confirm?.isOpen) return;
+    onClose();
+    navigate(`/view/${itemId}`);
+  };
+
+  if (typeof window === 'undefined') return null;
+
+  return createPortal(
+    <>
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* 백드롭 */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[1000]"
+              onClick={onClose}
+            />
+
+            {/* 바텀 시트 */}
+            <motion.div
+              className="fixed left-1/2 bottom-0 z-[1010] bg-bg-main rounded-t-[2rem] shadow-lg flex flex-col border-t border-text-main/10 overflow-hidden w-full max-w-[390px]"
+              style={{ x: '-50%' }}
+              initial={{ y: '100%', x: '-50%' }}
+              animate={{ y: 0, x: '-50%', height: isExpanded ? '90%' : '60%' }}
+              exit={{ y: '100%', x: '-50%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              onDragEnd={(e, info) => {
+                if (info.offset.y > 100) onClose();
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* 핸들바 */}
+              <div
+                className="w-full flex justify-center pt-3 pb-2 cursor-grab bg-bg-main shrink-0"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                <div className="w-12 h-1.5 bg-neutral-700 rounded-full" />
+              </div>
+
+              {/* 헤더 */}
+              <div
+                className="px-5 pb-4 bg-bg-main flex flex-col gap-4 shrink-0"
+                onPointerDown={handleHeaderPointerDown}
+              >
+                <div className="relative flex items-center justify-center py-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold text-text-main">
+                      연결된 링크
+                    </span>
+                    <span className="text-xs font-bold text-primary-500 mt-1">
+                      {items.length}개
+                    </span>
+                  </div>
+
+                  <IconButton
+                    icon={MoreHorizontal}
+                    size={20}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuAnchor(e.currentTarget);
+                    }}
+                    className="absolute right-0 top-1/2 -translate-y-1/2"
+                    aria-label="더보기"
+                  />
+                </div>
+
+                <div className="flex gap-2 items-center">
+                  <div className="relative flex-1">
+                    <Search
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-text-disabled"
+                      size={16}
+                    />
+                    <input
+                      type="text"
+                      placeholder="연결된 링크 검색"
+                      value={localSearch}
+                      onChange={(e) => setLocalSearch(e.target.value)}
+                      className="w-full bg-neutral-800 border border-text-main/5 rounded-xl py-2.5 pl-10 pr-10 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:border-primary-500"
+                      onPointerDown={handleContentPointerDown}
+                    />
+                    {localSearch && (
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => setLocalSearch('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-text-main transition-colors p-1 rounded-full"
+                        aria-label="검색어 지우기"
+                      >
+                        <CircleX size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsPickerOpen(true);
+                    }}
+                    className="w-[42px] h-[42px] flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white rounded-xl transition-colors shrink-0"
+                  >
+                    <Plus size={20} strokeWidth={3} />
+                  </button>
+                </div>
+              </div>
+
+              {/* 아이템 리스트 */}
+              <div
+                className="flex-1 min-h-0 bg-bg-main pb-8"
+                onPointerDown={handleContentPointerDown}
+              >
+                {isLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <LoadingSpinner />
+                  </div>
+                ) : processedItems.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-text-disabled gap-2 opacity-60">
+                    <span className="text-sm">
+                      {localSearch
+                        ? '검색 결과가 없어요.'
+                        : '연결된 링크가 없습니다.'}
+                    </span>
+                  </div>
+                ) : (
+                  <Virtuoso
+                    style={{ height: '100%' }}
+                    data={processedItems}
+                    className="scrollbar-hide"
+                    itemContent={(index, item) => (
+                      <ListItem
+                        key={item.itemId || item.id}
+                        item={item}
+                        onRemove={onDisconnect}
+                        onClick={() => handleItemClick(item.itemId || item.id)}
+                      />
+                    )}
+                  />
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      <ItemPicker
+        isOpen={isPickerOpen}
+        onClose={() => setIsPickerOpen(false)}
+        onSelect={handlePickerSelect}
+        title="연결할 링크 선택"
+      />
+
+      <div className="relative z-[1100]">
+        <ActionSheet
+          isOpen={Boolean(menuAnchor)}
+          onClose={() => setMenuAnchor(null)}
+          sections={actionSheetSections}
+          anchorEl={menuAnchor}
+        />
+      </div>
+    </>,
+    document.body,
+  );
+}

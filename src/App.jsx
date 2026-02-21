@@ -5,6 +5,7 @@ import LoadingOverlay from './components/common/LoadingOverlay';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import axiosInstance from './api/axiosInstance';
 import { useAuthStore } from './store/useAuthStore';
+import GlobalModal from './components/common/GlobalModal';
 
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const SignupPage = React.lazy(() => import('./pages/SignupPage'));
@@ -94,6 +95,7 @@ export default function App() {
             />
           </Routes>
         </Suspense>
+        <GlobalModal />
       </div>
     </div>
   );

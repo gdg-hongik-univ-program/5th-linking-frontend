@@ -42,9 +42,9 @@ export const updateItemImportance = async (itemId, importance) => {
 };
 
 // 6. 아이템 다수 이동
-export const moveItems = async (itemId, folderId) => {
+export const moveItems = async (itemIds, folderId) => {
   const response = await axiosInstance.patch('/item/move', {
-    itemId,
+    itemIds,
     folderId,
   });
   return response.data;
@@ -72,7 +72,7 @@ export const deleteItemsPermanently = async (itemIds) => {
   return response.data;
 };
 
-// 10. 휴지통 전체 비우기
+// 10. 아이템 휴지통 비우기
 export const emptyTrash = async () => {
   const response = await axiosInstance.delete('/item/trash/all');
   return response.data;

@@ -14,7 +14,14 @@ export default function Snackbar({ isVisible, message, onUndo }) {
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="fixed bottom-24 left-1/2 z-[9999] w-[90%] max-w-[350px]"
         >
-          <div className="bg-neutral-800 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center justify-between border border-neutral-700">
+          <div className="bg-bg-nav text-text-main px-4 py-3 rounded-2xl shadow-lg flex items-center justify-between border border-text-main/10 relative overflow-hidden">
+            <motion.div
+              initial={{ width: '100%' }}
+              animate={{ width: '0%' }}
+              transition={{ duration: 3, ease: 'linear' }}
+              className="absolute top-0 left-0 h-[3px] bg-primary-500"
+            />
+
             <span className="text-sm font-medium">{message}</span>
             <button
               onClick={onUndo}

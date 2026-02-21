@@ -1,9 +1,19 @@
-import { CaseSensitive, Calendar, Hourglass, Star } from 'lucide-react';
+import {
+  CaseSensitive,
+  Calendar,
+  Hourglass,
+  Star,
+  CalendarX,
+  Ghost,
+} from 'lucide-react';
 
 const getSortBadge = (type, order) => {
   if (type === 'name') return order === 'asc' ? '가나다 순' : '하파타 순';
-  if (type === 'createdAt') return order === 'desc' ? '최신 순' : '오래된 순';
+  if (type === 'createdAt') return order === 'desc' ? '최근 순' : '오래된 순';
   if (type === 'dDay') return order === 'asc' ? '임박한 순' : '여유로운 순';
+  if (type === 'deletedAt') return order === 'desc' ? '최근 순' : '오래된 순';
+  if (type === 'updatedAt') return order === 'asc' ? '오래된 순' : '최근 순';
+
   return '';
 };
 
@@ -94,6 +104,48 @@ export const buildMenu = ({
       });
     }
 
+    // 삭제일 기준 정렬
+    if (sortKeys.includes('deletedAt')) {
+      sortItems.push({
+        id: 'deletedAt',
+        label: '삭제일',
+        icon: CalendarX,
+        hasCheck: true,
+        isChecked: sortOption.type === 'deletedAt',
+        badge: sortOption.type === 'deletedAt' ? currentBadge : undefined,
+        onClick: () => {
+          setSortOption((prev) => ({
+            type: 'deletedAt',
+            order:
+              prev.type === 'deletedAt' && prev.order === 'desc'
+                ? 'asc'
+                : 'desc',
+          }));
+        },
+      });
+    }
+
+    // 방치된 기간 기준 정렬
+    if (sortKeys.includes('updatedAt')) {
+      sortItems.push({
+        id: 'updatedAt',
+        label: '방치된 기간',
+        icon: Ghost,
+        hasCheck: true,
+        isChecked: sortOption.type === 'updatedAt',
+        badge: sortOption.type === 'updatedAt' ? currentBadge : undefined,
+        onClick: () => {
+          setSortOption((prev) => ({
+            type: 'updatedAt',
+            order:
+              prev.type === 'updatedAt' && prev.order === 'desc'
+                ? 'asc'
+                : 'desc',
+          }));
+        },
+      });
+    }
+
     if (sortItems.length > 0) {
       sections.push({
         header: '정렬',
@@ -114,11 +166,10 @@ export const buildMenu = ({
     if (filterKeys.includes('important')) {
       filterItems.push({
         id: 'important',
-        label: '중요 표시한 링크만',
+        label: '중요 표시만',
         icon: Star,
         hasCheck: true,
         isChecked: !!showImportantOnly,
-        badge: showImportantOnly ? 'ON' : undefined,
         onClick: () => setShowImportantOnly((prev) => !prev),
       });
     }

@@ -5,12 +5,14 @@ import Input from '../components/common/Input';
 import { useAuthStore } from '../store/useAuthStore';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import LoadingOverlay from '../components/common/LoadingOverlay';
+import { useModalStore } from '../store/useModalStore';
 
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { from, isInitialized } = useAuthRedirect();
   const loginSuccess = useAuthStore((state) => state.loginSuccess);
+  const { openAlert } = useModalStore();
 
   const [formData, setFormData] = useState({
     loginId: location.state?.loginId || '',
@@ -29,21 +31,28 @@ function LoginPage() {
     if (e) e.preventDefault();
 
     if (!formData.loginId || !formData.password) {
-      alert('아이디와 비밀번호를 모두 입력해주세요.');
+      openAlert({
+        title: '로그인 실패',
+        message: '아이디와 비밀번호를 모두 입력해주세요.',
+        confirmText: '확인',
+      });
       return;
     }
 
     try {
       const response = await axiosInstance.post('/user/sign-in', formData);
       loginSuccess(response.data);
-
-      alert('로그인에 성공했습니다!');
-      navigate(from, { replace: true });
     } catch (error) {
       console.error('로그인 실패:', error);
       const errorMessage =
-        error.response?.data?.message || '아이디 또는 비밀번호를 확인해주세요.';
-      alert(errorMessage);
+        error.response?.data?.message ||
+        '아이디 또는 비밀번호를 다시 확인해주세요.';
+      openAlert({
+        title: '로그인 실패',
+        message: errorMessage,
+        confirmText: '확인',
+        isDanger: true,
+      });
     }
   };
 

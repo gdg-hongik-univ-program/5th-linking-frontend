@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
+import { useModalStore } from '../store/useModalStore';
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -13,6 +14,7 @@ axiosInstance.interceptors.response.use(
   (error) => {
     const { config, response } = error;
     const { logout, isAuthenticated } = useAuthStore.getState();
+    const { openAlert } = useModalStore.getState();
 
     if (response?.status === 401) {
       if (config.url.includes('/user/me')) {
@@ -25,9 +27,17 @@ axiosInstance.interceptors.response.use(
       }
 
       if (isAuthenticated) {
-        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-        logout();
-        window.location.href = '/login';
+        openAlert({
+          title: '세션 만료',
+          message:
+            '일정 시간 활동이 없어 로그인이 만료되었어요. 로그아웃 한 뒤 다시 로그인 해주세요.',
+          confirmText: '로그아웃',
+          isDanger: true,
+          onConfirm: () => {
+            logout();
+            window.location.href = '/login';
+          },
+        });
       }
     }
 

@@ -19,6 +19,7 @@ import {
 } from 'recharts';
 import IconButton from '../components/common/IconButton';
 import { useAuthStore } from '../store/useAuthStore';
+import { useModalStore } from '../store/useModalStore';
 import axiosInstance from '../api/axiosInstance';
 import TabHeader from '../components/common/TabHeader';
 
@@ -36,8 +37,7 @@ const getTierConfig = (code) =>
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
-  const scrollRef = useRef(null);
+  const { user, logout } = useAuthStore();
 
   const [profile, setProfile] = useState(null);
   const [tagStats, setTagStats] = useState([]);
@@ -154,8 +154,10 @@ export default function ProfilePage() {
     const raw = ((cur - min) / (max - min)) * 100;
     return Math.min(100, Math.max(0, raw));
   }, [profile]);
+  const { openConfirm } = useModalStore();
 
-  const handleLogout = async () => {
+  // 실제 로그아웃
+  const executeLogout = async () => {
     try {
       await axiosInstance.post('/user/sign-out');
     } catch (err) {
@@ -188,6 +190,18 @@ export default function ProfilePage() {
       }, 1200);
     }
   }, []);
+
+  // 로그아웃
+  const handleLogoutClick = () => {
+    openConfirm({
+      title: '로그아웃',
+      message: '정말 로그아웃하시겠어요?',
+      confirmText: '로그아웃',
+      cancelText: '취소',
+      isDanger: true,
+      onConfirm: executeLogout,
+    });
+  };
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-y-auto scrollbar-hide">
