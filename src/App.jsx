@@ -1,11 +1,11 @@
 import React, { Suspense, useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
-import Layout from './components/layout/Layout';
-import LoadingOverlay from './components/common/LoadingOverlay';
-import ProtectedRoute from './components/auth/ProtectedRoute';
 import axiosInstance from './api/axiosInstance';
 import { useAuthStore } from './store/useAuthStore';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import GlobalModal from './components/common/GlobalModal';
+import LoadingOverlay from './components/common/LoadingOverlay';
+import Layout from './components/layout/Layout';
 
 const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const SignupPage = React.lazy(() => import('./pages/SignupPage'));
@@ -13,6 +13,7 @@ const HomePage = React.lazy(() => import('./pages/HomePage'));
 const SchedulePage = React.lazy(() => import('./pages/SchedulePage'));
 const StoragePage = React.lazy(() => import('./pages/StoragePage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const SearchPage = React.lazy(() => import('./pages/SearchPage'));
 const UpcomingItemsPage = React.lazy(() => import('./pages/UpcomingItemsPage'));
 const ImportantItemsPage = React.lazy(
   () => import('./pages/ImportantItemsPage'),
@@ -58,6 +59,7 @@ export default function App() {
                       path="/notification"
                       element={<NotificationPage />}
                     />
+
                     <Route path="/create" element={<ItemEditorPage />} />
                     <Route path="/edit/:itemId" element={<ItemEditorPage />} />
                     <Route path="/view/:itemId" element={<ItemViewerPage />} />
@@ -65,6 +67,7 @@ export default function App() {
                     <Route element={<Layout />}>
                       <Route path="/" element={<HomePage />} />
                       <Route path="/home" element={<HomePage />} />
+                      <Route path="/search" element={<SearchPage />} />
                       <Route path="/upcoming" element={<UpcomingItemsPage />} />
                       <Route
                         path="/important"

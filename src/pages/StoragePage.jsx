@@ -418,7 +418,11 @@ export default function StoragePage() {
       >
         <div className="relative w-full shrink-0">
           {folderId ? (
-            <PageHeader title={currentFolderName} onBack={() => navigate(-1)}>
+            <PageHeader
+              title={currentFolderName}
+              onBack={() => navigate(-1)}
+              collapseBottomGap
+            >
               <IconButton
                 icon={MoreHorizontal}
                 onClick={handleOpenMenu}
@@ -427,7 +431,7 @@ export default function StoragePage() {
               />
             </PageHeader>
           ) : (
-            <TabHeader title="저장소">
+            <TabHeader title="저장소" collapseBottomGap>
               <IconButton
                 icon={MoreHorizontal}
                 onClick={handleOpenMenu}
@@ -438,30 +442,28 @@ export default function StoragePage() {
           )}
         </div>
 
-        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
+        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-4">
           <SearchBar
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="현재 위치의 폴더 또는 링크 검색"
-            mb={isSelectionMode ? 'mb-2' : 'mb-0'}
+            mb={isSelectionMode ? 'mb-1' : 'mb-0'}
           />
 
           {isSelectionMode && (
-            <div className="pb-1">
-              <SelectionHeader
-                mode="storage"
-                selectedCount={totalSelectedCount}
-                isAllSelected={isAllSelected}
-                onToggleAll={handleToggleAll}
-                onClose={handleExitSelectionMode}
-                onMove={handleMoveSelected}
-                onDelete={handleDeleteSelected}
-              />
-            </div>
+            <SelectionHeader
+              mode="storage"
+              selectedCount={totalSelectedCount}
+              isAllSelected={isAllSelected}
+              onToggleAll={handleToggleAll}
+              onClose={handleExitSelectionMode}
+              onMove={handleMoveSelected}
+              onDelete={handleDeleteSelected}
+            />
           )}
         </div>
 
-        <div className="flex-1 min-h-0 pt-3">
+        <div className="flex-1 min-h-0">
           <ListView
             data={combinedList}
             isLoading={isLoading}

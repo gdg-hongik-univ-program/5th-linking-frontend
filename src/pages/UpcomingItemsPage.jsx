@@ -131,25 +131,35 @@ export default function UpcomingItemsPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <PageHeader title="임박" onBack={() => navigate(-1)}>
-        <IconButton
-          icon={MoreHorizontal}
-          onClick={(e) => setMenuAnchor(e.currentTarget)}
-          disabled={isSelectionMode}
-          aria-label="더보기"
-        />
-      </PageHeader>
+      <main
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide"
+      >
+        <div className="relative w-full shrink-0">
+          <PageHeader
+            title="임박"
+            iconType="close"
+            onBack={() => navigate(-1)}
+            collapseBottomGap
+          >
+            <IconButton
+              icon={MoreHorizontal}
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
+              disabled={isSelectionMode}
+              aria-label="더보기"
+            />
+          </PageHeader>
+        </div>
 
-      <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
-        <SearchBar
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="마감일까지 7일 이내인 링크 검색"
-          mb={isSelectionMode ? 'mb-2' : 'mb-0'}
-        />
+        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-4">
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="마감일까지 7일 이내인 링크 검색"
+            mb={isSelectionMode ? 'mb-1' : 'mb-0'}
+          />
 
-        {isSelectionMode && (
-          <div className="pb-1">
+          {isSelectionMode && (
             <SelectionHeader
               mode="default"
               selectedCount={totalSelectedCount}
@@ -158,49 +168,46 @@ export default function UpcomingItemsPage() {
               onClose={() => setIsSelectionMode(false)}
               onDelete={handleDeleteSelected}
             />
-          </div>
-        )}
-      </div>
+          )}
+        </div>
 
-      <main
-        ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide pt-3"
-      >
-        <ListView
-          data={sortedItems}
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          openedId={openedSwipeId}
-          setOpenedId={setOpenedSwipeId}
-          scrollParentRef={scrollRef}
-          isSelectionMode={isSelectionMode}
-          selectedIds={selectedIds}
-          onToggleSelection={(id) => handleToggleSelection(id)}
-          onNavigate={(entry) => handleGoToView(entry.itemId)}
-          renderLeftAction={(item, dragX) => (
-            <SwipeActionButton
-              type="edit"
-              x={dragX}
-              direction="left"
-              onClick={() => handleGoToEdit(item.itemId)}
-            />
-          )}
-          renderRightAction={(item, dragX) => (
-            <SwipeActionButton
-              type="delete"
-              x={dragX}
-              direction="right"
-              onClick={async () => {
-                const result = await handleDelete(item);
-                if (result?.success) {
-                  setOpenedSwipeId(null);
-                  refetchAll();
-                }
-              }}
-            />
-          )}
-          emptyText="마감일까지 7일 이내인 링크가 없어요."
-        />
+        <div className="flex-1 min-h-0">
+          <ListView
+            data={sortedItems}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            openedId={openedSwipeId}
+            setOpenedId={setOpenedSwipeId}
+            scrollParentRef={scrollRef}
+            isSelectionMode={isSelectionMode}
+            selectedIds={selectedIds}
+            onToggleSelection={(id) => handleToggleSelection(id)}
+            onNavigate={(entry) => handleGoToView(entry.itemId)}
+            renderLeftAction={(item, dragX) => (
+              <SwipeActionButton
+                type="edit"
+                x={dragX}
+                direction="left"
+                onClick={() => handleGoToEdit(item.itemId)}
+              />
+            )}
+            renderRightAction={(item, dragX) => (
+              <SwipeActionButton
+                type="delete"
+                x={dragX}
+                direction="right"
+                onClick={async () => {
+                  const result = await handleDelete(item);
+                  if (result?.success) {
+                    setOpenedSwipeId(null);
+                    refetchAll();
+                  }
+                }}
+              />
+            )}
+            emptyText="마감일까지 7일 이내인 링크가 없어요."
+          />
+        </div>
       </main>
 
       <Snackbar
