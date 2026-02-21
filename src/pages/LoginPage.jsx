@@ -59,8 +59,8 @@ function LoginPage() {
   if (!isInitialized) return <LoadingOverlay />;
 
   return (
-    <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main">
-      <div className="mb-10 text-center flex flex-col items-center">
+    <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main items-center">
+      <div className="mb-8 text-center flex flex-col items-center w-full max-w-xs">
         <img
           src="/linking.svg"
           alt="main logo"
@@ -68,18 +68,21 @@ function LoginPage() {
           height="80"
           className="block"
         />
-        <h1 className="text-4xl font-bold text-text-primary mb-2 font-logo tracking-tight">
-          LINKING
+        <h1 className="text-4xl font-bold text-text-primary font-['Outfit'] tracking-wide">
+          Linking
         </h1>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4 w-full mx-auto">
+      <form
+        onSubmit={handleLogin}
+        className="space-y-4 w-full max-w-xs mx-auto"
+      >
         <Input
           type="text"
           name="loginId"
           value={formData.loginId}
           onChange={handleChange}
-          placeholder="아이디를 입력해주세요"
+          placeholder="아이디 입력"
           onClear={() => setFormData((prev) => ({ ...prev, loginId: '' }))}
         />
 
@@ -88,19 +91,19 @@ function LoginPage() {
           name="password"
           value={formData.password}
           onChange={handleChange}
-          placeholder="비밀번호를 입력해주세요"
+          placeholder="비밀번호 입력"
           onClear={() => setFormData((prev) => ({ ...prev, password: '' }))}
         />
 
         <button
           type="submit"
-          className="mt-6 w-full bg-primary-500 text-neutral-950 font-bold py-3.5 rounded-full hover:bg-primary-600 transition-colors cursor-pointer"
+          className="mt-6 w-full bg-primary-500 text-bg-main font-bold py-3 rounded-xl hover:bg-primary-500/90 transition-colors cursor-pointer"
         >
           로그인
         </button>
       </form>
 
-      <div className="mt-6 text-center text-sm text-text-sub">
+      <div className="mt-6 text-center text-sm text-text-sub w-full max-w-xs">
         계정이 없으신가요?{' '}
         <Link
           to="/signup"
