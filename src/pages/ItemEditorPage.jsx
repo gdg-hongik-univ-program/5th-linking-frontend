@@ -6,6 +6,8 @@ import { useItem } from '../hooks/useItem';
 import { findFolderPath } from '../utils/findFolderPath';
 import { useModalStore } from '../store/useModalStore';
 import FolderPicker from '../components/common/FolderPicker';
+import DatePickerModal from '../components/common/DatePickerModal';
+import { format } from 'date-fns';
 import IconButton from '../components/common/IconButton';
 import PageHeader from '../components/common/PageHeader';
 
@@ -23,7 +25,6 @@ export default function ItemEditorPage() {
   const { item: fetchedItem, handleCreate, handleUpdate } = useItem(itemId);
   const { folders: folderTree, refetch: refetchFolders } = useFolders();
 
-  const hiddenDateRef = useRef(null);
   const tagInputRef = useRef(null);
   const memoRef = useRef(null);
   const titleRef = useRef(null);
@@ -41,6 +42,7 @@ export default function ItemEditorPage() {
   const [tagInput, setTagInput] = useState('');
   const [isImportant, setIsImportant] = useState(false);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
@@ -136,18 +138,14 @@ export default function ItemEditorPage() {
     else await handleCreate(payload);
   };
 
-  const handleHiddenDateChange = (e) => {
-    const next = e.target.value || '';
-    setFormData((prev) => ({ ...prev, deadline: next }));
+  const handleDateSelect = (dateObj) => {
+    setFormData((prev) => ({ ...prev, deadline: format(dateObj, 'yyyy-MM-dd') }));
+    setIsDatePickerOpen(false);
     setIsDirty(true);
   };
 
   const handleCalendarClick = () => {
-    try {
-      hiddenDateRef.current?.showPicker();
-    } catch {
-      hiddenDateRef.current?.focus();
-    }
+    setIsDatePickerOpen(true);
   };
 
   const handleClearDate = (e) => {
@@ -393,16 +391,6 @@ export default function ItemEditorPage() {
                     마감일 없음
                   </button>
                 )}
-                <input
-                  ref={hiddenDateRef}
-                  type="date"
-                  value={
-                    formData.deadline ? formData.deadline.split('T')[0] : ''
-                  }
-                  onChange={handleHiddenDateChange}
-                  className="absolute inset-0 opacity-0 pointer-events-none"
-                  tabIndex={-1}
-                />
               </div>
             </div>
 
@@ -470,6 +458,13 @@ export default function ItemEditorPage() {
         onClose={() => setIsPickerOpen(false)}
         onSelect={handleFolderSelect}
         title="저장할 위치 선택"
+      />
+
+      <DatePickerModal
+        isOpen={isDatePickerOpen}
+        onClose={() => setIsDatePickerOpen(false)}
+        onSelect={handleDateSelect}
+        initialDate={formData.deadline}
       />
     </div>
   );
