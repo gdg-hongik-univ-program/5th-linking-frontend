@@ -125,9 +125,12 @@ export default function SchedulePage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <main ref={scrollRef} className="flex-1 flex flex-col overflow-y-auto">
-        <div className="relative w-full">
-          <TabHeader title="일정">
+      <main
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide"
+      >
+        <div className="relative w-full shrink-0">
+          <TabHeader title="일정" collapseBottomGap>
             <IconButton
               icon={Bell}
               onClick={() => navigate('/notification')}
@@ -135,7 +138,6 @@ export default function SchedulePage() {
             />
           </TabHeader>
         </div>
-
         <ListView
           data={eventList}
           isLoading={loading}

@@ -316,25 +316,35 @@ export default function TrashPage() {
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
-      <PageHeader title="휴지통" onBack={() => navigate(-1)}>
-        <IconButton
-          icon={MoreHorizontal}
-          onClick={(e) => setMenuAnchor(e.currentTarget)}
-          disabled={isSelectionMode}
-          aria-label="더보기"
-        />
-      </PageHeader>
+      <main
+        ref={scrollRef}
+        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide"
+      >
+        <div className="relative w-full shrink-0">
+          <PageHeader
+            title="휴지통"
+            iconType="close"
+            onBack={() => navigate(-1)}
+            collapseBottomGap
+          >
+            <IconButton
+              icon={MoreHorizontal}
+              onClick={(e) => setMenuAnchor(e.currentTarget)}
+              disabled={isSelectionMode}
+              aria-label="더보기"
+            />
+          </PageHeader>
+        </div>
 
-      <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-2">
-        <SearchBar
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="삭제된 항목 검색"
-          mb={isSelectionMode ? 'mb-2' : 'mb-0'}
-        />
+        <div className="sticky top-0 z-20 bg-bg-main px-6 pt-4 pb-4">
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="삭제된 항목 검색"
+            mb={isSelectionMode ? 'mb-1' : 'mb-0'}
+          />
 
-        {isSelectionMode && (
-          <div className="pb-1">
+          {isSelectionMode && (
             <SelectionHeader
               selectedCount={totalSelectedCount}
               isAllSelected={isAllSelected}
@@ -347,77 +357,77 @@ export default function TrashPage() {
               onMove={handleRestoreSelected}
               onDelete={handleDeleteSelectedPermanently}
             />
-          </div>
-        )}
-      </div>
-
-      <main
-        ref={scrollRef}
-        className="flex-1 flex flex-col overflow-y-auto scrollbar-hide pt-3"
-      >
-        <ListView
-          data={combinedList}
-          isLoading={isLoading}
-          searchQuery={searchQuery}
-          openedId={openedSwipeId}
-          setOpenedId={setOpenedSwipeId}
-          scrollParentRef={scrollRef}
-          isSelectionMode={isSelectionMode}
-          selectedIds={selectedIds}
-          onToggleSelection={handleToggleSelection}
-          onNavigate={handleNavigate}
-          renderLeftAction={(entry, dragX) => (
-            <SwipeActionButton
-              type="restore"
-              x={dragX}
-              direction="left"
-              onClick={async () => {
-                if (entry.folderId) {
-                  await handleRestoreFolderAction([entry]);
-                } else {
-                  await handleRestoreItemAction([entry]);
-                }
-                setOpenedSwipeId(null);
-              }}
-            />
           )}
-          renderRightAction={(entry, dragX) => (
-            <SwipeActionButton
-              type="delete"
-              x={dragX}
-              direction="right"
-              onClick={() => {
-                setOpenedSwipeId(null);
-                const rawName = entry.title || entry.folderName || '이름 없음';
-                const entryName =
-                  rawName.length > 15 ? `${rawName.slice(0, 15)}...` : rawName;
+        </div>
 
-                openConfirm({
-                  title: '영구 삭제',
-                  message: `'${entryName}' 항목을 영구적으로 삭제할까요? 이 작업은 되돌릴 수 없어요.`,
-                  confirmText: '영구 삭제',
-                  isDanger: true,
-                  onConfirm: async () => {
-                    try {
-                      if (entry.folderId) {
-                        await handleDeleteFolderPermAction([entry]);
-                      } else {
-                        await handleDeleteItemPermAction([entry]);
+        <div className="flex-1 min-h-0">
+          <ListView
+            data={combinedList}
+            isLoading={isLoading}
+            searchQuery={searchQuery}
+            openedId={openedSwipeId}
+            setOpenedId={setOpenedSwipeId}
+            scrollParentRef={scrollRef}
+            isSelectionMode={isSelectionMode}
+            selectedIds={selectedIds}
+            onToggleSelection={handleToggleSelection}
+            onNavigate={handleNavigate}
+            renderLeftAction={(entry, dragX) => (
+              <SwipeActionButton
+                type="restore"
+                x={dragX}
+                direction="left"
+                onClick={async () => {
+                  if (entry.folderId) {
+                    await handleRestoreFolderAction([entry]);
+                  } else {
+                    await handleRestoreItemAction([entry]);
+                  }
+                  setOpenedSwipeId(null);
+                }}
+              />
+            )}
+            renderRightAction={(entry, dragX) => (
+              <SwipeActionButton
+                type="delete"
+                x={dragX}
+                direction="right"
+                onClick={() => {
+                  setOpenedSwipeId(null);
+                  const rawName =
+                    entry.title || entry.folderName || '이름 없음';
+                  const entryName =
+                    rawName.length > 15
+                      ? `${rawName.slice(0, 15)}...`
+                      : rawName;
+
+                  openConfirm({
+                    title: '영구 삭제',
+                    message: `'${entryName}' 항목을 영구적으로 삭제할까요? 이 작업은 되돌릴 수 없어요.`,
+                    confirmText: '영구 삭제',
+                    isDanger: true,
+                    onConfirm: async () => {
+                      try {
+                        if (entry.folderId) {
+                          await handleDeleteFolderPermAction([entry]);
+                        } else {
+                          await handleDeleteItemPermAction([entry]);
+                        }
+                      } catch (error) {
+                        openAlert({
+                          title: '삭제 실패',
+                          message: `'${entryName}' 항목을 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.`,
+                          isDanger: true,
+                        });
                       }
-                    } catch (error) {
-                      openAlert({
-                        title: '삭제 실패',
-                        message: `'${entryName}' 항목을 삭제하는 중 오류가 발생했어요. 다시 시도해 주세요.`,
-                        isDanger: true,
-                      });
-                    }
-                  },
-                });
-              }}
-            />
-          )}
-          emptyText="휴지통이 비어있어요."
-        />
+                    },
+                  });
+                }}
+              />
+            )}
+            emptyText="휴지통이 비어있어요."
+          />
+        </div>
       </main>
 
       <ActionSheet

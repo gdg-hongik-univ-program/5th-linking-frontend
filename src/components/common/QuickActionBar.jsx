@@ -15,7 +15,7 @@ export default function QuickActionBar() {
   const location = useLocation();
 
   return (
-    <div className="mx-auto w-[340px] h-[72px] px-[5px] py-[15px] mt-3 bg-bg-card rounded-2xl flex items-center shadow-lg border border-text-main/10 font-family-sans">
+    <div className="mx-auto w-full px-1.5 py-4 bg-bg-card rounded-2xl flex items-center shadow-lg border border-text-main/10 font-family-sans">
       {actions.map((action, index) => {
         const Icon = action.icon;
         const isActive = location.pathname === action.path;
@@ -26,7 +26,7 @@ export default function QuickActionBar() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => navigate(action.path)}
-                className="flex flex-col items-center gap-[5px] group outline-none"
+                className="flex flex-col items-center gap-1.5 group outline-none"
               >
                 <Icon
                   size="18"
@@ -38,7 +38,7 @@ export default function QuickActionBar() {
                   }`}
                 />
                 <span
-                  className={`text-[12px] font-normal leading-none transition-colors ${
+                  className={`text-xs font-normal leading-none transition-colors ${
                     isActive
                       ? 'text-primary-500'
                       : 'text-text-main group-hover:text-primary-400'
@@ -49,7 +49,7 @@ export default function QuickActionBar() {
               </motion.button>
             </div>
             {index < actions.length - 1 && (
-              <div className="w-[1px] h-[14px] bg-text-main/10 shrink-0" />
+              <div className="w-px h-3.5 bg-text-main/10 shrink-0" />
             )}
           </React.Fragment>
         );
