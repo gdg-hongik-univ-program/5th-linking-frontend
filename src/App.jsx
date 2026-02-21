@@ -45,7 +45,7 @@ export default function App() {
   }, [loginSuccess, logout]);
 
   return (
-    <div className="h-screen bg-neutral-950 grid place-items-center font-family-sans">
+    <div className="h-screen bg-neutral-950 grid place-items-center">
       <div className="w-full min-w-[390px] max-w-[390px] h-full bg-bg-main shadow-2xl overflow-hidden relative border-x border-neutral-800">
         <Suspense fallback={<LoadingOverlay />}>
           <Routes>
