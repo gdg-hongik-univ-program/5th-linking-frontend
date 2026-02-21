@@ -275,12 +275,12 @@ export default function ItemEditorPage() {
   }, [formData.deadline]);
 
   return (
-    <div className="h-full flex flex-col font-family-sans bg-bg-main">
+    <div className="h-full flex flex-col font-family-sans bg-bg-main overflow-y-auto scrollbar-hide">
       <PageHeader onBack={handleBack}>
         <IconButton icon={Save} onClick={handleSave} aria-label="저장하기" />
       </PageHeader>
 
-      <main className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+      <main className="flex-1 flex flex-col">
         <div className="flex-1 flex flex-col px-5 py-4 gap-4 min-h-full">
           <div className="flex flex-col gap-1 shrink-0 min-w-0">
             <div className="flex items-center gap-2">
