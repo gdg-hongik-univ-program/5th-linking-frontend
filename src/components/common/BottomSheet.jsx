@@ -207,7 +207,7 @@ export default function BottomSheet({
                       e.stopPropagation();
                       setIsPickerOpen(true);
                     }}
-                    className="w-[42px] h-[42px] flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-white rounded-xl transition-colors shrink-0"
+                    className="w-[42px] h-[42px] flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-bg-main rounded-xl transition-colors shrink-0"
                   >
                     <Plus size={20} strokeWidth={3} />
                   </button>

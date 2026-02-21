@@ -16,7 +16,7 @@ export default function DDayBadge({ deadline, className = '' }) {
   const styles = {
     upcoming: 'bg-error-500 text-text-main',
     normal: 'bg-error-50 text-text-error',
-    past: 'bg-neutral-500 text-text-main opacity-60',
+    past: 'bg-neutral-500 text-text-main',
   };
 
   return (

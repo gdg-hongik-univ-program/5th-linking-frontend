@@ -87,7 +87,7 @@ export default function InputModal({
           <button
             onClick={handleSubmit}
             disabled={!value.trim()}
-            className={`flex-1 py-3 text-text-main text-sm font-bold rounded-xl transition-colors disabled:opacity-50 ${
+            className={`flex-1 py-3 text-bg-main text-sm font-bold rounded-xl transition-colors disabled:opacity-50 ${
               isDanger
                 ? 'bg-error-500 hover:bg-error-600'
                 : 'bg-primary-500 hover:bg-primary-500/90'
