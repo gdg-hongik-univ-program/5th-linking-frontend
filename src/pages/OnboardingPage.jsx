@@ -91,7 +91,10 @@ export default function OnboardingPage() {
   const isLast = index === slides.length - 1;
 
   return (
-    <div className="min-h-screen relative flex flex-col bg-bg-main text-text-main overflow-hidden">
+    <div
+      className="min-h-screen relative flex flex-col bg-bg-main text-text-main overflow-hidden"
+      style={{ minHeight: '100dvh' }}
+    >
       <div className="pt-20 px-6">
         <div className="flex justify-center gap-2 mb-8">
           {slides.map((_, i) => (
@@ -109,7 +112,7 @@ export default function OnboardingPage() {
       </div>
 
       <div
-        className="flex-1 overflow-hidden"
+        className="flex-1 overflow-hidden pb-[calc(env(safe-area-inset-bottom)+96px)]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onPointerDown={handlePointerDown}
@@ -143,7 +146,7 @@ export default function OnboardingPage() {
         </div>
       </div>
 
-      <div className="absolute inset-x-0 bottom-15 z-20 flex justify-center px-6 pointer-events-none">
+      <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] pointer-events-none">
         {isLast ? (
           <button
             type="button"
