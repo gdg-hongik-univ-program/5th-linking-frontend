@@ -3,13 +3,16 @@ import { Settings } from 'lucide-react';
 import TabHeader from '../components/common/TabHeader';
 import IconButton from '../components/common/IconButton';
 import { useAuthStore } from '../store/useAuthStore';
+import { useModalStore } from '../store/useModalStore';
 import axiosInstance from '../api/axiosInstance';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
+  const { openConfirm } = useModalStore();
 
-  const handleLogout = async () => {
+  // 실제 로그아웃
+  const executeLogout = async () => {
     try {
       await axiosInstance.post('/user/sign-out');
     } catch (error) {
@@ -18,6 +21,17 @@ export default function ProfilePage() {
       logout();
       navigate('/login', { replace: true });
     }
+  };
+
+  const handleLogoutClick = () => {
+    openConfirm({
+      title: '로그아웃',
+      message: '정말 로그아웃하시겠어요?',
+      confirmText: '로그아웃',
+      cancelText: '취소',
+      isDanger: true,
+      onConfirm: executeLogout,
+    });
   };
 
   return (
@@ -35,7 +49,7 @@ export default function ProfilePage() {
           프로필 페이지 구현 중입니다.
         </p>
         <button
-          onClick={handleLogout}
+          onClick={handleLogoutClick}
           className="w-full py-3 rounded-full border border-red-500 text-red-500 font-bold hover:bg-red-500 hover:text-white transition-all"
         >
           로그아웃

@@ -11,6 +11,8 @@ import {
   Plus,
   Database,
   MoreHorizontal,
+  Star,
+  CircleX,
 } from 'lucide-react';
 import { useFolders } from '../../hooks/useFolders';
 import { useItems } from '../../hooks/useItems';
@@ -180,7 +182,7 @@ export default function ItemPicker({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm pointer-events-auto"
+          className="absolute inset-0 bg-black/50 pointer-events-auto"
           onClick={(e) => {
             e.stopPropagation();
             onClose();
@@ -192,11 +194,11 @@ export default function ItemPicker({
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-bg-main w-full max-w-[340px] rounded-xl shadow-2xl overflow-hidden flex flex-col h-[75vh] max-h-[650px] border border-neutral-800 pointer-events-auto"
+          className="relative bg-bg-main w-full max-w-[340px] rounded-2xl shadow-lg overflow-hidden flex flex-col h-[75vh] max-h-[650px] border border-text-main/10 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* 헤더 */}
-          <div className="px-4 h-14 border-b border-neutral-800 flex items-center justify-between shrink-0 bg-neutral-900/50 relative">
+          <div className="px-4 h-14 border-b border-text-main/10 flex items-center justify-between shrink-0 bg-bg-main relative">
             <div className="flex items-center justify-start min-w-[40px]">
               <button
                 onClick={(e) => {
@@ -233,7 +235,7 @@ export default function ItemPicker({
           </div>
 
           {/* 서치 바 */}
-          <div className="px-4 py-2 bg-bg-main border-b border-neutral-800/50">
+          <div className="px-4 py-2 bg-bg-main border-b border-text-main/10">
             <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-text-disabled"
@@ -241,11 +243,23 @@ export default function ItemPicker({
               />
               <input
                 type="text"
-                placeholder="아이템 이름 검색..."
+                placeholder="링크 제목 검색"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-neutral-800/50 rounded-lg py-2.5 pl-9 pr-3 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all"
+                className="w-full bg-neutral-800 border border-text-main/5 rounded-lg py-2.5 pl-9 pr-10 text-sm text-text-main placeholder:text-text-disabled focus:outline-none focus:ring-1 focus:ring-primary-500 transition-all"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-text-main transition-colors p-1 rounded-full"
+                  aria-label="검색어 지우기"
+                >
+                  <CircleX size={16} />
+                </button>
+              )}
             </div>
           </div>
 
@@ -257,7 +271,7 @@ export default function ItemPicker({
                   e.stopPropagation();
                   handleBack();
                 }}
-                className="flex items-center gap-3 px-5 py-3 w-full text-left hover:bg-neutral-800 active:bg-neutral-700 transition-colors border-b border-neutral-800/50 shrink-0"
+                className="flex items-center gap-3 px-5 py-3 w-full text-left hover:bg-neutral-800 active:bg-neutral-700 transition-colors border-b border-text-main/10 shrink-0"
               >
                 <CornerLeftUp className="text-primary-500" size={20} />
                 <div className="text-primary-500 text-sm font-semibold truncate">
@@ -322,7 +336,12 @@ export default function ItemPicker({
                               {data.title}
                             </span>
                             {data.importance && (
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary-500 shrink-0" />
+                              <Star
+                                size={12}
+                                className="text-primary-500 fill-primary-500 shrink-0"
+                                strokeWidth={2.5}
+                                strokeLinejoin="round"
+                              />
                             )}
                           </div>
                           <span className="text-text-sub text-xs">

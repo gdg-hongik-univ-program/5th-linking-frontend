@@ -9,6 +9,7 @@ export default function ListView({
   isLoading,
   searchQuery,
   ListHeaderComponent = null,
+  ListFooterComponent = null,
   openedId,
   setOpenedId,
   isSelectionMode,
@@ -99,7 +100,12 @@ export default function ListView({
             )}
           </div>
         ),
-        Footer: () => <div className="h-6" />,
+        Footer: () =>
+          ListFooterComponent ? (
+            <div>{ListFooterComponent}</div>
+          ) : (
+            <div className="h-6" />
+          ),
       }}
     />
   );

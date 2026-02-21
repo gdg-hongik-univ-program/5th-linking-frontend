@@ -57,9 +57,3 @@ export const deleteFoldersPermanently = async (folderIds) => {
   });
   return response.data;
 };
-
-// 8. 폴더 휴지통 비우기
-export const emptyFolderTrash = async () => {
-  const response = await axiosInstance.delete('/folder/trash/all');
-  return response.data;
-};

@@ -442,7 +442,7 @@ export default function StoragePage() {
           <SearchBar
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="폴더 또는 링크 검색"
+            placeholder="현재 위치의 폴더 또는 링크 검색"
             mb={isSelectionMode ? 'mb-2' : 'mb-0'}
           />
 
