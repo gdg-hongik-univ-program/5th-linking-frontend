@@ -18,6 +18,7 @@ import { buildMenu } from '../../utils/buildMenu';
 import { findFolderNode } from '../../utils/findFolderNode';
 import { formatDate } from '../../utils/formatDate';
 import { sortData } from '../../utils/sortData';
+import { useModalStore } from '../../store/useModalStore';
 import ActionSheet from './ActionSheet';
 import InputModal from './InputModal';
 import LoadingSpinner from './LoadingSpinner';
@@ -41,6 +42,8 @@ export default function FolderPicker({
   const currentFolder = history[history.length - 1];
   const isRoot = history.length === 1;
   const isSearching = searchQuery.trim().length > 0;
+
+  const { openAlert } = useModalStore();
 
   // 배경 제어
   useEffect(() => {
@@ -139,7 +142,12 @@ export default function FolderPicker({
       if (refetch) await refetch();
       setIsCreateModalOpen(false);
     } catch (error) {
-      alert('폴더 생성 실패');
+      openAlert({
+        title: '폴더 생성 실패',
+        message: '폴더를 생성하는 중 오류가 발생했어요. 다시 시도해 주세요.',
+        isDanger: true,
+        confirmText: '확인',
+      });
     }
   };
 

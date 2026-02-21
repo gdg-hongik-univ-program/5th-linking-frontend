@@ -13,11 +13,11 @@ export default function ConfirmModal({
   return (
     <div
       className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/50 px-4"
-      onClick={onClose} // (배경 클릭 닫기 원치 않으면 이 줄 제거)
+      onClick={onClose}
     >
       <div
         className="bg-bg-main w-full max-w-xs rounded-2xl p-5 border border-text-main/10 flex flex-col shadow-lg"
-        onClick={(e) => e.stopPropagation()} // ✅ 카드 클릭은 배경으로만 안 새게
+        onClick={(e) => e.stopPropagation()}
       >
         <h3 className="text-lg font-bold text-text-main mb-2">{title}</h3>
 

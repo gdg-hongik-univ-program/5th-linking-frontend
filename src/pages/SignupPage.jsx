@@ -8,10 +8,13 @@ import { UserRoundPen, X } from 'lucide-react';
 import { PROFILE_ASSETS, getProfilePath } from '../constants/assets';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import LoadingOverlay from '../components/common/LoadingOverlay';
+import { useModalStore } from '../store/useModalStore';
 
 const SignupPage = () => {
   const navigate = useNavigate();
   const { isInitialized } = useAuthRedirect();
+
+  const { openAlert } = useModalStore();
 
   const [step, setStep] = useState(1);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -79,7 +82,11 @@ const SignupPage = () => {
   const handleCheckDuplicate = async () => {
     const idValue = formData.loginId;
     if (!idValue || !VALIDATION.loginId.regex.test(idValue)) {
-      alert('올바른 아이디 형식을 먼저 입력해주세요.');
+      openAlert({
+        title: '아이디 형식 오류',
+        message: '올바른 아이디 형식을 먼저 입력해주세요.',
+        confirmText: '확인',
+      });
       return;
     }
     try {
@@ -101,7 +108,12 @@ const SignupPage = () => {
       }
     } catch (error) {
       setIsIdAvailable(false);
-      alert('중복 확인 중 오류가 발생했습니다.');
+      openAlert({
+        title: '중복 확인 실패',
+        message: '중복 확인 중 오류가 발생했어요. 다시 시도해 주세요.',
+        confirmText: '확인',
+        isDanger: true,
+      });
     }
   };
 
@@ -115,10 +127,23 @@ const SignupPage = () => {
   const handleSignup = async () => {
     try {
       await axiosInstance.post('/user/sign-up', formData);
-      alert('회원가입이 완료되었습니다!');
-      navigate('/login', { state: { loginId: formData.loginId } });
+      openAlert({
+        title: '회원가입 성공',
+        message: '회원가입이 완료되었어요. 링크 아카이빙의 왕이 되어볼까요?',
+        confirmText: '확인',
+        onConfirm: () => {
+          navigate('/login', { state: { loginId: formData.loginId } });
+        },
+      });
     } catch (error) {
-      alert(error.response?.data?.message || '회원가입 실패');
+      openAlert({
+        title: '회원가입 실패',
+        message:
+          error.response?.data?.message ||
+          '회원 가입 중 오류가 발생했어요. 다시 시도해 주세요.',
+        confirmText: '확인',
+        isDanger: true,
+      });
     }
   };
 

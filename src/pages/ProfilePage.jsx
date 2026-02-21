@@ -23,6 +23,7 @@ export default function ProfilePage() {
     }
   };
 
+  // 로그아웃
   const handleLogoutClick = () => {
     openConfirm({
       title: '로그아웃',
