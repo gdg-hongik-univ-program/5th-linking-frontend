@@ -15,7 +15,9 @@ export default function QuickActionBar() {
   const location = useLocation();
 
   return (
-    <div className="mx-auto w-full px-1.5 py-4 bg-bg-card rounded-2xl flex items-center shadow-lg border border-text-main/10 font-family-sans">
+    <div className="mx-auto w-full px-1.5 py-4 bg-bg-nav rounded-2xl flex items-center shadow-[0_8px_24px_rgba(0,0,0,0.4)] border border-neutral-800/80 font-family-sans relative overflow-hidden">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-600/30 to-transparent" />
+      
       {actions.map((action, index) => {
         const Icon = action.icon;
         const isActive = location.pathname === action.path;
