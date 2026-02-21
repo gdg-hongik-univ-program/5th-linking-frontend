@@ -192,7 +192,7 @@ export default function CalendarPicker({
                     <div
                       className={`flex items-center justify-center w-9 h-9 text-sm font-semibold rounded-full transition-all
                       ${isSelected ? 'bg-primary-500 text-bg-main shadow-md' : 'text-text-main'}
-                      ${!isSelected && isTodayReal ? 'border border-neutral-600' : ''}
+                      ${!isSelected && isTodayReal ? 'border border-neutral-600 bg-bg-card/80' : ''}
                       ${!isCurrentMonth ? 'opacity-20' : ''}`}
                     >
                       {format(day, 'd')}

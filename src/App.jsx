@@ -22,6 +22,9 @@ const ItemEditorPage = React.lazy(() => import('./pages/ItemEditorPage'));
 const ItemViewerPage = React.lazy(() => import('./pages/ItemViewerPage'));
 const NotificationPage = React.lazy(() => import('./pages/NotificationPage'));
 const NotFoundPage = React.lazy(() => import('./pages/NotFoundPage'));
+const GraphFullScreenPage = React.lazy(
+  () => import('./pages/GraphFullScreenPage'),
+);
 
 export default function App() {
   const { loginSuccess, logout } = useAuthStore();
@@ -60,6 +63,10 @@ export default function App() {
                     <Route path="/create" element={<ItemEditorPage />} />
                     <Route path="/edit/:itemId" element={<ItemEditorPage />} />
                     <Route path="/view/:itemId" element={<ItemViewerPage />} />
+                    <Route
+                      path="/profile/graph"
+                      element={<GraphFullScreenPage />}
+                    />
 
                     <Route element={<Layout />}>
                       <Route path="/" element={<HomePage />} />

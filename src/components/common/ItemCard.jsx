@@ -10,7 +10,8 @@ export default function ItemCard({
   onSelect,
   onClick,
 }) {
-  const { title, tags, importance, createdAt } = item;
+  // imageUrl 구조 분해 할당 추가
+  const { title, tags, importance, createdAt, imageUrl } = item;
 
   const handleClick = () => {
     if (isSelectMode && onSelect) {
@@ -29,8 +30,17 @@ export default function ItemCard({
     `}
     >
       {/* 썸네일 */}
-      <div className="relative w-24 h-24 bg-neutral-200 rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
-        <LinkIcon size={40} className="text-neutral-600" />
+      <div className="relative w-24 h-24 bg-bg-main rounded-xl shrink-0 overflow-hidden shadow-sm flex items-center justify-center">
+        {/* imageUrl 유무에 따른 조건부 렌더링 추가 */}
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <LinkIcon size={40} className="text-neutral-600" />
+        )}
 
         {/* 1-1. 선택 모드 체크박스 */}
         {isSelectMode && (
