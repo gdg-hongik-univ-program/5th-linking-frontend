@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { differenceInCalendarDays, format } from 'date-fns';
 import {
@@ -57,73 +57,6 @@ export default function ItemViewerPage() {
 
   const [menuAnchor, setMenuAnchor] = useState(null);
   const [isPickerOpen, setIsPickerOpen] = useState(false);
-  const [imageBgColor, setImageBgColor] = useState('');
-
-  useEffect(() => {
-    const url = item?.imageUrl;
-    if (!url) {
-      if (imageBgColor) setImageBgColor('');
-      return;
-    }
-
-    let cancelled = false;
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.decoding = 'async';
-    img.src = url;
-
-    img.onload = () => {
-      if (cancelled) return;
-      try {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) return;
-
-        const w = 32;
-        const h = 32;
-        canvas.width = w;
-        canvas.height = h;
-        ctx.drawImage(img, 0, 0, w, h);
-
-        const { data } = ctx.getImageData(0, 0, w, h);
-        const counts = new Map();
-        let maxKey = null;
-        let maxCount = 0;
-
-        for (let i = 0; i < data.length; i += 4) {
-          const a = data[i + 3];
-          if (a < 128) continue;
-          const r = data[i] >> 4;
-          const g = data[i + 1] >> 4;
-          const b = data[i + 2] >> 4;
-          const key = (r << 8) | (g << 4) | b;
-          const next = (counts.get(key) || 0) + 1;
-          counts.set(key, next);
-          if (next > maxCount) {
-            maxCount = next;
-            maxKey = key;
-          }
-        }
-
-        if (maxKey === null) return;
-        const rr = ((maxKey >> 8) & 0xf) * 17;
-        const gg = ((maxKey >> 4) & 0xf) * 17;
-        const bb = (maxKey & 0xf) * 17;
-        setImageBgColor(`rgb(${rr}, ${gg}, ${bb})`);
-      } catch {
-        setImageBgColor('');
-      }
-    };
-
-    img.onerror = () => {
-      if (cancelled) return;
-      setImageBgColor('');
-    };
-
-    return () => {
-      cancelled = true;
-    };
-  }, [item?.imageUrl]);
 
   const folderPathDisplay = useMemo(() => {
     if (!item?.folderId) return '저장소 최상단';
@@ -220,14 +153,7 @@ export default function ItemViewerPage() {
       <main className="flex-1 flex flex-col pt-2 pb-20">
         {/* 비디오 */}
         {(videoId || item.imageUrl) && (
-          <div
-            className="w-full aspect-video bg-black shrink-0 relative overflow-hidden"
-            style={
-              !videoId && item.imageUrl && imageBgColor
-                ? { backgroundColor: imageBgColor }
-                : undefined
-            }
-          >
+          <div className="w-full aspect-video bg-black shrink-0 relative overflow-hidden">
             {videoId ? (
               <iframe
                 className="w-full h-full"
