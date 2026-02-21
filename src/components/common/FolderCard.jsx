@@ -23,7 +23,7 @@ export default function FolderCard({
     <motion.div
       whileTap={{ scale: 0.98 }}
       onClick={handleClick}
-      className={`flex gap-2 px-2 py-3 cursor-pointer group select-none transition-colors ${
+      className={`flex gap-3 px-2 py-3 cursor-pointer group select-none transition-colors ${
         isSelected ? 'bg-neutral-800' : 'bg-transparent px-0'
       }`}
     >
