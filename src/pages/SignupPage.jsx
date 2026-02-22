@@ -253,15 +253,21 @@ const SignupPage = () => {
                   className="group relative w-40 h-40 rounded-full flex items-center justify-center mb-10 border-2 border-primary-500 overflow-hidden cursor-pointer shadow-lg transition-all"
                   style={{ backgroundColor: asset.bg || '#262626' }}
                 >
-                  <img
-                    src={asset.path}
-                    alt="Selected"
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                  <div
+                    className="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
                     style={{
-                      transform: `scale(${asset.scale || 1})`,
                       padding: asset.padding ? `calc(${asset.padding} * 1.5)` : '0px'
                     }}
-                  />
+                  >
+                    <img
+                      src={asset.path}
+                      alt="Selected"
+                      className="w-full h-full object-contain object-center"
+                      style={{
+                        transform: `scale(${asset.scale || 1})`,
+                      }}
+                    />
+                  </div>
                   <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-40 group-hover:opacity-90 group-hover:bg-black/40 transition-all duration-300">
                     <UserRoundPen size={36} className="text-white" />
                   </div>
@@ -283,51 +289,16 @@ const SignupPage = () => {
       </div>
 
       {/* 프로필 선택 팝업 */}
-      {isPopupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="bg-bg-main w-[90%] max-w-[360px] mx-auto rounded-2xl shadow-lg overflow-hidden flex flex-col h-[65vh] max-h-[600px] border border-text-main/10 animate-scale-in">
-            <div className="px-4 h-14 border-b border-text-main/10 flex items-center justify-between shrink-0 bg-neutral-900/50 relative text-center">
-              <div className="min-w-[40px]" />
-              <h2 className="text-base font-bold text-text-main">
-                프로필 선택
-              </h2>
-              <button
-                onClick={() => setIsPopupOpen(false)}
-                className="p-1 text-text-sub hover:text-text-main rounded-full transition-colors min-w-[40px]"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="flex-1 min-h-0 bg-bg-main overflow-y-auto p-6 custom-scrollbar">
-              <div className="grid grid-cols-3 gap-5 place-items-center">
-                {PROFILE_ASSETS.filter(asset => 
-                  !['KNIGHT', 'BISHOP', 'ROOK', 'QUEEN', 'KING'].some(tier => asset.id.includes(tier))
-                ).map((asset) => (
-                  <button
-                    key={asset.id}
-                    onClick={() => {
-                      setFormData((prev) => ({ ...prev, imageCode: asset.id }));
-                      setIsPopupOpen(false);
-                    }}
-                    className={`relative w-20 h-20 rounded-full overflow-hidden border-2 transition-all flex items-center justify-center ${formData.imageCode === asset.id ? 'border-primary-500' : 'border-text-main/10 hover:border-neutral-600'}`}
-                    style={{ backgroundColor: asset.bg || 'transparent' }}
-                  >
-                    <img
-                      src={asset.path}
-                      alt={asset.id}
-                      className="w-full h-full object-cover"
-                      style={{
-                        transform: `scale(${asset.scale || 1})`,
-                        padding: asset.padding || '0px'
-                      }}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ProfileImageSelectorPopup
+        isOpen={isPopupOpen}
+        onClose={() => setIsPopupOpen(false)}
+        currentImageCode={formData.imageCode}
+        onSelect={(id) => {
+          setFormData((prev) => ({ ...prev, imageCode: id }));
+          setIsPopupOpen(false);
+        }}
+        maxTier="PAWN"
+      />
 
       <div className="pb-10 flex justify-center px-6">
         <button

@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import ActionSheet from '../components/common/ActionSheet';
 import ChangePasswordModal from '../components/common/ChangePasswordModal';
+import EditProfileModal from '../components/common/EditProfileModal';
+import HelpModal from '../components/common/HelpModal';
 import ForceGraph2D from 'react-force-graph-2d';
 import { forceCollide } from 'd3-force';
 import {
@@ -40,10 +42,20 @@ const TIER_CONFIG = {
   KING: { label: 'KING', emoji: '♚' },
 };
 
+const TIER_MAPPING = {
+  '폰': 'PAWN', 'PAWN': 'PAWN',
+  '나이트': 'KNIGHT', 'KNIGHT': 'KNIGHT',
+  '비숍': 'BISHOP', 'BISHOP': 'BISHOP',
+  '룩': 'ROOK', 'ROOK': 'ROOK',
+  '퀸': 'QUEEN', 'QUEEN': 'QUEEN',
+  '킹': 'KING', 'KING': 'KING'
+};
+
 const getTierConfig = (code) => {
   if (!code) return { label: 'UNRANKED', emoji: '✨' };
   const baseCode = code.replace('_COLOR', '').replace('_MONO', '');
-  return TIER_CONFIG[baseCode] || { label: 'UNRANKED', emoji: '✨' };
+  const mappedCode = TIER_MAPPING[baseCode] || baseCode;
+  return TIER_CONFIG[mappedCode] || { label: 'UNRANKED', emoji: '✨' };
 };
 
 export default function ProfilePage() {
@@ -57,6 +69,8 @@ export default function ProfilePage() {
   const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
 
   const graphContainerRef = useRef(null);
   const [graphDimensions, setGraphDimensions] = useState({
@@ -66,58 +80,55 @@ export default function ProfilePage() {
   const graphRef = useRef(null);
   const initialZoomRef = useRef(false);
 
+  const fetchProfileData = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [profileRes, statsRes, graphRes] = await Promise.all([
+        axiosInstance.get('/profile'),
+        axiosInstance.get('/profile/my/stats'),
+        axiosInstance.get('/profile/graph'),
+      ]);
+
+      setProfile(profileRes.data || null);
+
+      if (Array.isArray(statsRes.data)) {
+        setTagStats(
+          statsRes.data.map((item) => ({
+            tagName: item.tagName,
+            rate: item.rate,
+            fullMark: 100,
+          })),
+        );
+      }
+
+      if (graphRes.data) {
+        setGraphData({
+          nodes: Array.isArray(graphRes.data.nodes)
+            ? graphRes.data.nodes.map((n) => ({ ...n }))
+            : [],
+          links: Array.isArray(graphRes.data.links)
+            ? graphRes.data.links.map((l) => ({ ...l }))
+            : [],
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setError('프로필 정보를 불러오지 못했어요.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
 
-    const fetchAll = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const [profileRes, statsRes, graphRes] = await Promise.all([
-          axiosInstance.get('/profile'),
-          axiosInstance.get('/profile/my/stats'),
-          axiosInstance.get('/profile/graph'),
-        ]);
-
-        if (!isMounted) return;
-
-        setProfile(profileRes.data || null);
-
-        if (Array.isArray(statsRes.data)) {
-          setTagStats(
-            statsRes.data.map((item) => ({
-              tagName: item.tagName,
-              rate: item.rate,
-              fullMark: 100,
-            })),
-          );
-        }
-
-        if (graphRes.data) {
-          setGraphData({
-            nodes: Array.isArray(graphRes.data.nodes)
-              ? graphRes.data.nodes.map((n) => ({ ...n }))
-              : [],
-            links: Array.isArray(graphRes.data.links)
-              ? graphRes.data.links.map((l) => ({ ...l }))
-              : [],
-          });
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        console.error(err);
-        setError('프로필 정보를 불러오지 못했어요.');
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    fetchAll();
+    if (isMounted) fetchProfileData();
 
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [fetchProfileData]);
 
   useEffect(() => {
     if (!graphContainerRef.current) return;
@@ -203,7 +214,7 @@ export default function ProfilePage() {
   const top1Tag = hasTags ? tagStats[0].tagName : '없음';
 
   const tierInfo = profile
-    ? getTierConfig(profile.imageCode)
+    ? getTierConfig(profile.tierName || profile.tier || profile.imageCode)
     : getTierConfig('PAWN');
 
   const handleNodeClick = useCallback((node) => {
@@ -247,7 +258,8 @@ export default function ProfilePage() {
           label: '프로필 수정',
           icon: User,
           onClick: () => {
-            // TODO: 프로필 수정 이동
+             setIsEditProfileModalOpen(true);
+             setIsSettingsOpen(false);
           },
         },
         {
@@ -283,7 +295,8 @@ export default function ProfilePage() {
           label: '도움말',
           icon: CircleHelp,
           onClick: () => {
-             // TODO: 도움말 표시
+             setIsHelpModalOpen(true);
+             setIsSettingsOpen(false);
           },
         },
         {
@@ -335,15 +348,17 @@ export default function ProfilePage() {
                   style={{ backgroundColor: asset ? (asset.bg || 'transparent') : '#171717' }}
                 >
                   {asset ? (
-                    <img
-                      src={asset.path}
-                      alt="Profile"
-                      className="w-full h-full object-cover relative z-10"
-                      style={{
-                        transform: `scale(${asset.scale || 1})`,
-                        padding: asset.padding || '0px'
-                      }}
-                    />
+                    <div className="w-full h-full flex items-center justify-center relative z-10"
+                         style={{ padding: asset.padding || '0px' }}>
+                      <img
+                        src={asset.path}
+                        alt="Profile"
+                        className="w-full h-full object-contain object-center"
+                        style={{
+                          transform: `scale(${asset.scale || 1})`,
+                        }}
+                      />
+                    </div>
                   ) : (
                     <span className="relative z-10">{tierInfo.emoji}</span>
                   )}
@@ -622,6 +637,18 @@ export default function ProfilePage() {
       <ChangePasswordModal 
         isOpen={isPasswordModalOpen} 
         onClose={() => setIsPasswordModalOpen(false)} 
+      />
+
+      <EditProfileModal
+        isOpen={isEditProfileModalOpen}
+        onClose={() => setIsEditProfileModalOpen(false)}
+        initialData={profile ? { nickName: profile.nickname, imageCode: profile.imageCode, maxTier: tierInfo.label } : null}
+        onSuccess={fetchProfileData}
+      />
+
+      <HelpModal 
+        isOpen={isHelpModalOpen} 
+        onClose={() => setIsHelpModalOpen(false)} 
       />
     </div>
   );
