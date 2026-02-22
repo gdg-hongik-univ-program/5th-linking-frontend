@@ -1,11 +1,12 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import HomeIcon from '../../assets/home.svg?react';
-import ScheduleIcon from '../../assets/schedule.svg?react';
+import CalendarIcon from '../../assets/calendar.svg?react';
 import StorageIcon from '../../assets/storage.svg?react';
 import ProfileIcon from '../../assets/profile.svg?react';
 
 function NavigationBar() {
   const location = useLocation();
+
   const navigate = useNavigate();
 
   const isActive = (path) => {
@@ -31,8 +32,8 @@ function NavigationBar() {
           <Link to="/home" className={linkStyle}>
             <HomeIcon className={iconStyle('/home')} />
           </Link>
-          <Link to="/schedule" className={linkStyle}>
-            <ScheduleIcon className={iconStyle('/schedule')} />
+          <Link to="/calendar" className={linkStyle}>
+            <CalendarIcon className={iconStyle('/calendar')} />
           </Link>
         </div>
 

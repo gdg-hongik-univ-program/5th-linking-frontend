@@ -11,7 +11,7 @@ const LoginPage = React.lazy(() => import('./pages/LoginPage'));
 const SignupPage = React.lazy(() => import('./pages/SignupPage'));
 const OnboardingPage = React.lazy(() => import('./pages/OnboardingPage'));
 const HomePage = React.lazy(() => import('./pages/HomePage'));
-const SchedulePage = React.lazy(() => import('./pages/SchedulePage'));
+const CalendarPage = React.lazy(() => import('./pages/CalendarPage'));
 const StoragePage = React.lazy(() => import('./pages/StoragePage'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
 const SearchPage = React.lazy(() => import('./pages/SearchPage'));
@@ -83,7 +83,7 @@ export default function App() {
                       />
                       <Route path="/stale" element={<StaleItemsPage />} />
                       <Route path="/trash" element={<TrashPage />} />
-                      <Route path="/schedule" element={<SchedulePage />} />
+                      <Route path="/calendar" element={<CalendarPage />} />
                       <Route path="/storage" element={<StoragePage />} />
                       <Route
                         path="/storage/:folderId"

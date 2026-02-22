@@ -69,7 +69,7 @@ function LoginPage() {
           className="block"
         />
         <h1 className="text-4xl font-bold text-text-main font-['Outfit'] tracking-wide">
-          Linking
+          LINKING
         </h1>
       </div>
 

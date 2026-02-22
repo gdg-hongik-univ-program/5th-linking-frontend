@@ -1,11 +1,10 @@
 import { useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-
-import homeImage from '../assets/home.png';
-import linkImage from '../assets/link.png';
-import scheduleImage from '../assets/schedule.png';
-import graphImage from '../assets/graph.png';
-import profileImage from '../assets/profile.png';
+import homeImage from '../assets/onboarding-1.png';
+import linkImage from '../assets/onboarding-2.png';
+import calendarImage from '../assets/onboarding-3.png';
+import profileImage from '../assets/onboarding-4.png';
+import graphImage from '../assets/onboarding-5.png';
 
 const SWIPE_THRESHOLD = 50;
 
@@ -20,9 +19,15 @@ export default function OnboardingPage() {
     () => [
       { lines: ['봐야 할 링크를', '누구보다 재빠르게'], image: homeImage },
       { lines: ['저장한 링크에', '태그와 메모까지'], image: linkImage },
-      { lines: ['링크의 마감일까지', '일정은 철두철미'], image: scheduleImage },
+      {
+        lines: ['링크의 마감일까지', '일정 관리는 철두철미'],
+        image: calendarImage,
+      },
+      {
+        lines: ['나를 위한 분석은', '나보다 날 더 잘 아니까'],
+        image: profileImage,
+      },
       { lines: ['연결된 링크들은', '내 화면 속 우주 안에'], image: graphImage },
-      { lines: ['나를 위한 분석은', '이걸로 끝.'], image: profileImage },
     ],
     [],
   );
@@ -139,14 +144,13 @@ export default function OnboardingPage() {
                   className="w-full max-w-[380px] object-contain translate-y-10 select-none pointer-events-none"
                   draggable={false}
                 />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-80 bg-gradient-to-b from-bg-main/0 via-bg-main/100 to-bg-main" />
               </div>
             </section>
           ))}
         </div>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 flex justify-center px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] pointer-events-none">
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-0 z-20 flex justify-center w-full max-w-[390px] px-6 pb-[calc(env(safe-area-inset-bottom)+16px)] pointer-events-none">
         {isLast ? (
           <button
             type="button"
