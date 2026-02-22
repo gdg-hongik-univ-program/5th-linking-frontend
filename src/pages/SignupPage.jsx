@@ -5,7 +5,7 @@ import Input from '../components/common/Input';
 import { VALIDATION } from '../constants/validation';
 import PageHeader from '../components/common/PageHeader';
 import { UserRoundPen, X } from 'lucide-react';
-import { PROFILE_ASSETS, getProfilePath } from '../constants/assets';
+import { PROFILE_ASSETS, getProfilePath, getProfileAsset } from '../constants/assets';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import LoadingOverlay from '../components/common/LoadingOverlay';
 import { useModalStore } from '../store/useModalStore';
@@ -242,19 +242,29 @@ const SignupPage = () => {
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center pb-20 animate-in fade-in">
-            <div
-              onClick={() => setIsPopupOpen(true)}
-              className="group relative w-40 h-40 bg-neutral-800 rounded-full flex items-center justify-center mb-10 border-2 border-primary-500 overflow-hidden cursor-pointer shadow-lg transition-all"
-            >
-              <img
-                src={getProfilePath(formData.imageCode)}
-                alt="Selected"
-                className="w-full h-full object-cover p-2 transition-transform duration-300 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-40 group-hover:opacity-90 group-hover:bg-black/40 transition-all duration-300">
-                <UserRoundPen size={36} className="text-white" />
-              </div>
-            </div>
+            {(() => {
+              const asset = getProfileAsset(formData.imageCode);
+              return (
+                <div
+                  onClick={() => setIsPopupOpen(true)}
+                  className="group relative w-40 h-40 rounded-full flex items-center justify-center mb-10 border-2 border-primary-500 overflow-hidden cursor-pointer shadow-lg transition-all"
+                  style={{ backgroundColor: asset.bg || '#262626' }}
+                >
+                  <img
+                    src={asset.path}
+                    alt="Selected"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      transform: `scale(${asset.scale || 1})`,
+                      padding: asset.padding ? `calc(${asset.padding} * 1.5)` : '0px'
+                    }}
+                  />
+                  <div className="absolute inset-0 bg-black/10 flex items-center justify-center opacity-40 group-hover:opacity-90 group-hover:bg-black/40 transition-all duration-300">
+                    <UserRoundPen size={36} className="text-white" />
+                  </div>
+                </div>
+              );
+            })()}
             <div className="w-full max-w-[400px]">
               <Input
                 name="nickName"
@@ -287,19 +297,26 @@ const SignupPage = () => {
             </div>
             <div className="flex-1 min-h-0 bg-bg-main overflow-y-auto p-6 custom-scrollbar">
               <div className="grid grid-cols-3 gap-5 place-items-center">
-                {PROFILE_ASSETS.map((asset) => (
+                {PROFILE_ASSETS.filter(asset => 
+                  !['KNIGHT', 'BISHOP', 'ROOK', 'QUEEN', 'KING'].some(tier => asset.id.includes(tier))
+                ).map((asset) => (
                   <button
                     key={asset.id}
                     onClick={() => {
                       setFormData((prev) => ({ ...prev, imageCode: asset.id }));
                       setIsPopupOpen(false);
                     }}
-                    className={`relative w-18 h-18 rounded-full overflow-hidden border-2 transition-all ${formData.imageCode === asset.id ? 'border-primary-500 bg-primary-500/10' : 'border-text-main/10 hover:border-neutral-600'}`}
+                    className={`relative w-20 h-20 rounded-full overflow-hidden border-2 transition-all flex items-center justify-center ${formData.imageCode === asset.id ? 'border-primary-500' : 'border-text-main/10 hover:border-neutral-600'}`}
+                    style={{ backgroundColor: asset.bg || 'transparent' }}
                   >
                     <img
                       src={asset.path}
                       alt={asset.id}
-                      className="w-full h-full object-cover p-2"
+                      className="w-full h-full object-cover"
+                      style={{
+                        transform: `scale(${asset.scale || 1})`,
+                        padding: asset.padding || '0px'
+                      }}
                     />
                   </button>
                 ))}
