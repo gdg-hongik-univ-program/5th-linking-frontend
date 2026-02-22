@@ -100,7 +100,7 @@ export default function DatePickerModal({
                 {title}
               </h2>
             </div>
-            
+
             <div className="min-w-[40px]" />
           </div>
 
@@ -120,7 +120,7 @@ export default function DatePickerModal({
           <div className="p-4 border-t border-text-main/10 bg-bg-main shrink-0">
             <button
               onClick={handleConfirm}
-              className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-text-main font-bold py-3 rounded-lg transition-colors shadow-lg shadow-primary-500/20 px-4"
+              className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-bg-main font-bold py-3 rounded-lg transition-colors shadow-lg shadow-primary-500/20 px-4"
             >
               <div className="truncate min-w-0">
                 <span>{format(selectedDate, 'yyyy년 M월 d일')} 선택</span>
@@ -130,6 +130,6 @@ export default function DatePickerModal({
         </motion.div>
       </div>
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

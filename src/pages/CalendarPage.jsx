@@ -9,7 +9,7 @@ import IconButton from '../components/common/IconButton';
 import CalendarPicker from '../components/common/CalendarPicker';
 import ListView from '../components/common/ListView';
 
-export default function SchedulePage() {
+export default function CalendarPage() {
   const navigate = useNavigate();
   const scrollRef = useRef(null);
 
@@ -24,7 +24,7 @@ export default function SchedulePage() {
   const [loading, setLoading] = useState(false);
   const [monthCache, setMonthCache] = useState({});
   const [openedSwipeId, setOpenedSwipeId] = useState(null);
-  
+
   const [activeTab, setActiveTab] = useState('all'); // all | deadline | created
 
   const handleGoToView = (itemId) => {
@@ -134,16 +134,14 @@ export default function SchedulePage() {
         showDots={true}
       />
       <div className="px-6 mt-6 mb-2">
-        <h3 className="text-lg font-bold">
-          {format(selectedDate, 'M월 d일')}
-        </h3>
+        <h3 className="text-lg font-bold">{format(selectedDate, 'M월 d일')}</h3>
       </div>
-      
+
       {/* 탭 버튼들 */}
       <div className="px-5 mt-3 mb-1">
         <div className="flex items-center p-1 bg-bg-nav border border-neutral-800/80 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-600/30 to-transparent" />
-          
+
           {[
             { id: 'all', label: '전체' },
             { id: 'deadline', label: '마감일' },
