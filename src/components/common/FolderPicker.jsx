@@ -317,7 +317,7 @@ export default function FolderPicker({
                 onSelect(currentFolder.id);
                 onClose();
               }}
-              className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-text-main font-bold py-3 rounded-lg transition-colors shadow-lg shadow-primary-500/20 px-4"
+              className="w-full flex items-center justify-center bg-primary-500 hover:bg-primary-600 active:bg-primary-700 text-bg-main font-bold py-3 rounded-lg transition-colors shadow-lg shadow-primary-500/20 px-4"
             >
               <div className="truncate min-w-0">
                 {currentFolder.id === null ? (

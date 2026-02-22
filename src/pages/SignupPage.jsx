@@ -132,7 +132,10 @@ const SignupPage = () => {
         message: '회원가입이 완료되었어요. 링크 아카이빙의 왕이 되어볼까요?',
         confirmText: '확인',
         onConfirm: () => {
-          navigate('/login', { state: { loginId: formData.loginId } });
+          navigate('/onboarding', {
+            replace: true,
+            state: { loginId: formData.loginId },
+          });
         },
       });
     } catch (error) {
