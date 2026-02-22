@@ -14,6 +14,7 @@ import {
   Info,
 } from 'lucide-react';
 import ActionSheet from '../components/common/ActionSheet';
+import ChangePasswordModal from '../components/common/ChangePasswordModal';
 import ForceGraph2D from 'react-force-graph-2d';
 import { forceCollide } from 'd3-force';
 import {
@@ -28,18 +29,22 @@ import { useAuthStore } from '../store/useAuthStore';
 import { useModalStore } from '../store/useModalStore';
 import axiosInstance from '../api/axiosInstance';
 import TabHeader from '../components/common/TabHeader';
+import { getProfilePath, getProfileAsset } from '../constants/assets';
 
 const TIER_CONFIG = {
-  PAWN: { label: 'PAWN', emoji: '♟️', color: '#9ca3af' },
-  KNIGHT: { label: 'KNIGHT', emoji: '♞', color: '#22c55e' },
-  BISHOP: { label: 'BISHOP', emoji: '♝', color: '#3b82f6' },
-  ROOK: { label: 'ROOK', emoji: '♜', color: '#a855f7' },
-  QUEEN: { label: 'QUEEN', emoji: '♛', color: '#eab308' },
-  KING: { label: 'KING', emoji: '♚', color: '#f97316' },
+  PAWN: { label: 'PAWN', emoji: '♟' },
+  KNIGHT: { label: 'KNIGHT', emoji: '♞' },
+  BISHOP: { label: 'BISHOP', emoji: '♝' },
+  ROOK: { label: 'ROOK', emoji: '♜' },
+  QUEEN: { label: 'QUEEN', emoji: '♛' },
+  KING: { label: 'KING', emoji: '♚' },
 };
 
-const getTierConfig = (code) =>
-  TIER_CONFIG[code] || { label: 'UNRANKED', emoji: '✨', color: '#6b7280' };
+const getTierConfig = (code) => {
+  if (!code) return { label: 'UNRANKED', emoji: '✨' };
+  const baseCode = code.replace('_COLOR', '').replace('_MONO', '');
+  return TIER_CONFIG[baseCode] || { label: 'UNRANKED', emoji: '✨' };
+};
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -51,6 +56,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
   const graphContainerRef = useRef(null);
   const [graphDimensions, setGraphDimensions] = useState({
@@ -249,7 +255,8 @@ export default function ProfilePage() {
           label: '비밀번호 변경',
           icon: Key,
           onClick: () => {
-             // TODO: 비밀번호 변경 이동
+             setIsPasswordModalOpen(true);
+             setIsSettingsOpen(false);
           },
         },
       ],
@@ -259,7 +266,8 @@ export default function ProfilePage() {
       items: [
         {
           id: 'theme',
-          label: '라이트/다크 모드 설정',
+          label: '테마 설정',
+          badge: 'BETA',
           icon: Palette,
           onClick: () => {
              // TODO: 테마 변경
@@ -319,14 +327,33 @@ export default function ProfilePage() {
         <section className="mt-2 rounded-2xl bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-700/70 p-5 shadow-lg relative overflow-hidden">
           <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-primary-500/10 blur-3xl pointer-events-none" />
           <div className="flex items-center gap-5 relative z-10">
-            <div className="w-18 h-18 shrink-0 rounded-[18px] bg-neutral-900 border border-neutral-800 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden">
-              <span className="relative z-10">{tierInfo.emoji}</span>
-            </div>
+            {(() => {
+              const asset = profile?.imageCode ? getProfileAsset(profile.imageCode) : null;
+              return (
+                <div 
+                  className="w-20 h-20 shrink-0 rounded-full border border-neutral-800 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden"
+                  style={{ backgroundColor: asset ? (asset.bg || 'transparent') : '#171717' }}
+                >
+                  {asset ? (
+                    <img
+                      src={asset.path}
+                      alt="Profile"
+                      className="w-full h-full object-cover relative z-10"
+                      style={{
+                        transform: `scale(${asset.scale || 1})`,
+                        padding: asset.padding || '0px'
+                      }}
+                    />
+                  ) : (
+                    <span className="relative z-10">{tierInfo.emoji}</span>
+                  )}
+                </div>
+              );
+            })()}
 
             <div className="flex flex-col gap-1 flex-1 min-w-0 justify-center">
               <p
-                className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80"
-                style={{ color: tierInfo.color }}
+                className="text-[10px] text-primary-500 font-bold uppercase tracking-[0.2em]"
               >
                 {tierInfo.label} {tierInfo.emoji}
               </p>
@@ -590,6 +617,11 @@ export default function ProfilePage() {
         onClose={handleSettingsClose}
         anchorEl={settingsBtnRef.current}
         sections={settingsSections}
+      />
+
+      <ChangePasswordModal 
+        isOpen={isPasswordModalOpen} 
+        onClose={() => setIsPasswordModalOpen(false)} 
       />
     </div>
   );
