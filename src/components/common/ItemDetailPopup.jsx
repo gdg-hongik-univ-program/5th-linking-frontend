@@ -184,7 +184,7 @@ export default function ItemDetailPopup({ itemId, onClose }) {
 
   return (
     <div 
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-bg-main w-[90%] max-w-sm max-h-[40vh] rounded-xl shadow-[0_15px_60px_rgba(0,0,0,0.9)] z-50 flex flex-col pt-1 shadow-inner border border-neutral-800 animate-in slide-in-from-bottom-12 fade-in duration-300"
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-bg-main w-[90%] max-w-sm max-h-[42vh] rounded-xl shadow-[0_15px_60px_rgba(0,0,0,0.9)] z-50 flex flex-col pt-1 shadow-inner border border-neutral-800 animate-in slide-in-from-bottom-12 fade-in duration-300"
       onClick={() => {
         if (menuAnchor) setMenuAnchor(null);
       }}
