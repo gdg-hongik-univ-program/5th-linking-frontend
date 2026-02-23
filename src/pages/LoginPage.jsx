@@ -62,7 +62,7 @@ function LoginPage() {
     <div className="min-h-screen flex flex-col justify-center px-6 bg-bg-main items-center">
       <div className="mb-8 text-center flex flex-col items-center w-full max-w-xs">
         <img
-          src="/linking.svg"
+          src="/logo.svg"
           alt="main logo"
           width="80"
           height="80"

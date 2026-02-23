@@ -24,7 +24,7 @@ export default function OnboardingPage() {
         image: calendarImage,
       },
       {
-        lines: ['나를 위한 분석은', '나보다 날 더 잘 아니까'],
+        lines: ['쌓인 기록이 만드는', '나만의 리포트'],
         image: profileImage,
       },
       { lines: ['연결된 링크들은', '내 화면 속 우주 안에'], image: graphImage },

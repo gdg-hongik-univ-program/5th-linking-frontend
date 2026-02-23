@@ -2,14 +2,14 @@ import { motion, useTransform } from 'framer-motion';
 import { Pencil, Trash2, RotateCcw, ArchiveRestore } from 'lucide-react';
 
 const BUTTON_CASE = {
-  edit: { icon: Pencil, label: '수정', colorClass: 'bg-blue-500' },
-  delete: { icon: Trash2, label: '삭제', colorClass: 'bg-error-600' },
-  restore: { icon: RotateCcw, label: '복원', colorClass: 'bg-success-600' },
-  extend: { icon: ArchiveRestore, label: '연장', colorClass: 'bg-primary-500' },
+  edit: { icon: Pencil, label: '수정', colorClass: 'bg-edit-500' },
+  delete: { icon: Trash2, label: '삭제', colorClass: 'bg-error-500' },
+  restore: { icon: RotateCcw, label: '복원', colorClass: 'bg-success-500' },
+  extend: { icon: ArchiveRestore, label: '연장', colorClass: 'bg-archive-500' },
   permanent_delete: {
     icon: Trash2,
     label: '영구삭제',
-    colorClass: 'bg-error-600',
+    colorClass: 'bg-error-500',
   },
 };
 

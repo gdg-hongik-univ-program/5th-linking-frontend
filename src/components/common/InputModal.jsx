@@ -33,9 +33,15 @@ export default function InputModal({
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && value.trim()) {
-      handleSubmit();
-    }
+    if (e.key !== 'Enter') return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (e.nativeEvent?.isComposing) return;
+    if (!value.trim()) return;
+
+    handleSubmit();
   };
 
   const handleClear = () => {
