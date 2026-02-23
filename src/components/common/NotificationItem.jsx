@@ -1,9 +1,17 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Hourglass, BrushCleaning } from 'lucide-react';
+import { Hourglass, Trophy, Sparkles, Bell } from 'lucide-react';
 
 const NotificationItem = memo(({ item, onClick }) => {
-  const Icon = item.message.includes('마감일이') ? Hourglass : BrushCleaning;
+  const getConfig = (type) => {
+    switch (type) {
+      case 'LEVEL_UP': return { icon: Trophy, color: 'text-violet-400' };
+      case 'UPCOMING': return { icon: Hourglass, color: 'text-primary-500' };
+      case 'CLEANUP': return { icon: Sparkles, color: 'text-emerald-400' };
+      default: return { icon: Bell, color: 'text-primary-500' };
+    }
+  };
+  const { icon: Icon, color } = getConfig(item.type);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -36,7 +44,7 @@ const NotificationItem = memo(({ item, onClick }) => {
       <div className="pt-1">
         <Icon
           size={18}
-          className={item.read ? 'text-text-sub' : 'text-primary-500'}
+          className={item.read ? 'text-text-sub' : color}
         />
       </div>
       <div className="flex-1 flex flex-col gap-2">
@@ -48,7 +56,7 @@ const NotificationItem = memo(({ item, onClick }) => {
           {item.message}
         </p>
         <span className="text-[11px] text-text-sub self-end">
-          {formatDate(item.createdAt)}
+          {formatDate(item.scheduledDate)}
         </span>
       </div>
     </motion.div>

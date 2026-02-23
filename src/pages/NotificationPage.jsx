@@ -80,8 +80,9 @@ export default function NotificationPage() {
         );
         await markAsRead(notif.notificationId);
       }
-      // 아이템 상세 페이지로 이동
-      if (notif.itemId) navigate(`/view/${notif.itemId}`);
+      // 타입 혹은 아이템 존재 여부에 따른 이동
+      if (notif.type === 'LEVEL_UP') navigate('/profile');
+      else if (notif.itemId) navigate(`/view/${notif.itemId}`);
       else navigate('/stale');
     } catch (error) {
       console.error(error);

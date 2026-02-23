@@ -398,43 +398,49 @@ export default function ProfilePage() {
                 {tierInfo.label} {tierInfo.emoji}
               </p>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-semibold break-words max-w-full">
+              <div className="flex items-start justify-between gap-3 w-full">
+                <h2 className="text-lg font-semibold break-keep leading-tight flex-1">
                   {profile?.nickname || '불러오는 중...'}
                 </h2>
                 {profile && (
-                  <span className="shrink-0 whitespace-nowrap text-xs rounded-full border border-primary-500/60 px-2 py-[2px] text-primary-300 bg-primary-500/5">
+                  <span className="shrink-0 whitespace-nowrap text-xs rounded-full border border-primary-500/60 px-2.5 py-[3px] text-primary-300 bg-primary-500/10 font-bold shadow-sm mt-0.5">
                     Lv. {profile.level ?? 1}
                   </span>
                 )}
               </div>
               {profile?.description && (
-                <p className="text-xs text-text-sub/90 line-clamp-2 leading-relaxed">
+                <p className="text-xs text-text-sub/90 line-clamp-2 leading-relaxed mt-1">
                   {profile.description}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="mt-6 relative z-10 flex flex-col gap-1.5">
-            <div className="flex justify-between items-end">
-              <span className="text-[11px] font-medium tracking-wide text-text-sub uppercase">
+          <div className="mt-8 relative z-10 flex flex-col gap-2">
+            <div className="flex justify-between items-end mb-1">
+              <span className="text-[11px] font-bold tracking-widest text-text-sub uppercase">
                 경험치
               </span>
-              <span className="text-[11px] font-bold text-primary-400">
+              <span className="text-[11px] font-black text-primary-400">
                 {Math.round(xpProgress)}%
               </span>
             </div>
 
-            <div className="h-1.5 w-full rounded-full bg-neutral-950 border border-neutral-700/50 overflow-hidden relative">
+            <div className="h-2.5 w-full rounded-full bg-neutral-900/80 border border-neutral-700/50 overflow-hidden shadow-inner">
               <div
-                className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary-600 via-primary-500 to-primary-300 transition-all duration-1000 ease-out"
-                style={{ width: `${xpProgress}%` }}
-              />
+                className="h-full rounded-full bg-gradient-to-r from-primary-600 via-primary-500 to-primary-300 transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(234,190,47,0.4)] relative"
+                style={{ width: `${Math.max(1, xpProgress)}%` }}
+              >
+                <div className="absolute inset-0 bg-white/20 w-full h-full" style={{ mixBlendMode: 'overlay' }}></div>
+              </div>
             </div>
+            
             {profile && (
-              <div className="mt-1.5 flex justify-end text-[9px] text-text-sub/50 font-medium tracking-wider">
-                <span>{profile.currentXp ?? 0} XP</span>
+              <div className="mt-1 flex justify-between text-[10px] text-text-sub/80 font-medium tracking-wide px-0.5">
+                <span>{' '}</span>
+                <span>
+                  <strong className="text-primary-400 text-[11px]">{profile.currentXp ?? 0}</strong> / {profile.maxXp ?? 0} XP
+                </span>
               </div>
             )}
           </div>
