@@ -136,9 +136,6 @@ export default function EditProfileModal({
 
             {/* Input Form */}
             <div className="w-full">
-              <label className="text-sm font-medium text-text-sub mb-3 block ml-1">
-                닉네임
-              </label>
               <div className="w-full mb-3">
                 <Input
                   name="nickName"
