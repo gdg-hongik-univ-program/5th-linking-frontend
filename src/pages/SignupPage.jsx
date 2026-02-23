@@ -9,6 +9,7 @@ import { PROFILE_ASSETS, getProfilePath, getProfileAsset } from '../constants/as
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import LoadingOverlay from '../components/common/LoadingOverlay';
 import { useModalStore } from '../store/useModalStore';
+import ProfileImageSelectorPopup from '../components/common/ProfileImageSelectorPopup';
 
 const SignupPage = () => {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { MoreHorizontal } from 'lucide-react';
 import { useItems } from '../hooks/useItems';
 import { buildMenu } from '../utils/buildMenu';
@@ -12,20 +12,29 @@ import SearchBar from '../components/common/SearchBar';
 
 export default function SearchPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const scrollRef = useRef(null);
 
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      document.querySelector('input[name="keyword"]')?.focus?.();
-    });
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  // URL에서 초기 검색어 가져오기
+  const initialQuery = searchParams.get('q') || '';
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [menuAnchor, setMenuAnchor] = useState(null);
-  const [submittedKeyword, setSubmittedKeyword] = useState('');
-  const [searchEnabled, setSearchEnabled] = useState(false);
+  
+  // 제출된 키워드도 URL 기반으로 초기화
+  const [submittedKeyword, setSubmittedKeyword] = useState(initialQuery);
+  const [searchEnabled, setSearchEnabled] = useState(!!initialQuery);
+
+  useEffect(() => {
+    // URL에 쿼리가 있으면 검색창 포커스 생략 가능, 없으면 포커스
+    if (!initialQuery) {
+      const raf = requestAnimationFrame(() => {
+        document.querySelector('input[name="keyword"]')?.focus?.();
+      });
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [initialQuery]);
 
   const { items, isLoading, handleGoToView, refetch } = useItems(
     null,
@@ -73,6 +82,7 @@ export default function SearchPage() {
     if (!keyword) {
       setSearchEnabled(false);
       setSubmittedKeyword('');
+      setSearchParams({}); // URL 쿼리 파라미터 초기화
       return;
     }
 
@@ -83,7 +93,8 @@ export default function SearchPage() {
 
     setSubmittedKeyword(keyword);
     setSearchEnabled(true);
-  }, [searchQuery, searchEnabled, submittedKeyword, refetch]);
+    setSearchParams({ q: keyword }); // URL 쿼리 파라미터 업데이트
+  }, [searchQuery, searchEnabled, submittedKeyword, refetch, setSearchParams]);
 
   return (
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-hidden">
@@ -95,7 +106,7 @@ export default function SearchPage() {
           <PageHeader
             title="검색"
             iconType="close"
-            onBack={() => navigate(-1)}
+            onBack={() => navigate('/')}
             collapseBottomGap
           >
             <IconButton

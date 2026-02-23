@@ -344,7 +344,7 @@ export default function ProfilePage() {
               const asset = profile?.imageCode ? getProfileAsset(profile.imageCode) : null;
               return (
                 <div 
-                  className="w-20 h-20 shrink-0 rounded-full border border-neutral-800 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden"
+                  className="w-18 h-18 shrink-0 rounded-full border border-neutral-800 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden"
                   style={{ backgroundColor: asset ? (asset.bg || 'transparent') : '#171717' }}
                 >
                   {asset ? (
@@ -373,12 +373,12 @@ export default function ProfilePage() {
                 {tierInfo.label} {tierInfo.emoji}
               </p>
 
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-xl font-semibold truncate">
+              <div className="flex flex-wrap items-center gap-2">
+                <h2 className="text-lg font-semibold break-words max-w-full">
                   {profile?.nickname || '불러오는 중...'}
                 </h2>
                 {profile && (
-                  <span className="text-xs rounded-full border border-primary-500/60 px-2 py-[2px] text-primary-300 bg-primary-500/5">
+                  <span className="shrink-0 whitespace-nowrap text-xs rounded-full border border-primary-500/60 px-2 py-[2px] text-primary-300 bg-primary-500/5">
                     Lv. {profile.level ?? 1}
                   </span>
                 )}
@@ -404,9 +404,8 @@ export default function ProfilePage() {
               />
             </div>
             {profile && (
-              <div className="mt-1.5 flex justify-between text-[9px] text-text-sub/50 font-medium tracking-wider">
-                <span>{profile.minXp ?? 0} XP</span>
-                <span>{profile.maxXp ?? 0} XP</span>
+              <div className="mt-1.5 flex justify-end text-[9px] text-text-sub/50 font-medium tracking-wider">
+                <span>{profile.currentXp ?? 0} XP</span>
               </div>
             )}
           </div>
