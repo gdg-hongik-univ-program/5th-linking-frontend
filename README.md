@@ -45,11 +45,11 @@
   <tr>
     <td align="center" style="padding: 14px;">
       <b>김상엽</b><br/>
-      <a href="https://github.com/sy-jerry">@sy-jerry</a>
+      <a href="[https://github.com/yeop1108](https://github.com/yeop1108)">@yeop1108</a>
     </td>
     <td align="center" style="padding: 14px;">
       <b>한서경</b><br/>
-      <a href="https://github.com/seogyeonghan">@seogyeonghan</a>
+      <a href="[https://github.com/seogyeonghan](https://github.com/seokyun9seokyun9)">@seokyun9</a>
     </td>
   </tr>
   <tr>
