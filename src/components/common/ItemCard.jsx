@@ -57,6 +57,7 @@ export default function ItemCard({
                 className="absolute inset-0 w-full h-full object-cover blur-2xl scale-110 opacity-60"
                 aria-hidden="true"
                 referrerPolicy='no-referrer'
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <img
@@ -64,6 +65,11 @@ export default function ItemCard({
                   alt={title}
                   className="max-w-full max-h-full object-contain"
                   onLoad={handleThumbLoad}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement.style.display = 'flex';
+                    e.currentTarget.parentElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link text-neutral-400"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>';
+                  }}
                 />
               </div>
             </>
@@ -73,6 +79,10 @@ export default function ItemCard({
               alt={title}
               className="w-full h-full object-cover"
               onLoad={handleThumbLoad}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement.innerHTML += '<div class="absolute inset-0 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-link text-neutral-400"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg></div>';
+              }}
             />
           )
         ) : (

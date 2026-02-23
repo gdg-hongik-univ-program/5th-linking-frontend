@@ -4,8 +4,8 @@ import axiosInstance from '../api/axiosInstance';
 import Input from '../components/common/Input';
 import { VALIDATION } from '../constants/validation';
 import PageHeader from '../components/common/PageHeader';
-import { UserRoundPen, X } from 'lucide-react';
-import { PROFILE_ASSETS, getProfilePath, getProfileAsset } from '../constants/assets';
+import { UserRoundPen } from 'lucide-react';
+import { PROFILE_ASSETS, getProfileAsset } from '../constants/assets';
 import { useAuthRedirect } from '../hooks/useAuthRedirect';
 import LoadingOverlay from '../components/common/LoadingOverlay';
 import { useModalStore } from '../store/useModalStore';
@@ -257,7 +257,9 @@ const SignupPage = () => {
                   <div
                     className="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-110"
                     style={{
-                      padding: asset.padding ? `calc(${asset.padding} * 1.5)` : '0px'
+                      padding: asset.padding
+                        ? `calc(${asset.padding} * 1.5)`
+                        : '0px',
                     }}
                   >
                     <img

@@ -139,8 +139,8 @@ export default function CalendarPage() {
 
       {/* 탭 버튼들 */}
       <div className="px-5 mt-3 mb-1">
-        <div className="flex items-center p-1 bg-bg-nav border border-neutral-800/80 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.4)] relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-neutral-600/30 to-transparent" />
+        <div className="flex items-center p-1 bg-neutral-800 border border-text-main/5 rounded-xl relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-text-main/10 to-transparent" />
 
           {[
             { id: 'all', label: '전체' },
@@ -150,17 +150,17 @@ export default function CalendarPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 text-sm font-bold tracking-wide rounded-lg transition-colors relative z-10 ${
+              className={`flex-1 py-2 text-sm font-bold tracking-wide rounded-xl transition-colors relative z-10 ${
                 activeTab === tab.id
-                  ? 'text-primary-400'
-                  : 'text-text-sub hover:text-text-main'
+                  ? 'text-text-main'
+                  : 'text-text-disabled hover:text-text-main'
               }`}
             >
               {activeTab === tab.id && (
                 <motion.div
                   layoutId="scheduleTabIndicator"
                   layout="position"
-                  className="absolute inset-0 bg-bg-card rounded-lg shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_1px_2px_rgba(0,0,0,0.4)] border border-neutral-700/60 -z-10"
+                  className="absolute inset-0 bg-neutral-800 rounded-xl border border-text-main/5 ring-1 ring-primary-500 -z-10"
                   initial={false}
                   transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                 />

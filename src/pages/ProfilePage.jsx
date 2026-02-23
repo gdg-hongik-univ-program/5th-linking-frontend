@@ -43,12 +43,18 @@ const TIER_CONFIG = {
 };
 
 const TIER_MAPPING = {
-  '폰': 'PAWN', 'PAWN': 'PAWN',
-  '나이트': 'KNIGHT', 'KNIGHT': 'KNIGHT',
-  '비숍': 'BISHOP', 'BISHOP': 'BISHOP',
-  '룩': 'ROOK', 'ROOK': 'ROOK',
-  '퀸': 'QUEEN', 'QUEEN': 'QUEEN',
-  '킹': 'KING', 'KING': 'KING'
+  폰: 'PAWN',
+  PAWN: 'PAWN',
+  나이트: 'KNIGHT',
+  KNIGHT: 'KNIGHT',
+  비숍: 'BISHOP',
+  BISHOP: 'BISHOP',
+  룩: 'ROOK',
+  ROOK: 'ROOK',
+  퀸: 'QUEEN',
+  QUEEN: 'QUEEN',
+  킹: 'KING',
+  KING: 'KING',
 };
 
 const getTierConfig = (code) => {
@@ -194,7 +200,7 @@ export default function ProfilePage() {
     const raw = ((cur - min) / (max - min)) * 100;
     return Math.min(100, Math.max(0, raw));
   }, [profile]);
-  const { openConfirm } = useModalStore();
+  const { openConfirm, openAlert } = useModalStore();
 
   // 실제 로그아웃
   const executeLogout = async () => {
@@ -221,7 +227,11 @@ export default function ProfilePage() {
     setSelectedNode(node);
     if (graphRef.current) {
       // 팝업 오프셋
-      graphRef.current.centerAt(node.x, node.y + (node.importance === 1 ? 70 : 50), 800);
+      graphRef.current.centerAt(
+        node.x,
+        node.y + (node.importance === 1 ? 70 : 50),
+        800,
+      );
       graphRef.current.zoom(node.importance === 1 ? 0.5 : 0.8, 800);
     }
   }, []);
@@ -258,8 +268,8 @@ export default function ProfilePage() {
           label: '프로필 수정',
           icon: User,
           onClick: () => {
-             setIsEditProfileModalOpen(true);
-             setIsSettingsOpen(false);
+            setIsEditProfileModalOpen(true);
+            setIsSettingsOpen(false);
           },
         },
         {
@@ -267,8 +277,8 @@ export default function ProfilePage() {
           label: '비밀번호 변경',
           icon: Key,
           onClick: () => {
-             setIsPasswordModalOpen(true);
-             setIsSettingsOpen(false);
+            setIsPasswordModalOpen(true);
+            setIsSettingsOpen(false);
           },
         },
       ],
@@ -282,7 +292,12 @@ export default function ProfilePage() {
           badge: 'BETA',
           icon: Palette,
           onClick: () => {
-             // TODO: 테마 변경
+            setIsSettingsOpen(false);
+            openAlert({
+              title: '테마 설정',
+              message:
+                '테마 설정 기능은 아직 준비 중이에요. 곧 만나볼 수 있어요.',
+            });
           },
         },
       ],
@@ -295,8 +310,8 @@ export default function ProfilePage() {
           label: '도움말',
           icon: CircleHelp,
           onClick: () => {
-             setIsHelpModalOpen(true);
-             setIsSettingsOpen(false);
+            setIsHelpModalOpen(true);
+            setIsSettingsOpen(false);
           },
         },
         {
@@ -304,7 +319,11 @@ export default function ProfilePage() {
           label: 'TEAM LINKING',
           icon: Info,
           onClick: () => {
-             // TODO: 만든이 표시
+            setIsSettingsOpen(false);
+            openAlert({
+              title: 'TEAM LINKING',
+              message: 'FE: 김상엽, 한서경 BE: 이영선, 최승원',
+            });
           },
         },
       ],
@@ -325,7 +344,11 @@ export default function ProfilePage() {
     <div className="flex-1 bg-bg-main text-text-main flex flex-col font-family-sans h-full overflow-y-auto scrollbar-hide">
       <TabHeader title="프로필">
         <div className="flex items-center gap-1" ref={settingsBtnRef}>
-          <IconButton icon={Settings} aria-label="설정" onClick={() => setIsSettingsOpen(true)} />
+          <IconButton
+            icon={Settings}
+            aria-label="설정"
+            onClick={() => setIsSettingsOpen(true)}
+          />
         </div>
       </TabHeader>
 
@@ -341,15 +364,19 @@ export default function ProfilePage() {
           <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-primary-500/10 blur-3xl pointer-events-none" />
           <div className="flex items-center gap-5 relative z-10">
             {(() => {
-              const asset = profile?.imageCode ? getProfileAsset(profile.imageCode) : null;
+              const asset = profile?.imageCode
+                ? getProfileAsset(profile.imageCode)
+                : null;
               return (
                 <div 
                   className="w-18 h-18 shrink-0 rounded-full border border-neutral-800 flex items-center justify-center text-3xl shadow-inner relative overflow-hidden"
                   style={{ backgroundColor: asset ? (asset.bg || 'transparent') : '#171717' }}
                 >
                   {asset ? (
-                    <div className="w-full h-full flex items-center justify-center relative z-10"
-                         style={{ padding: asset.padding || '0px' }}>
+                    <div
+                      className="w-full h-full flex items-center justify-center relative z-10"
+                      style={{ padding: asset.padding || '0px' }}
+                    >
                       <img
                         src={asset.path}
                         alt="Profile"
@@ -367,9 +394,7 @@ export default function ProfilePage() {
             })()}
 
             <div className="flex flex-col gap-1 flex-1 min-w-0 justify-center">
-              <p
-                className="text-[10px] text-primary-500 font-bold uppercase tracking-[0.2em]"
-              >
+              <p className="text-[10px] text-primary-500 font-bold uppercase tracking-[0.2em]">
                 {tierInfo.label} {tierInfo.emoji}
               </p>
 
@@ -393,10 +418,14 @@ export default function ProfilePage() {
 
           <div className="mt-6 relative z-10 flex flex-col gap-1.5">
             <div className="flex justify-between items-end">
-              <span className="text-[11px] font-medium tracking-wide text-text-sub uppercase">경험치</span>
-              <span className="text-[11px] font-bold text-primary-400">{Math.round(xpProgress)}%</span>
+              <span className="text-[11px] font-medium tracking-wide text-text-sub uppercase">
+                경험치
+              </span>
+              <span className="text-[11px] font-bold text-primary-400">
+                {Math.round(xpProgress)}%
+              </span>
             </div>
-            
+
             <div className="h-1.5 w-full rounded-full bg-neutral-950 border border-neutral-700/50 overflow-hidden relative">
               <div
                 className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary-600 via-primary-500 to-primary-300 transition-all duration-1000 ease-out"
@@ -414,7 +443,7 @@ export default function ProfilePage() {
         {/* 2. 통계 및 개요 */}
         <section className="grid grid-cols-2 gap-4">
           <div className="flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-700/70 rounded-2xl p-4 shadow-lg relative overflow-hidden">
-             <div className="absolute top-0 right-0 w-24 h-24 bg-primary-500/10 rounded-full blur-2xl -mr-4 -mt-4 opacity-50 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-24 h-24 bg-primary-500/10 rounded-full blur-2xl -mr-4 -mt-4 opacity-50 pointer-events-none" />
             <div className="flex items-center gap-1.5 text-text-sub text-xs font-bold uppercase mb-2 relative z-10 tracking-wider">
               <LinkIcon size={12} className="text-primary-500" /> 총 저장된 링크
             </div>
@@ -424,7 +453,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="flex flex-col items-center justify-center bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-700/70 rounded-2xl p-4 shadow-lg relative overflow-hidden">
-             <div className="absolute bottom-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-4 -mb-4 opacity-50 pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl -mr-4 -mb-4 opacity-50 pointer-events-none" />
             <div className="flex items-center gap-1.5 text-text-sub text-xs font-bold uppercase mb-2 relative z-10 tracking-wider">
               <Hash size={12} className="text-primary-500" /> 최애 태그
             </div>
@@ -444,17 +473,17 @@ export default function ProfilePage() {
               가장 많이 사용한 5개의 태그
             </p>
           </div>
-          
+
           <div className="h-[1px] w-full bg-gradient-to-r from-neutral-700/80 via-neutral-800/50 to-transparent" />
 
           <div className="h-52 -ml-2 relative">
-             <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+            <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-500 pointer-events-none">
               <div className="w-32 h-32 bg-primary-500/5 rounded-full blur-3xl" />
             </div>
             {hasTags ? (
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={tagStats} outerRadius="70%">
-                  <PolarGrid stroke="#2e2e2e"/>
+                  <PolarGrid stroke="#2e2e2e" />
                   <PolarAngleAxis
                     dataKey="tagName"
                     tick={{ fill: '#a3a3a3', fontSize: 11, fontWeight: 500 }}
@@ -469,8 +498,12 @@ export default function ProfilePage() {
                   />
                   <defs>
                     <linearGradient id="colorRate" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#eabe2f" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#eabe2f" stopOpacity={0.05}/>
+                      <stop offset="5%" stopColor="#eabe2f" stopOpacity={0.3} />
+                      <stop
+                        offset="95%"
+                        stopColor="#eabe2f"
+                        stopOpacity={0.05}
+                      />
                     </linearGradient>
                   </defs>
                 </RadarChart>
@@ -488,11 +521,13 @@ export default function ProfilePage() {
         {/* 4. 지식 그래프 */}
         <section className="rounded-2xl bg-gradient-to-b from-neutral-900 to-neutral-950 border border-neutral-700/70 p-1 shadow-lg flex flex-col mt-4">
           <div className="px-4 pt-4 pb-2 flex items-end justify-between">
-              <h3 className="text-sm font-bold tracking-wide gap-2 flex items-center">링크 그래프</h3>
-              <p className="text-[10px] text-text-sub/70 tracking-wide pb-0.5">
+            <h3 className="text-sm font-bold tracking-wide gap-2 flex items-center">
+              링크 그래프
+            </h3>
+            <p className="text-[10px] text-text-sub/70 tracking-wide pb-0.5">
               내 지식의 연결망 탐색
             </p>
-            </div>
+          </div>
 
           <div
             ref={graphContainerRef}
@@ -550,8 +585,10 @@ export default function ProfilePage() {
                     } else {
                       isConnected = graphData.links.some(
                         (link) =>
-                          (link.source.id === selectedNode.id && link.target.id === node.id) ||
-                          (link.target.id === selectedNode.id && link.source.id === node.id)
+                          (link.source.id === selectedNode.id &&
+                            link.target.id === node.id) ||
+                          (link.target.id === selectedNode.id &&
+                            link.source.id === node.id),
                       );
                     }
                   }
@@ -577,7 +614,9 @@ export default function ProfilePage() {
                   ctx.shadowBlur = 0;
 
                   const shouldShowLabel =
-                    ((isImportant && globalScale > 0.25) || globalScale > 0.5) && isConnected;
+                    ((isImportant && globalScale > 0.25) ||
+                      globalScale > 0.5) &&
+                    isConnected;
 
                   if (label && shouldShowLabel) {
                     const fontSize = 14 / globalScale;
@@ -601,7 +640,6 @@ export default function ProfilePage() {
                     ctx.fillStyle = isImportant
                       ? `rgba(234, 190, 47, ${isConnected ? 1 : 0.3})`
                       : `rgba(255, 255, 255, ${isConnected ? 1 : 0.3})`;
-
 
                     ctx.fillText(
                       label,
@@ -633,21 +671,29 @@ export default function ProfilePage() {
         sections={settingsSections}
       />
 
-      <ChangePasswordModal 
-        isOpen={isPasswordModalOpen} 
-        onClose={() => setIsPasswordModalOpen(false)} 
+      <ChangePasswordModal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
       />
 
       <EditProfileModal
         isOpen={isEditProfileModalOpen}
         onClose={() => setIsEditProfileModalOpen(false)}
-        initialData={profile ? { nickName: profile.nickname, imageCode: profile.imageCode, maxTier: tierInfo.label } : null}
+        initialData={
+          profile
+            ? {
+                nickName: profile.nickname,
+                imageCode: profile.imageCode,
+                maxTier: tierInfo.label,
+              }
+            : null
+        }
         onSuccess={fetchProfileData}
       />
 
-      <HelpModal 
-        isOpen={isHelpModalOpen} 
-        onClose={() => setIsHelpModalOpen(false)} 
+      <HelpModal
+        isOpen={isHelpModalOpen}
+        onClose={() => setIsHelpModalOpen(false)}
       />
     </div>
   );
