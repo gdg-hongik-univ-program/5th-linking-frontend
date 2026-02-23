@@ -189,7 +189,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
             ) : step === 1 ? (
               '다음'
             ) : (
-              '변경 완료'
+              '변경'
             )}
           </button>
         </div>

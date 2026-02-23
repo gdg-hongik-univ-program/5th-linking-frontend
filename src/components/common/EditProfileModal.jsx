@@ -71,8 +71,8 @@ export default function EditProfileModal({
       });
 
       openAlert({
-        title: '프로필 변경 완료',
-        message: '프로필 정보가 성공적으로 변경되었어요.',
+        title: '프로필 수정 완료',
+        message: '프로필 정보가 성공적으로 수정되었어요.',
         confirmText: '확인',
       });
 
@@ -80,7 +80,7 @@ export default function EditProfileModal({
       onClose();
     } catch (error) {
       openAlert({
-        title: '프로필 변경 실패',
+        title: '프로필 수정 실패',
         message:
           error.response?.data?.message ||
           '프로필 수정 중 오류가 발생했어요. 다시 시도해 주세요.',
@@ -164,7 +164,7 @@ export default function EditProfileModal({
                   disabled={!nickNameRegex.test(nickName) || isSubmitting}
                   className="flex-1 py-3 text-bg-main text-sm font-bold rounded-xl transition-colors disabled:opacity-50 bg-primary-500 hover:bg-primary-500/90"
                 >
-                  {isSubmitting ? '수정 중...' : '수정 완료'}
+                  {isSubmitting ? '수정 중...' : '수정'}
                 </button>
               </div>
             </div>
