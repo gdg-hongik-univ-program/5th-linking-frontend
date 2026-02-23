@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Virtuoso } from 'react-virtuoso';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CircleX, Search, Plus, MoreHorizontal, Unlink } from 'lucide-react';
@@ -48,6 +48,7 @@ export default function BottomSheet({
   onDisconnect,
 }) {
   const navigate = useNavigate();
+  const { itemId: currentItemId } = useParams();
   const [isExpanded, setIsExpanded] = useState(false);
   const [localSearch, setLocalSearch] = useState('');
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -257,6 +258,7 @@ export default function BottomSheet({
         onClose={() => setIsPickerOpen(false)}
         onSelect={handlePickerSelect}
         title="연결할 링크 선택"
+        excludeItemId={currentItemId}
       />
 
       <div className="relative z-[1100]">

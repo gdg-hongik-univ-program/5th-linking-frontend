@@ -86,7 +86,7 @@ export default function SelectionHeader({
             className={
               isActionDisabled
                 ? disabledClass
-                : 'text-red-500 hover:text-red-400 hover:bg-red-500/10'
+                : 'text-error-500 hover:text-red-400 hover:bg-error-500/10'
             }
           />
         </div>

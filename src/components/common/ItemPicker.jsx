@@ -28,6 +28,7 @@ export default function ItemPicker({
   onClose,
   onSelect,
   title = '연결할 링크 선택',
+  excludeItemId,
 }) {
   const {
     folders: folderTree,
@@ -118,6 +119,14 @@ export default function ItemPicker({
       });
     }
 
+    if (excludeItemId != null) {
+      targetItems = targetItems.filter((i) => {
+        const id = i.itemId || i.id;
+        if (id == null) return true;
+        return String(id) !== String(excludeItemId);
+      });
+    }
+
     if (showImportantOnly) {
       targetItems = targetItems.filter((item) => item.importance);
     }
@@ -145,6 +154,7 @@ export default function ItemPicker({
     allItems,
     sortOption,
     showImportantOnly,
+    excludeItemId,
   ]);
 
   const actionSheetSections = useMemo(() => {
@@ -305,7 +315,7 @@ export default function ItemPicker({
                         className="flex items-center gap-3 px-3 py-3 w-full text-left rounded-lg hover:bg-neutral-800 active:bg-neutral-700 transition-colors group"
                       >
                         <Folder
-                          className="text-yellow-500 fill-yellow-500 shrink-0"
+                          className="text-primary-500 fill-primary-500 shrink-0"
                           size={20}
                         />
                         <div className="flex flex-col flex-1 min-w-0">
