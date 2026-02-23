@@ -354,7 +354,7 @@ export default function ProfilePage() {
 
       <main className="flex-1 px-5 pb-8 space-y-5">
         {error && (
-          <div className="mt-2 rounded-xl border border-red-500/40 bg-red-500/5 px-4 py-3 text-sm text-red-300">
+          <div className="mt-2 rounded-xl border border-error-500/40 bg-error-500/5 px-4 py-3 text-sm text-red-300">
             {error}
           </div>
         )}

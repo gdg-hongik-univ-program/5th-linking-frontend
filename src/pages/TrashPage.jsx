@@ -301,7 +301,7 @@ export default function TrashPage() {
           id: 'emptyTrash',
           label: '휴지통 비우기',
           icon: Trash2,
-          textColor: 'text-red-500',
+          textColor: 'text-error-500',
           onClick: handleEmptyTrashAction,
         },
       ],

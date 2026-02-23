@@ -86,6 +86,42 @@ export default function ItemViewerPage() {
     await handleMove(selectedId);
   };
 
+  const safeConnectedItems = useMemo(() => {
+    const selfId = item?.itemId ?? itemId;
+    if (!connectedItems || selfId == null) return connectedItems;
+
+    return connectedItems.filter((it) => {
+      const id =
+        typeof it === 'object' && it !== null
+          ? (it.itemId ?? it.id ?? it._id)
+          : it;
+      if (id == null) return true;
+      return String(id) !== String(selfId);
+    });
+  }, [connectedItems, itemId, item?.itemId]);
+
+  const handleConnectSafe = async (target) => {
+    const selfId = item?.itemId ?? itemId;
+    const targetId =
+      typeof target === 'object' && target !== null
+        ? (target.itemId ?? target.id ?? target._id)
+        : target;
+
+    if (
+      selfId != null &&
+      targetId != null &&
+      String(targetId) === String(selfId)
+    ) {
+      openAlert({
+        title: '연결 불가',
+        message: '자기 자신과는 연결할 수 없어요.',
+      });
+      return;
+    }
+
+    await handleConnect(target);
+  };
+
   const actionSheetSections = [
     {
       items: [
@@ -314,9 +350,9 @@ export default function ItemViewerPage() {
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={() => setIsSheetOpen(false)}
-        items={connectedItems}
+        items={safeConnectedItems}
         isLoading={isLoadingConnections}
-        onConnect={handleConnect}
+        onConnect={handleConnectSafe}
         onDisconnect={handleDisconnect}
       />
 

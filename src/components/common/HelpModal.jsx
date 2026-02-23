@@ -180,7 +180,7 @@ export default function HelpModal({ isOpen, onClose }) {
               작성한 문서나 아이디어를 시간의 흐름 위에. <br />
             </p>
             <div className="space-y-3 mt-3">
-              <div className="p-4 border border-blue-500/20 bg-blue-500/5 rounded-xl text-blue-100 flex flex-col gap-2">
+              <div className="p-4 border border-edit-500/20 bg-edit-500/5 rounded-xl text-blue-100 flex flex-col gap-2">
                 <div className="flex items-center gap-2 font-bold mb-1">
                   <Calendar size={18} className="text-blue-400" />
                   캘린더 탭 200% 활용하기

@@ -128,7 +128,7 @@ export default function NotificationPage() {
                 size={20}
                 onClick={handleDeleteAll}
                 disabled={notifications.length === 0 || isLoading}
-                color="group-enabled:group-hover:text-red-500"
+                color="group-enabled:group-hover:text-error-500"
               />
             </div>
           </div>

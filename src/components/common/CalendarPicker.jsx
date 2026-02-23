@@ -200,7 +200,7 @@ export default function CalendarPicker({
                     {showDots && (
                       <div className="flex gap-1 mt-1 h-1">
                         {summarySets.deadlineSet.has(dateStr) && (
-                          <div className="w-1 h-1 rounded-full bg-red-500" />
+                          <div className="w-1 h-1 rounded-full bg-error-500" />
                         )}
                         {summarySets.createdSet.has(dateStr) && (
                           <div className="w-1 h-1 rounded-full bg-primary-500" />
