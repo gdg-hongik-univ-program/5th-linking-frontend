@@ -44,6 +44,14 @@
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
 
+  /* Edit Pallete */
+  --color-edit-500: #3b82f6;
+  --color-edit-600: #2563eb;
+
+  /* Archive Pallete */
+  --color-archive-500: #f97316;
+  --color-archive-600: #ea580c;
+
   /* ===== Semantic Aliases ===== */
   /* Text Colors */
   --color-text-main: var(--color-neutral-50);
@@ -70,7 +78,7 @@
   --font-family-logo: 'Outfit', sans-serif;
 }
 
-/* 스크롤바 숨기기 */
+/* ===== Hiding Scrollbars ===== */
 * {
   /* Firefox */
   scrollbar-width: none;

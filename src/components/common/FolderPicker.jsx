@@ -344,7 +344,7 @@ export default function FolderPicker({
         <InputModal
           isOpen={isCreateModalOpen}
           title="새 폴더 생성"
-          placeholder="폴더 이름을 입력하세요."
+          placeholder="폴더 이름 입력"
           onClose={() => setIsCreateModalOpen(false)}
           onSubmit={handleCreateFolderSubmit}
           submitText="생성"

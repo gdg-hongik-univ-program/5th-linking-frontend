@@ -5,6 +5,7 @@ import {
   CircleCheck,
   FilePlus,
   FolderPlus,
+  Pencil,
 } from 'lucide-react';
 import { useFolders } from '../hooks/useFolders';
 import { useItems } from '../hooks/useItems';
@@ -392,6 +393,26 @@ export default function StoragePage() {
           icon: FolderPlus,
           onClick: handleCreateFolderAction,
         },
+        ...(folderId
+          ? [
+              {
+                id: 'renameFolder',
+                label: '폴더 이름 변경',
+                icon: Pencil,
+                onClick: () => {
+                  const node = findFolderNode(rootFolders, folderId);
+                  if (!node) return;
+
+                  setFolderRenameModal({
+                    isOpen: true,
+                    folder: node,
+                    initialValue: node.folderName || '',
+                  });
+                  setMenuAnchor(null);
+                },
+              },
+            ]
+          : []),
       ],
       sortOption,
       setSortOption,
@@ -400,7 +421,7 @@ export default function StoragePage() {
       setShowImportantOnly,
       filterKeys: ['important'],
     });
-  }, [sortOption, showImportantOnly]);
+  }, [sortOption, showImportantOnly, folderId, rootFolders]);
 
   const handleOpenMenu = (e) => {
     setMenuAnchor(e.currentTarget);
@@ -495,7 +516,7 @@ export default function StoragePage() {
       <InputModal
         isOpen={isCreateFolderModalOpen}
         title="새 폴더 생성"
-        placeholder="폴더 이름을 입력하세요"
+        placeholder="폴더 이름 입력"
         initialValue=""
         onClose={() => setIsCreateFolderModalOpen(false)}
         onSubmit={handleCreateFolderSubmit}
@@ -506,7 +527,7 @@ export default function StoragePage() {
       <InputModal
         isOpen={folderRenameModal.isOpen}
         title="폴더 이름 변경"
-        placeholder="폴더 이름을 입력하세요"
+        placeholder="폴더 이름 입력"
         initialValue={folderRenameModal.initialValue}
         onClose={handleCloseRenameModal}
         onSubmit={handleRenameFolderSubmit}

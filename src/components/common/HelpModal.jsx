@@ -1,13 +1,5 @@
 import { useState } from 'react';
-import {
-  X,
-  Network,
-  Search,
-  Zap,
-  Calendar,
-  Medal,
-  CircleHelp,
-} from 'lucide-react';
+import { X, Network, Search, Zap, Calendar, Medal } from 'lucide-react';
 
 export default function HelpModal({ isOpen, onClose }) {
   const [activeTab, setActiveTab] = useState('overview');
@@ -305,20 +297,27 @@ export default function HelpModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-bg-main w-[90%] max-w-[330px] sm:max-w-[380px] h-[70vh] max-h-[550px] flex flex-col rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-text-main/10 animate-in zoom-in-95 duration-300 relative overflow-hidden">
+    <div className="fixed inset-0 z-[3000] flex items-center justify-center p-4 isolate animate-in fade-in duration-300">
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="bg-bg-main w-full max-w-[340px] h-[70vh] max-h-[550px] flex flex-col rounded-2xl shadow-lg border border-text-main/10 animate-in zoom-in-95 duration-300 relative overflow-hidden">
         {/* Header */}
-        <div className="px-6 h-[60px] border-b border-text-main/10 flex items-center justify-between shrink-0 bg-neutral-900/80 rounded-t-2xl">
-          <h2 className="text-base font-bold text-text-main flex items-center gap-2">
-            <CircleHelp size={20} className="text-primary-500" />
-            서비스 이용 가이드
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 -mr-2 text-text-sub hover:text-text-main rounded-full transition-colors bg-white/5 hover:bg-white/10"
-          >
-            <X size={18} />
-          </button>
+        <div className="px-4 h-14 border-b border-text-main/10 flex items-center justify-between shrink-0 bg-bg-main relative">
+          <div className="flex items-center justify-start min-w-[40px]">
+            <button
+              onClick={onClose}
+              className="p-2 -ml-2 text-text-sub hover:text-text-main rounded-full active:bg-neutral-800 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-[180px]">
+            <h2 className="text-base font-bold text-text-main truncate">
+              서비스 이용 가이드
+            </h2>
+          </div>
+
+          <div className="flex items-center justify-end min-w-[40px]" />
         </div>
 
         {/* Tab Navigation */}
